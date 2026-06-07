@@ -12,6 +12,7 @@ const auditTool = document.querySelector('[data-audit-tool]');
 const toolResult = document.querySelector('[data-tool-result]');
 const motionImages = Array.from(document.querySelectorAll('[data-scroll-image]'));
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const COOKIE_CONSENT_KEY = 'savewatt-cookie-consent';
 let lastToolReport = null;
 
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -58,6 +59,39 @@ function validateFile(file) {
 }
 
 setTheme(initialTheme);
+
+function createCookieBanner() {
+  if (localStorage.getItem(COOKIE_CONSENT_KEY)) return;
+
+  const banner = document.createElement('section');
+  banner.className = 'cookie-banner';
+  banner.setAttribute('aria-label', 'Gestion des cookies');
+  banner.innerHTML = `
+    <strong>Gestion des cookies</strong>
+    <p>SaveWatt utilise uniquement des stockages nécessaires au fonctionnement du site pour le moment. Les mesures d'audience ou cookies marketing ne seront activés qu'après votre accord.</p>
+    <div class="cookie-actions">
+      <button class="button" type="button" data-cookie-accept>Accepter</button>
+      <button class="button button-secondary" type="button" data-cookie-refuse>Refuser</button>
+      <a class="cookie-link" href="/cookies/">Lire la politique cookies</a>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  banner.querySelector('[data-cookie-accept]')?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
+    window.saveWattCanUseAnalytics = true;
+    banner.hidden = true;
+  });
+
+  banner.querySelector('[data-cookie-refuse]')?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'refused');
+    window.saveWattCanUseAnalytics = false;
+    banner.hidden = true;
+  });
+}
+
+window.saveWattCanUseAnalytics = localStorage.getItem(COOKIE_CONSENT_KEY) === 'accepted';
+createCookieBanner();
 
 themeButton?.addEventListener('click', () => {
   setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');

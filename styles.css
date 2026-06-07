@@ -466,6 +466,35 @@ h3 { font-size: 1.25rem; line-height: 1.2; }
 .footer-grid a:hover, .footer-grid a:focus-visible { color: var(--current-dark); }
 .footer-grid p { color: var(--muted); margin-bottom: 0; }
 
+.legal-main { padding-top: 128px; background: linear-gradient(180deg, #ffffff 0%, #f5fbf2 100%); }
+.legal-hero { padding-block: 82px 36px; border-bottom: 1px solid var(--light-border); }
+.legal-hero h1 { max-width: 12ch; font-size: clamp(3rem, 6vw, 5rem); }
+.legal-hero .lede { max-width: 760px; }
+.legal-layout { display: grid; grid-template-columns: minmax(220px, 0.32fr) minmax(0, 0.68fr); gap: clamp(32px, 7vw, 96px); padding-block: 72px 112px; }
+.legal-layout > * { min-width: 0; }
+.legal-toc { position: sticky; top: 116px; align-self: start; display: grid; gap: 10px; padding: 18px; border: 1px solid rgba(17, 138, 52, 0.16); border-radius: 18px; background: #ffffff; }
+.legal-toc strong { color: var(--current-dark); font: 600 0.76rem/1.2 "IBM Plex Mono", monospace; letter-spacing: 0.14em; text-transform: uppercase; }
+.legal-toc a { color: var(--muted); text-decoration: none; }
+.legal-toc a:hover, .legal-toc a:focus-visible { color: var(--current-dark); }
+.legal-content { display: grid; gap: 22px; min-width: 0; }
+.legal-card { padding: clamp(22px, 4vw, 36px); border: 1px solid var(--light-border); border-radius: 18px; background: #ffffff; }
+.legal-card h2 { max-width: none; margin-bottom: 18px; font-size: clamp(1.7rem, 3vw, 2.4rem); }
+.legal-card h3 { margin-top: 24px; }
+.legal-card p, .legal-card li { color: var(--muted); }
+.legal-card ul { padding-left: 22px; }
+.legal-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 18px; font-size: 0.95rem; }
+.legal-table th, .legal-table td { padding: 14px; border: 1px solid var(--light-border); text-align: left; vertical-align: top; }
+.legal-table th, .legal-table td { overflow-wrap: anywhere; word-break: break-word; }
+.legal-table th { color: var(--current-dark); background: #f7fcf5; }
+.legal-notice { padding: 18px; border-left: 3px solid var(--current); background: #f7fcf5; color: var(--ink); }
+.cookie-banner { position: fixed; z-index: 30; right: 18px; bottom: 18px; width: min(560px, calc(100vw - 36px)); padding: 20px; background: #ffffff; border: 1px solid rgba(17, 138, 52, 0.24); border-radius: 20px; box-shadow: 0 24px 80px rgba(16, 40, 34, 0.18); }
+.cookie-banner[hidden] { display: none; }
+.cookie-banner p { margin: 8px 0 0; color: var(--muted); font-size: 0.92rem; }
+.cookie-banner strong { color: var(--ink); }
+.cookie-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.cookie-actions .button { min-height: 44px; padding-inline: 18px; font-size: 0.9rem; }
+.cookie-link { color: var(--current-dark); font-weight: 700; text-decoration-color: var(--current); text-underline-offset: 4px; }
+
 .reveal { opacity: 0; transform: translateY(16px); transition: opacity 650ms ease, transform 650ms ease; }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
 :focus-visible { outline: 2px solid var(--current); outline-offset: 3px; }
@@ -482,6 +511,8 @@ h3 { font-size: 1.25rem; line-height: 1.2; }
   .hero-visual picture { width: min(100%, 760px); }
   .hero-visual img { width: 100%; margin-inline: auto; }
   .proof-grid, .service-grid, .sector-grid, .step-grid, .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .legal-layout { grid-template-columns: 1fr; }
+  .legal-toc { position: static; }
   .section-art img { width: min(100%, 640px); margin-inline: auto; }
   .ledger-art { width: min(100%, 680px); margin-inline: auto; }
 }
@@ -643,6 +674,12 @@ h3 { font-size: 1.25rem; line-height: 1.2; }
   .upload-visual { max-height: none; }
   .upload-visual img { max-height: none; }
   .proof-grid, .service-grid, .sector-grid, .step-grid, .differentiator-grid, .footer-grid, .audit-form, .audit-tool, .tool-fields, .result-ranges, .result-gate, .results-head { grid-template-columns: 1fr; }
+  .legal-main { padding-top: 96px; }
+  .legal-hero { padding-block: 56px 24px; }
+  .legal-layout { padding-block: 48px 72px; }
+  .legal-card { min-width: 0; overflow-x: clip; }
+  .legal-table { display: block; max-width: 100%; overflow-x: auto; }
+  .cookie-banner { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
   .results-visual-panel { justify-self: stretch; width: 100%; }
   .final-grid { grid-template-columns: 1fr; }
   .proof-grid article { border-left: 0; border-top: 1px solid rgba(17, 138, 52, 0.16); }

@@ -1,0 +1,7 @@
+# SaveWatt
+
+This file is kept for tools that request `llm.txt`. The canonical AI-readable context file is available at:
+
+https://www.savewatt.fr/llms.txt
+
+SaveWatt is an independent French energy-billing audit service. It helps organizations audit electricity and gas invoices, identify overbilling, recover confirmed overpayments, optimize contracts and subscribed power, and check CEE opportunities when relevant.

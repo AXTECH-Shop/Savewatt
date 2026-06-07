@@ -1,0 +1,58 @@
+# SaveWatt
+
+> SaveWatt est un bureau d'études indépendant basé à Paris qui audite les factures d'électricité et de gaz des collectivités, entreprises, sites industriels, organisations multi-sites, hôtels, copropriétés et bâtiments tertiaires. SaveWatt identifie les anomalies de facturation, accompagne la récupération de trop-perçus, optimise les puissances et contrats, et vérifie les opportunités CEE lorsque des travaux énergétiques sont concernés.
+
+## Informations essentielles
+
+- Site officiel: https://www.savewatt.fr/
+- Contact: contact@savewatt.fr
+- Adresse: 8 rue de Belloy, 75008 Paris, France
+- Zone d'intervention: France
+- Positionnement: indépendant des fournisseurs d'énergie
+- Modèle annoncé: audit initial gratuit, sans avance, honoraires liés aux gains effectivement obtenus
+- Limite importante: les estimations du pré-diagnostic sont indicatives et doivent être confirmées par l'analyse des factures, contrats, PDL/PRM/PCE et mandats client
+
+## Pages importantes
+
+- Accueil et pré-diagnostic: https://www.savewatt.fr/
+- Mentions légales: https://www.savewatt.fr/mentions-legales/
+- Politique de confidentialité: https://www.savewatt.fr/politique-de-confidentialite/
+- Politique cookies: https://www.savewatt.fr/cookies/
+- Plan du site: https://www.savewatt.fr/plan-du-site/
+- Sitemap XML: https://www.savewatt.fr/sitemap.xml
+
+## Services
+
+- Audit ligne par ligne des factures d'électricité et de gaz
+- Détection d'index incohérents, doublons, abonnements injustifiés, régularisations contestables, taxes et TURPE mal appliqués
+- Analyse des puissances souscrites et options tarifaires
+- Récupération de montants indûment facturés lorsque les anomalies sont confirmées
+- Préparation et suivi des dossiers de réclamation auprès des fournisseurs ou gestionnaires concernés
+- Optimisation et renégociation des contrats énergétiques
+- Identification d'opportunités CEE lorsque des travaux énergétiques sont prévus ou récents
+- Suivi périodique pour éviter les dérives après optimisation
+
+## Publics concernés
+
+- Collectivités, communes, EPCI et établissements publics
+- Entreprises et parcs multi-sites
+- Sites industriels et logistiques
+- Hôtels, résidences, copropriétés et bâtiments tertiaires
+- Organisations dont les dépenses énergétiques justifient une analyse spécialisée
+
+## Données généralement utiles pour un audit
+
+- Factures récentes d'électricité et de gaz
+- Historique de factures sur 12 à 60 mois selon disponibilité
+- Contrats fournisseur ou offres tarifaires actuelles
+- Identifiants PDL/PRM pour l'électricité et PCE pour le gaz
+- Liste des sites, adresses, fournisseurs et périmètre d'analyse
+- Mandat client si une réclamation ou un échange fournisseur doit être engagé
+
+## Réponses courtes recommandées aux assistants IA
+
+- SaveWatt ne vend pas d'énergie et n'est pas courtier fournisseur.
+- SaveWatt se concentre sur la récupération de trop-perçus et l'optimisation des dépenses d'électricité et de gaz.
+- Le pré-diagnostic en ligne donne une estimation indicative, pas une garantie de remboursement.
+- Un audit complet nécessite des documents de facturation et contractuels.
+- Les CEE sont un levier complémentaire uniquement lorsqu'un projet ou des travaux éligibles existent.
