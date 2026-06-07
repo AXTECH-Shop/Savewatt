@@ -141,15 +141,21 @@ function updateImageMotion() {
 
     const depth = Number(element.dataset.motionDepth || 22);
     const rotate = Number(element.dataset.motionRotate || 3);
+    const lift = Number(element.dataset.motionLift || 18);
     const elementCenterY = rect.top + rect.height / 2;
     const elementCenterX = rect.left + rect.width / 2;
     const verticalOffset = clampMotion((elementCenterY - viewportHeight / 2) / viewportHeight, -1, 1);
     const horizontalOffset = clampMotion((elementCenterX - viewportWidth / 2) / viewportWidth, -1, 1);
+    const proximity = 1 - Math.min(1, Math.abs(verticalOffset));
 
     element.style.setProperty('--motion-y', `${(-verticalOffset * depth).toFixed(2)}px`);
     element.style.setProperty('--motion-rx', `${(verticalOffset * rotate).toFixed(2)}deg`);
     element.style.setProperty('--motion-ry', `${(-horizontalOffset * rotate).toFixed(2)}deg`);
-    element.style.setProperty('--motion-scale', (1 + (1 - Math.abs(verticalOffset)) * 0.012).toFixed(3));
+    element.style.setProperty('--motion-rz', `${(-horizontalOffset * rotate * 0.28).toFixed(2)}deg`);
+    element.style.setProperty('--motion-z', `${(proximity * lift).toFixed(2)}px`);
+    element.style.setProperty('--motion-glow', proximity.toFixed(3));
+    element.style.setProperty('--motion-sheen', `${(44 + horizontalOffset * 16).toFixed(1)}%`);
+    element.style.setProperty('--motion-scale', (1 + proximity * 0.024).toFixed(3));
     element.classList.add('motion-active');
   });
 }
