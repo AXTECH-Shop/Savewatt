@@ -4,23 +4,15 @@ Static marketing website for SaveWatt.
 
 ## Cloudflare Pages
 
-### Option A: Cloudflare Git integration
+This project is deployed with Wrangler direct uploads.
 
-Use these build settings when creating the project from the Cloudflare dashboard:
+Deploy after pushing changes to GitHub:
 
-- Framework preset: `None`
-- Build command: leave empty
-- Build output directory: `.`
-- Root directory: `/`
-- Production branch: `main`
+```sh
+./scripts/deploy-wrangler.sh
+```
 
-### Option B: GitHub Actions deploy
-
-This repo includes `.github/workflows/deploy-cloudflare-pages.yml`, which deploys to Cloudflare Pages on every push to `main`.
-
-Add this in GitHub repository settings:
-
-- Repository secret: `CLOUDFLARE_API_TOKEN` with `Cloudflare Pages:Edit` permission for the target account
+The script creates a clean `.deploy-site/` folder with only the public site files, creates the `savewatt` Pages project if needed, then deploys it with Wrangler.
 
 The production entry page is `index.html`. The Swiss design experiment is available at `index-v2.html`.
 
