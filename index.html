@@ -282,44 +282,105 @@
       </section>
 
       <section class="section-dark final-section" id="demande-audit">
-        <div class="container final-grid reveal">
+        <div class="container final-grid tool-grid reveal">
           <div class="final-copy">
-            <p class="kicker">08 — PASSEZ À L'ACTION</p>
-            <h2>Découvrez ce que vous pouvez récupérer.</h2>
-            <p class="lede">Commencez avec quelques informations et, si vous le souhaitez, une facture récente. SaveWatt vous recontactera pour qualifier le périmètre et organiser le pré-diagnostic, sans engagement.</p>
-            <div class="action-panel" aria-label="Réassurance avant demande d'audit">
-              <p>Une demande courte, sans document obligatoire au départ.</p>
+            <p class="kicker">08 — OUTIL GRATUIT</p>
+            <h2>Estimez votre potentiel en 30 secondes.</h2>
+            <p class="lede">Répondez à quelques questions simples. Vous obtenez immédiatement un score, une fourchette indicative et la liste des pièces à réunir avant un audit complet.</p>
+            <div class="action-panel" aria-label="Fonctionnement de l'estimateur SaveWatt">
+              <p>Ce que l'outil peut détecter sans API externe.</p>
               <ul>
-                <li><strong>1</strong><span>Vous décrivez votre organisation et votre niveau de dépense.</span></li>
-                <li><strong>2</strong><span>Vous joignez une facture récente seulement si elle est déjà disponible.</span></li>
-                <li><strong>3</strong><span>SaveWatt qualifie le périmètre avant tout engagement.</span></li>
+                <li><strong>1</strong><span>Risque de trop-perçu sur factures passées.</span></li>
+                <li><strong>2</strong><span>Potentiel d'optimisation contractuelle future.</span></li>
+                <li><strong>3</strong><span>Signal CEE à vérifier si des travaux sont prévus.</span></li>
               </ul>
             </div>
           </div>
-          <form class="audit-form" data-audit-form novalidate>
-            <div class="form-status" data-form-status role="status" aria-live="polite"></div>
-            <picture class="upload-visual full-field" data-scroll-image data-motion-depth="16" data-motion-rotate="2.2">
-              <source media="(max-width: 639px)" srcset="public/assets/generated-v3/A15-contact-upload-mobile.png" />
-              <source media="(max-width: 639px)" srcset="public/assets/generated-v3/A15-contact-upload-mobile.png" />
-              <source srcset="public/assets/generated-v3/A15-contact-upload-desktop.png" />
-              <source srcset="public/assets/generated-v3/A15-contact-upload-desktop.png" />
-              <img src="public/assets/generated-v3/A15-contact-upload-desktop.png" width="1200" height="1000" alt="Envoi sécurisé d'une facture récente vers l'analyse SaveWatt." loading="lazy" />
-            </picture>
-            <label>Nom et prénom<input name="name" autocomplete="name" required /></label>
-            <label>Organisation<input name="organization" autocomplete="organization" required /></label>
-            <label>Fonction<input name="role" autocomplete="organization-title" /></label>
-            <label>E-mail professionnel<input name="email" type="email" autocomplete="email" required /></label>
-            <label>Téléphone<input name="phone" type="tel" autocomplete="tel" /></label>
-            <label>Ville / code postal<input name="city" autocomplete="postal-code" /></label>
-            <label>Type d'organisation<select name="organizationType" required><option value="">Sélectionner</option><option>Collectivité / commune</option><option>EPCI / établissement public</option><option>Entreprise multi-sites</option><option>Industrie / logistique</option><option>Hôtellerie / résidence</option><option>Copropriété / syndic</option><option>Autre</option></select></label>
-            <label>Nombre de sites<input name="sites" inputmode="numeric" /></label>
-            <label>Dépense énergétique mensuelle estimée<input name="spend" inputmode="numeric" placeholder="Ex. 1 500 €" /></label>
-            <label class="full-field">Message<textarea name="message" rows="4"></textarea></label>
-            <label class="upload-field full-field">Ajouter une facture récente (facultatif)<input name="invoice" type="file" accept=".pdf,.png,.jpg,.jpeg" data-file-input /><span data-file-note>PDF ou image, 10 Mo maximum.</span></label>
-            <p class="form-note full-field">Vous pouvez commencer sans joindre de document. Une facture récente pourra être transmise ensuite.</p>
-            <label class="consent full-field"><input name="consent" type="checkbox" required /> <span>J'accepte que ces informations soient utilisées pour traiter ma demande et me recontacter.</span></label>
-            <button class="button full-field" type="submit">Demander mon audit gratuit</button>
-            <p class="privacy full-field">Les informations transmises sont utilisées pour traiter votre demande et vous recontacter. Consultez notre <a href="/politique-de-confidentialite">politique de confidentialité</a> pour connaître vos droits et les modalités de traitement.</p>
+
+          <form class="audit-tool" data-audit-tool novalidate>
+            <div class="tool-intro">
+              <span>Pré-diagnostic instantané</span>
+              <strong>Aucune facture nécessaire pour commencer.</strong>
+            </div>
+
+            <div class="tool-fields">
+              <label>Type d'organisation
+                <select name="sector" required>
+                  <option value="">Sélectionner</option>
+                  <option value="collectivite">Collectivité / commune / EPCI</option>
+                  <option value="multisite">Entreprise multi-sites</option>
+                  <option value="industrie">Industrie / logistique</option>
+                  <option value="hotel">Hôtellerie / résidence</option>
+                  <option value="copro">Copropriété / syndic</option>
+                  <option value="tertiaire">Tertiaire / bureaux</option>
+                  <option value="autre">Autre</option>
+                </select>
+              </label>
+
+              <label>Dépense énergie annuelle estimée
+                <input name="annualSpend" inputmode="numeric" placeholder="Ex. 300000" required />
+              </label>
+
+              <label>Nombre de sites
+                <input name="sites" inputmode="numeric" placeholder="Ex. 4" />
+              </label>
+
+              <label>Historique de factures disponible
+                <select name="history">
+                  <option value="12">12 mois</option>
+                  <option value="24">24 mois</option>
+                  <option value="36">36 mois</option>
+                  <option value="60">48 à 60 mois</option>
+                </select>
+              </label>
+
+              <label>Âge du contrat principal
+                <select name="contractAge">
+                  <option value="0">Moins de 12 mois</option>
+                  <option value="12">12 à 24 mois</option>
+                  <option value="24">24 à 36 mois</option>
+                  <option value="36">Plus de 36 mois</option>
+                </select>
+              </label>
+            </div>
+
+            <fieldset class="tool-checks">
+              <legend>Signaux observés</legend>
+              <label><input type="checkbox" name="signals" value="regularisation" /> Régularisations ou factures estimées fréquentes</label>
+              <label><input type="checkbox" name="signals" value="power" /> Puissance souscrite jamais revue</label>
+              <label><input type="checkbox" name="signals" value="tax" /> Taxes, TURPE ou lignes réseau difficiles à contrôler</label>
+              <label><input type="checkbox" name="signals" value="multisite" /> Écarts visibles entre plusieurs sites</label>
+              <label><input type="checkbox" name="signals" value="works" /> Travaux énergie prévus ou récents</label>
+            </fieldset>
+
+            <button class="button full-field" type="submit">Calculer mon potentiel</button>
+            <p class="tool-note">Résultat indicatif, non contractuel. Un audit complet nécessite les factures, contrats, PDL/PRM/PCE et mandat client.</p>
+
+            <section class="tool-result" data-tool-result hidden aria-live="polite">
+              <div class="result-score">
+                <span data-score-value>0</span>
+                <small>score d'opportunité</small>
+              </div>
+              <div class="result-copy">
+                <h3 data-result-title>Potentiel à qualifier</h3>
+                <p data-result-summary></p>
+              </div>
+              <div class="result-ranges">
+                <article><span>Récupération passée</span><strong data-recovery-range>—</strong></article>
+                <article><span>Économie annuelle future</span><strong data-savings-range>—</strong></article>
+                <article><span>CEE</span><strong data-cee-status>—</strong></article>
+              </div>
+              <div class="result-next">
+                <h4>Pièces à réunir pour confirmer</h4>
+                <ul data-next-docs></ul>
+              </div>
+              <div class="result-gate">
+                <label>Recevoir la checklist complète par email
+                  <input type="email" name="toolEmail" placeholder="vous@entreprise.fr" />
+                </label>
+                <a class="button button-secondary" data-mailto-report href="mailto:contact@savewatt.fr">Préparer ma demande</a>
+              </div>
+            </section>
           </form>
         </div>
       </section>

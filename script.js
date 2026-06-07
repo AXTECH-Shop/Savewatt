@@ -8,8 +8,11 @@ const form = document.querySelector('[data-audit-form]');
 const statusBox = document.querySelector('[data-form-status]');
 const fileInput = document.querySelector('[data-file-input]');
 const fileNote = document.querySelector('[data-file-note]');
+const auditTool = document.querySelector('[data-audit-tool]');
+const toolResult = document.querySelector('[data-tool-result]');
 const motionImages = Array.from(document.querySelectorAll('[data-scroll-image]'));
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let lastToolReport = null;
 
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 const savedTheme = localStorage.getItem('savewatt-theme');
@@ -176,3 +179,147 @@ form?.addEventListener('submit', async (event) => {
     statusBox.textContent = "La demande est prête, mais l'envoi n'est pas activé : le connecteur de soumission doit être configuré avant la mise en production.";
   }
 });
+
+function parseMoney(value) {
+  const cleaned = String(value || '').replace(/[^0-9,.-]/g, '').replace(',', '.');
+  return Number(cleaned) || 0;
+}
+
+function formatEuros(value) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.max(0, value));
+}
+
+function scoreSpend(spend) {
+  if (spend >= 1000000) return 30;
+  if (spend >= 500000) return 26;
+  if (spend >= 150000) return 22;
+  if (spend >= 50000) return 15;
+  return 8;
+}
+
+function scoreSector(sector) {
+  return {
+    collectivite: 12,
+    multisite: 14,
+    industrie: 14,
+    hotel: 10,
+    copro: 8,
+    tertiaire: 8,
+    autre: 5,
+  }[sector] || 0;
+}
+
+function getBand(score) {
+  if (score >= 72) return 'high';
+  if (score >= 45) return 'medium';
+  return 'low';
+}
+
+function setText(selector, value) {
+  const element = document.querySelector(selector);
+  if (element) element.textContent = value;
+}
+
+function updateReportMailto() {
+  if (!auditTool || !lastToolReport) return;
+  const email = auditTool.querySelector('[name="toolEmail"]')?.value || '';
+  const mailto = document.querySelector('[data-mailto-report]');
+  const subject = encodeURIComponent(`Pré-diagnostic SaveWatt - score ${lastToolReport.score}`);
+  const body = encodeURIComponent(`Bonjour SaveWatt,\n\nJe souhaite recevoir la checklist complète et qualifier ce pré-diagnostic.\n\nScore: ${lastToolReport.score}/100\nRécupération indicative: ${lastToolReport.recoveryRange}\nÉconomie annuelle indicative: ${lastToolReport.savingsRange}\nCEE: ${lastToolReport.ceeStatus}\nEmail: ${email}\n\nMerci.`);
+  mailto?.setAttribute('href', `mailto:contact@savewatt.fr?subject=${subject}&body=${body}`);
+}
+
+auditTool?.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const data = new FormData(auditTool);
+  const sector = data.get('sector');
+  const annualSpend = parseMoney(data.get('annualSpend'));
+  const sites = Number(data.get('sites')) || 1;
+  const history = Number(data.get('history')) || 12;
+  const contractAge = Number(data.get('contractAge')) || 0;
+  const signals = data.getAll('signals');
+  const requiredFields = auditTool.querySelectorAll('[required]');
+  let hasErrors = false;
+
+  requiredFields.forEach((field) => {
+    const valid = field.checkValidity();
+    field.toggleAttribute('aria-invalid', !valid);
+    hasErrors = hasErrors || !valid;
+  });
+
+  if (hasErrors || annualSpend <= 0) {
+    const spendInput = auditTool.querySelector('[name="annualSpend"]');
+    spendInput?.toggleAttribute('aria-invalid', annualSpend <= 0);
+    spendInput?.focus();
+    return;
+  }
+
+  let score = scoreSpend(annualSpend) + scoreSector(sector);
+  score += sites >= 10 ? 20 : sites >= 5 ? 16 : sites >= 2 ? 10 : 3;
+  score += history >= 60 ? 12 : history >= 36 ? 10 : history >= 24 ? 8 : 4;
+  score += contractAge >= 36 ? 14 : contractAge >= 24 ? 10 : contractAge >= 12 ? 5 : 2;
+  score += Math.min(signals.length * 7, 30);
+  score = Math.min(100, Math.round(score));
+
+  const band = getBand(score);
+  const recoveryRates = {
+    low: [0.002, 0.01],
+    medium: [0.005, 0.025],
+    high: [0.01, 0.04],
+  }[band];
+  const savingsRates = {
+    low: [0.01, 0.03],
+    medium: [0.02, 0.06],
+    high: [0.03, 0.09],
+  }[band];
+
+  const recoveryRange = `${formatEuros(annualSpend * recoveryRates[0])} à ${formatEuros(annualSpend * recoveryRates[1])}`;
+  const savingsRange = `${formatEuros(annualSpend * savingsRates[0])} à ${formatEuros(annualSpend * savingsRates[1])} / an`;
+  const hasCeeSignal = signals.includes('works') || ['collectivite', 'industrie', 'hotel', 'tertiaire'].includes(String(sector));
+  const ceeStatus = hasCeeSignal ? 'À vérifier' : 'Secondaire';
+
+  const titles = {
+    low: 'Potentiel modéré, à filtrer rapidement',
+    medium: 'Potentiel réel à qualifier sur factures',
+    high: 'Potentiel prioritaire pour audit complet',
+  };
+  const summaries = {
+    low: 'Le profil ne montre pas encore un signal fort, mais une facture récente peut suffire à écarter ou confirmer une anomalie visible.',
+    medium: 'Le niveau de dépense, l’historique ou les signaux déclarés justifient une vérification structurée des factures et contrats.',
+    high: 'Le profil combine plusieurs facteurs favorables : dépenses importantes, complexité opérationnelle et signaux de récupération ou d’optimisation.',
+  };
+  const docs = [
+    'Une facture électricité récente et une facture gaz si applicable',
+    'Contrat fournisseur ou offre tarifaire actuelle',
+    'PDL/PRM pour électricité, PCE pour gaz',
+    history >= 24 ? 'Historique 24 à 60 mois de factures' : 'Au moins 12 mois de factures pour confirmer les tendances',
+    sites > 1 ? 'Liste des sites avec adresses et fournisseurs' : 'Adresse du site audité',
+    signals.includes('works') ? 'Description des travaux envisagés pour vérifier les leviers CEE' : 'Mandat autorisant SaveWatt à contacter le fournisseur si une anomalie est confirmée',
+  ];
+
+  setText('[data-score-value]', String(score));
+  setText('[data-result-title]', titles[band]);
+  setText('[data-result-summary]', summaries[band]);
+  setText('[data-recovery-range]', recoveryRange);
+  setText('[data-savings-range]', savingsRange);
+  setText('[data-cee-status]', ceeStatus);
+
+  const docsList = document.querySelector('[data-next-docs]');
+  if (docsList) {
+    docsList.innerHTML = '';
+    docs.forEach((doc) => {
+      const item = document.createElement('li');
+      item.textContent = doc;
+      docsList.appendChild(item);
+    });
+  }
+
+  lastToolReport = { score, recoveryRange, savingsRange, ceeStatus };
+  updateReportMailto();
+
+  toolResult.hidden = false;
+  toolResult.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'nearest' });
+});
+
+auditTool?.querySelector('[name="toolEmail"]')?.addEventListener('input', updateReportMailto);
