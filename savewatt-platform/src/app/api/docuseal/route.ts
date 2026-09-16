@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { DocuSealSubmissionRepository } from "@/lib/signing/docuseal-submission-repository";
+import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
 
 /**
  * Creates a DocuSeal signing submission for a proposal.
- * If DocuSeal env vars are absent, returns a mock link so the demo flow still works.
+ * Mock submissions are only available when the explicit demo mode is enabled.
  *
  * Env:
  *   DOCUSEAL_BASE_URL   e.g. https://api.docuseal.com  (or your self-hosted URL)
@@ -13,10 +13,17 @@ import { DocuSealSubmissionRepository } from "@/lib/signing/docuseal-submission-
  *   DOCUSEAL_SIGN_URL   optional public base for signer links (default https://docuseal.com)
  */
 export async function POST(req: Request) {
-  const { userId, orgId } = await auth();
   const demoMode = process.env.NEXT_PUBLIC_SAVEWATT_DEMO_MODE === "true";
-  if (!userId && !demoMode) {
-    return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+  let actor = null;
+  if (!demoMode) {
+    try {
+      actor = await resolveServerActor();
+    } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        return NextResponse.json({ error: error.code }, { status: 403 });
+      }
+      throw error;
+    }
   }
 
   const body = await req.json().catch(() => ({}));
@@ -33,8 +40,10 @@ export async function POST(req: Request) {
   const templateId = process.env.DOCUSEAL_TEMPLATE_ID;
   const signBase = process.env.DOCUSEAL_SIGN_URL ?? "https://docuseal.com";
 
-  // Mock mode — no DocuSeal configured.
   if (!base || !token || !templateId) {
+    if (!demoMode) {
+      return NextResponse.json({ error: "DOCUSEAL_NOT_CONFIGURED" }, { status: 503 });
+    }
     if (
       !requestedEmail ||
       !/^\S+@\S+\.\S+$/.test(requestedEmail) ||
@@ -49,11 +58,15 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!userId || !orgId) {
+  if (!actor) {
     return NextResponse.json({ error: "UNAUTHENTICATED_OR_NO_ORGANIZATION" }, { status: 401 });
   }
   const repository = new DocuSealSubmissionRepository();
-  const signingContext = await repository.getSigningContext(dossierId, userId, orgId);
+  const signingContext = await repository.getSigningContext(
+    dossierId,
+    actor.userId,
+    actor.orgId,
+  );
   if (!signingContext) {
     return NextResponse.json({ error: "DOSSIER_NOT_FOUND_OR_FORBIDDEN" }, { status: 404 });
   }
@@ -81,7 +94,7 @@ export async function POST(req: Request) {
             name: signingContext.signerName,
             external_id: dossierId,
             require_email_2fa: true,
-            metadata: { dossierId, initiatedBy: userId ?? "demo" },
+            metadata: { dossierId, initiatedBy: actor.userId },
           },
         ],
       }),

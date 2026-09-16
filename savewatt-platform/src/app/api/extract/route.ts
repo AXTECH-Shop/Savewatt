@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { extractBill } from "@/lib/extraction/gemini";
+import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
 
 // google-auth-library (ADC) requires Node, not the edge runtime.
 export const runtime = "nodejs";
@@ -10,9 +10,13 @@ const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const ALLOWED = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+  try {
+    await resolveServerActor();
+  } catch (error) {
+    if (error instanceof WorkspaceAccessError) {
+      return NextResponse.json({ error: error.code }, { status: 403 });
+    }
+    throw error;
   }
 
   const form = await request.formData();

@@ -14,3 +14,7 @@
 - Added Giftogram order issuance with Clerk-derived recipients, D1 credit reservations, idempotent provider orders, failure rollbacks, and signed webhook intake.
 - Hardened DocuSeal webhooks with timestamped HMAC verification and authoritative D1 signature updates.
 - Added a guarded DocuSeal PDF-template uploader that refuses to run until the source is explicitly confirmed sanitized.
+- Added segmented customer and partner self-registration with a D1-backed pending-access queue.
+- Removed the unsafe default apporteur role: dashboard access now requires an active D1 membership.
+- Added a mandatory D1 email whitelist for internal SaveWatt operator and finance accounts.
+- Configured the Cloudflare Worker custom domain at `app.savewatt.fr`.

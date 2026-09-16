@@ -1,9 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
 import {
-  isAppRole,
   scopeForRole,
   type AppRole,
   type WorkspaceActor,
@@ -35,45 +33,28 @@ const WorkspaceContext = createContext<WorkspaceContextValue>({
   setPreviewRole: () => undefined,
 });
 
-interface ClerkMetadata {
-  savewattRole?: unknown;
-  orgPath?: unknown;
-  orgName?: unknown;
-}
-
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser();
-  const metadata = (user?.publicMetadata ?? {}) as ClerkMetadata;
-  const identityRole = isAppRole(metadata.savewattRole)
-    ? metadata.savewattRole
-    : demoMode
-      ? "SUPER_ADMIN"
-      : "APPORTEUR";
+export function WorkspaceProvider({
+  actor: authenticatedActor,
+  children,
+}: {
+  actor: WorkspaceActor;
+  children: React.ReactNode;
+}) {
+  const identityRole = authenticatedActor.role;
   const [previewRole, setPreviewRoleState] = useState<AppRole | null>(null);
 
   const canPreviewRoles = demoMode || identityRole === "SUPER_ADMIN";
 
   const actor = useMemo<WorkspaceActor>(() => {
     const role = canPreviewRoles ? (previewRole ?? identityRole) : identityRole;
-    const orgName =
-      typeof metadata.orgName === "string"
-        ? metadata.orgName
-        : fallbackActor.orgName;
-    const orgPath =
-      typeof metadata.orgPath === "string" ? metadata.orgPath : fallbackActor.orgPath;
 
     return {
-      userId: user?.id ?? fallbackActor.userId,
-      displayName: user?.fullName ?? fallbackActor.displayName,
-      email: user?.primaryEmailAddress?.emailAddress ?? fallbackActor.email,
+      ...authenticatedActor,
       role,
-      orgId: fallbackActor.orgId,
-      orgName,
-      orgPath,
       scope: scopeForRole(role),
-      isPreview: !isLoaded || !user || role !== identityRole,
+      isPreview: authenticatedActor.isPreview || role !== identityRole,
     };
-  }, [canPreviewRoles, identityRole, isLoaded, metadata.orgName, metadata.orgPath, previewRole, user]);
+  }, [authenticatedActor, canPreviewRoles, identityRole, previewRole]);
 
   function setPreviewRole(role: AppRole) {
     if (!canPreviewRoles) return;
