@@ -152,8 +152,6 @@ h3 { font-size: 1.23rem; line-height: 1.25; }
 .supplier-mark { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px 36px; }
 .supplier-mark p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .supplier-mark picture { width: 170px; }
-.inline-art { display: inline-block; width: clamp(74px, 8vw, 118px); height: 0.7em; margin: 0 0.08em; border: 1px solid var(--image-line); border-radius: 999px; background-color: var(--image-canvas); background-position: center; background-repeat: no-repeat; background-size: 150%; vertical-align: 0.02em; box-shadow: var(--shadow-soft); }
-.inline-art-comparison { background-image: url("public/assets/generated-v4/A17-customer-comparison-desktop.webp"); }
 
 .identity-strip { padding-block: 34px; background: var(--deep-surface); color: var(--on-dark); }
 .identity-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 30px; }
