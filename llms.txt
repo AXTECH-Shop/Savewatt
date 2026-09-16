@@ -36,7 +36,7 @@
 
 ## Données et sécurité
 
-- Les formulaires publics préparent un brouillon dans la messagerie de l’utilisateur et ne simulent pas un envoi réussi.
+- Le formulaire de contact adapte ses champs au profil entreprise ou partenaire et prépare un brouillon dans la messagerie de l’utilisateur.
 - Aucune facture ou pièce sensible n’est collectée sur le site public.
 - Les documents sont destinés au parcours authentifié de la plateforme.
 - L’accès à la plateforme est prévu à l’adresse https://www.savewatt.fr/connexion.

@@ -88,7 +88,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 window.addEventListener('resize', () => {
-  if (window.innerWidth >= 920) closeMenu();
+  if (window.innerWidth > 1120) closeMenu();
 });
 
 window.addEventListener('scroll', () => {
@@ -193,6 +193,7 @@ function setFieldValidity(field, isValid) {
 function formValues(form) {
   const data = new FormData(form);
   const labels = {
+    profil: 'Profil',
     contact: 'Nom et prénom',
     organisation: 'Organisation',
     email: 'E-mail professionnel',
@@ -209,7 +210,7 @@ function formValues(form) {
   };
   return Array.from(form.elements)
     .filter((field) => field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)
-    .filter((field) => field.name && field.type !== 'submit')
+    .filter((field) => field.name && field.type !== 'submit' && !field.matches(':disabled'))
     .map((field) => {
       const labelText = labels[field.name] || field.name;
       const value = field.type === 'checkbox' ? (field.checked ? 'Oui' : 'Non') : String(data.get(field.name) || '').trim();
@@ -219,6 +220,52 @@ function formValues(form) {
 
 document.querySelectorAll('[data-lead-form]').forEach((form) => {
   const status = form.querySelector('[data-form-status]');
+  const audienceSelect = form.querySelector('[data-audience-select]');
+  const title = form.querySelector('[data-form-title]');
+  const description = form.querySelector('[data-form-description]');
+  const submit = form.querySelector('[data-form-submit]');
+  if (submit) submit.disabled = false;
+
+  function selectAudience(type) {
+    const isPartner = type === 'partenaire';
+    const audience = isPartner ? 'partenaire' : 'comparatif';
+    form.dataset.leadType = audience;
+    if (audienceSelect) audienceSelect.value = audience;
+    form.querySelectorAll('[data-audience-fields]').forEach((fieldset) => {
+      const active = fieldset.dataset.audienceFields === audience;
+      fieldset.hidden = !active;
+      fieldset.disabled = !active;
+    });
+    if (title) title.textContent = isPartner ? 'Découvrir l’espace partenaire' : 'Recevoir mon comparatif gratuit';
+    if (description) description.textContent = isPartner
+      ? 'Présentez-nous votre activité pour organiser une démonstration adaptée à votre réseau.'
+      : 'Présentez-nous votre entreprise pour préparer votre étude.';
+    if (submit) submit.textContent = isPartner ? 'Préparer ma demande de démo' : 'Préparer ma demande de comparatif';
+    if (status) status.textContent = '';
+    form.querySelectorAll('[aria-invalid]').forEach((field) => field.removeAttribute('aria-invalid'));
+  }
+
+  function audienceFromHash(hash) {
+    if (hash === '#devenir-partenaire') return 'partenaire';
+    if (hash === '#comparatif' || hash === '#demande-comparatif') return 'comparatif';
+    return null;
+  }
+
+  if (audienceSelect) {
+    audienceSelect.disabled = false;
+    selectAudience(audienceFromHash(window.location.hash) || audienceSelect.value);
+    audienceSelect.addEventListener('change', () => selectAudience(audienceSelect.value));
+    window.addEventListener('hashchange', () => {
+      const audience = audienceFromHash(window.location.hash);
+      if (audience) selectAudience(audience);
+    });
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener('click', () => {
+        const audience = audienceFromHash(link.getAttribute('href'));
+        if (audience) selectAudience(audience);
+      });
+    });
+  }
 
   form.addEventListener('input', (event) => {
     const field = event.target;
@@ -229,7 +276,7 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const fields = Array.from(form.querySelectorAll('input, select, textarea'));
+    const fields = Array.from(form.querySelectorAll('input, select, textarea')).filter((field) => !field.matches(':disabled'));
     fields.forEach((field) => setFieldValidity(field, field.checkValidity()));
     const firstInvalid = fields.find((field) => !field.checkValidity());
 
