@@ -95,7 +95,9 @@ export default async function SignInPage({
           ? "Accès réservé aux comptes internes autorisés par SaveWatt."
           : "Accédez uniquement aux dossiers rattachés à votre organisation."}
       </p>
-      <div className="mt-7 overflow-hidden rounded-2xl border border-line bg-surface shadow-diffuse">
+      <div
+        className={`mt-7 overflow-hidden rounded-2xl border border-line bg-surface shadow-diffuse ${isAdmin ? "admin-clerk" : ""}`}
+      >
         <SignIn
           routing="path"
           path={`/${locale}/sign-in`}
@@ -112,7 +114,6 @@ export default async function SignInPage({
               socialButtonsBlockButton: "border-line-strong",
               formButtonPrimary: "bg-accent hover:bg-accent-hover text-white",
               footerActionLink: "text-accent hover:text-accent-hover",
-              footerAction: isAdmin ? "hidden" : undefined,
             },
           }}
         />
