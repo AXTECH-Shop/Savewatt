@@ -1,63 +1,93 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
+import { ProviderEventRepository } from "@/lib/integrations/provider-event-repository";
+import { WebhookSignatureVerifier } from "@/lib/integrations/webhook-signature";
+import { DocuSealSubmissionRepository } from "@/lib/signing/docuseal-submission-repository";
 
 export const runtime = "nodejs";
 
-function safeTokenMatch(received: string, expected: string): boolean {
-  const left = Buffer.from(received);
-  const right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
+interface DocuSealWebhook {
+  event_type?: string;
+  timestamp?: string;
+  data?: {
+    id?: number | string;
+    external_id?: string;
+    submission?: { id?: number | string };
+  };
 }
 
 export async function POST(request: Request) {
-  const expectedToken = process.env.DOCUSEAL_WEBHOOK_TOKEN;
-  const receivedToken = new URL(request.url).searchParams.get("token") ?? "";
-  if (!expectedToken || !safeTokenMatch(receivedToken, expectedToken)) {
-    return NextResponse.json({ error: "UNAUTHORIZED_WEBHOOK" }, { status: 401 });
+  const secret = process.env.DOCUSEAL_WEBHOOK_SECRET;
+  const signature = request.headers.get("x-docuseal-signature") ?? "";
+  if (!secret) {
+    return NextResponse.json({ error: "WEBHOOK_NOT_CONFIGURED" }, { status: 503 });
   }
 
-  const raw = await request.text();
-  if (raw.length > 1_000_000) {
+  const rawPayload = await request.text();
+  if (rawPayload.length > 1_000_000) {
     return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
   }
+  if (!WebhookSignatureVerifier.verifyDocuSeal(rawPayload, signature, secret)) {
+    return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 401 });
+  }
 
-  let payload: unknown;
+  let payload: DocuSealWebhook;
   try {
-    payload = JSON.parse(raw);
+    payload = JSON.parse(rawPayload) as DocuSealWebhook;
   } catch {
     return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
   }
 
-  const event = payload as { event_type?: string; data?: { external_id?: string } };
-  if (!event.event_type || !event.data) {
+  const eventType = payload.event_type;
+  const submitterId = payload.data?.id;
+  const submissionId = payload.data?.submission?.id;
+  const dossierId = payload.data?.external_id;
+  if (!eventType || !payload.data) {
     return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
   }
 
-  if (event.event_type !== "form.completed" && event.event_type !== "form.declined") {
+  const payloadHash = createHash("sha256").update(rawPayload).digest("hex");
+  const providerEventKey = `${eventType}:${payload.timestamp ?? "unknown"}:${submitterId ?? payloadHash}`;
+  const events = new ProviderEventRepository();
+  await events.record({
+    provider: "DOCUSEAL",
+    providerEventKey,
+    eventType,
+    rawPayload,
+  });
+
+  if (eventType !== "form.completed" && eventType !== "form.declined") {
+    await events.markProcessed("DOCUSEAL", providerEventKey);
     return new NextResponse(null, { status: 204 });
   }
 
-  const completionUrl = process.env.DOCUSEAL_COMPLETION_URL;
-  const completionToken = process.env.DOCUSEAL_COMPLETION_TOKEN;
-  if (!completionUrl || !completionToken) {
-    return NextResponse.json(
-      { error: "PERSISTENCE_NOT_CONFIGURED", retryable: true },
-      { status: 503 },
-    );
+  if (!dossierId || submitterId == null || submissionId == null) {
+    await events.markFailed("DOCUSEAL", providerEventKey, "MISSING_DOSSIER_OR_PROVIDER_ID");
+    return NextResponse.json({ error: "INVALID_SIGNING_EVENT" }, { status: 400 });
   }
 
-  const response = await fetch(completionUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${completionToken}`,
-    },
-    body: raw,
-  });
-
-  if (!response.ok) {
-    return NextResponse.json({ error: "PERSISTENCE_FAILED", retryable: true }, { status: 502 });
+  try {
+    const signatures = new DocuSealSubmissionRepository();
+    if (eventType === "form.completed") {
+      const updated = await signatures.markCompleted(
+        dossierId,
+        String(submissionId),
+        String(submitterId),
+      );
+      if (!updated) throw new Error("SIGNATURE_SUBMISSION_NOT_FOUND");
+    } else {
+      const updated = await signatures.markDeclined(
+        dossierId,
+        String(submissionId),
+        String(submitterId),
+      );
+      if (!updated) throw new Error("SIGNATURE_SUBMISSION_NOT_FOUND");
+    }
+    await events.markProcessed("DOCUSEAL", providerEventKey);
+    return NextResponse.json({ accepted: true, dossierId });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "DOCUSEAL_PERSISTENCE_FAILED";
+    await events.markFailed("DOCUSEAL", providerEventKey, message);
+    return NextResponse.json({ error: message, retryable: true }, { status: 503 });
   }
-
-  return NextResponse.json({ accepted: true, dossierId: event.data.external_id ?? null });
 }

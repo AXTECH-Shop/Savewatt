@@ -15,7 +15,17 @@ Clerk supplies identity. `publicMetadata.savewattRole`, `orgPath`, and `orgName`
 
 ## Data and integrations
 
-Browser `localStorage` is a transparent demo adapter, not the production repository. The durable target is R2 for documents and either D1 or Postgres via Hyperdrive for transactional data. Gemini extraction uses ADC. DocuSeal client events are UI hints only; verified provider webhooks must drive the signed state and archive signed PDFs/audit trails through the durable completion worker.
+Browser `localStorage` is a transparent demo adapter, not the production repository. Cloudflare D1 is the selected transactional store; materialized paths plus repository predicates enforce tenant scope because D1 has no PostgreSQL-style RLS. R2 remains the document target. Gemini extraction uses ADC. DocuSeal browser events are UI hints only; HMAC-verified provider webhooks drive D1 signature state. Giftogram orders reserve wallet credits before provider calls and use `external_id` for idempotency.
+
+## Cloudflare deployment
+
+OpenNext adapts the existing Next.js application to Workers. `wrangler.jsonc` declares the `DB` D1 binding and `migrations/` is the only schema source. Integration secrets are Worker secrets or ignored local environment values; they are never public variables. `getCloudflareContext()` is isolated behind `DatabaseManager` so provider repositories remain server-only.
+
+## Integration boundaries
+
+- DocuSeal: private template, per-signer submission, email 2FA, HMAC-verified webhooks, durable provider IDs rather than expiring document URLs.
+- Giftogram: authenticated server-only client, campaign configured outside the browser, D1 wallet reservation, provider idempotency key, HMAC-verified webhook inbox.
+- Symphonics: manual supplier offer remains the current source; no supplier API is assumed.
 
 ## Financial invariants
 

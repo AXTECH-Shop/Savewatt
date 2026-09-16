@@ -6,8 +6,8 @@ import { auth } from "@clerk/nextjs/server";
  *
  * Clerk `orgId` maps 1:1 to a future `organizations.id` (the régie/branch node in
  * the ltree hierarchy); Clerk `orgRole` maps to the RBAC role in specs/rights-matrix.md.
- * Until the DB lands (D1 vs Postgres — see STATUS), this is the single place that
- * resolves "who is acting, in which régie" so callers never read Clerk directly.
+ * This is the single bridge that resolves "who is acting, in which régie" before
+ * tenant-scoped D1 repositories run, so callers never read Clerk directly.
  */
 export interface AuthContext {
   userId: string;

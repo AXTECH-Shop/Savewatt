@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { DocuSealSubmissionRepository } from "@/lib/signing/docuseal-submission-repository";
 
 /**
  * Creates a DocuSeal signing submission for a proposal.
@@ -12,18 +13,18 @@ import { auth } from "@clerk/nextjs/server";
  *   DOCUSEAL_SIGN_URL   optional public base for signer links (default https://docuseal.com)
  */
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   const demoMode = process.env.NEXT_PUBLIC_SAVEWATT_DEMO_MODE === "true";
   if (!userId && !demoMode) {
     return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
-  const email: string | undefined = body?.email;
-  const clientName: string | undefined = body?.clientName;
+  const requestedEmail: string | undefined = body?.email;
+  const requestedClientName: string | undefined = body?.clientName;
   const dossierId: string | undefined = body?.dossierId;
 
-  if (!email || !/^\S+@\S+\.\S+$/.test(email) || !clientName || !dossierId) {
+  if (!dossierId) {
     return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
   }
 
@@ -34,10 +35,35 @@ export async function POST(req: Request) {
 
   // Mock mode — no DocuSeal configured.
   if (!base || !token || !templateId) {
+    if (
+      !requestedEmail ||
+      !/^\S+@\S+\.\S+$/.test(requestedEmail) ||
+      !requestedClientName
+    ) {
+      return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
+    }
     return NextResponse.json({
       provider: "mock",
       submissionId: `mock_${Date.now()}`,
-      url: `${signBase}/s/demo-${encodeURIComponent(clientName ?? "client")}`,
+      url: `${signBase}/s/demo-${encodeURIComponent(requestedClientName)}`,
+    });
+  }
+
+  if (!userId || !orgId) {
+    return NextResponse.json({ error: "UNAUTHENTICATED_OR_NO_ORGANIZATION" }, { status: 401 });
+  }
+  const repository = new DocuSealSubmissionRepository();
+  const signingContext = await repository.getSigningContext(dossierId, userId, orgId);
+  if (!signingContext) {
+    return NextResponse.json({ error: "DOSSIER_NOT_FOUND_OR_FORBIDDEN" }, { status: 404 });
+  }
+  const existing = await repository.findActive(dossierId);
+  if (existing) {
+    return NextResponse.json({
+      provider: "docuseal",
+      submissionId: existing.providerSubmissionId,
+      url: `${signBase}/s/${existing.providerSubmitterSlug}`,
+      status: existing.status,
     });
   }
 
@@ -51,8 +77,8 @@ export async function POST(req: Request) {
         submitters: [
           {
             role: "Client",
-            email,
-            name: clientName,
+            email: signingContext.signerEmail,
+            name: signingContext.signerName,
             external_id: dossierId,
             require_email_2fa: true,
             metadata: { dossierId, initiatedBy: userId ?? "demo" },
@@ -62,9 +88,8 @@ export async function POST(req: Request) {
     });
 
     if (!res.ok) {
-      const detail = await res.text();
       return NextResponse.json(
-        { provider: "docuseal", error: "docuseal_error", detail },
+        { provider: "docuseal", error: "docuseal_error" },
         { status: 502 },
       );
     }
@@ -72,16 +97,46 @@ export async function POST(req: Request) {
     const data = await res.json();
     const submitter = Array.isArray(data) ? data[0] : data?.submitters?.[0] ?? data;
     const slug = submitter?.slug;
-    const url = submitter?.embed_src ?? (slug ? `${signBase}/s/${slug}` : signBase);
+    if (typeof slug !== "string" || !slug) {
+      return NextResponse.json(
+        { provider: "docuseal", error: "docuseal_missing_submitter_slug" },
+        { status: 502 },
+      );
+    }
+    const url = submitter?.embed_src ?? `${signBase}/s/${slug}`;
+    const providerSubmissionId = String(
+      submitter?.submission_id ?? data?.id ?? submitter?.id ?? "",
+    );
+    const providerSubmitterId = submitter?.id ? String(submitter.id) : null;
+    if (!providerSubmissionId) {
+      return NextResponse.json(
+        { provider: "docuseal", error: "docuseal_invalid_response" },
+        { status: 502 },
+      );
+    }
+
+    const persisted = await repository.record({
+      dossierId,
+      providerSubmissionId,
+      providerSubmitterId,
+      providerSubmitterSlug: slug,
+      signerEmail: signingContext.signerEmail,
+    });
+    if (!persisted) {
+      return NextResponse.json(
+        { provider: "docuseal", error: "submission_persistence_failed" },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
       provider: "docuseal",
-      submissionId: String(submitter?.submission_id ?? submitter?.id ?? slug ?? Date.now()),
+      submissionId: providerSubmissionId,
       url,
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json(
-      { provider: "docuseal", error: "network_error", detail: String(e) },
+      { provider: "docuseal", error: "network_error" },
       { status: 502 },
     );
   }

@@ -11,9 +11,12 @@ The platform shell is now role-scoped and production-build clean:
 - The workflow, margin, commission, template, branding, and active-session settings screens exist with honest disabled states where persistence is not yet available.
 - Bill validation now has the specified split-view field editor and saves validated contract data into the current demo repository.
 - Manual supplier-offer intake supports per-cadran energy prices, CEE, capacity, subscription, duration, validity, volumes, and margin; CSV remains an intentionally disabled connector seam.
-- DocuSeal submission creation is authenticated, bound to the dossier with `external_id`, requires email 2FA, and embeds the per-signer form. Browser completion is only a pending UI signal; the token-authenticated webhook relays authoritative completion to a durable worker and returns a retryable error when that worker is not configured.
+- DocuSeal submission creation is authenticated, bound to the dossier with `external_id`, requires email 2FA, and embeds the per-signer form. Browser completion is only a pending UI signal; timestamped HMAC webhooks write authoritative completion to D1.
 - The commission engine enforces the locked 66% network pool, 50/50 AX TECH/master split, bounded cascade, caps/primes/clawbacks, and integer-cent accounting with automated tests.
 - The customer-facing offer includes the AX TECH legal footer and the public token portal never exposes buy price or margin.
+- Cloudflare D1 is selected and live in Western Europe. The initial schema covers the materialized organization tree, users, clients, sites, dossiers, documents, signatures, commissions, wallets, Giftogram redemptions, integration events, and audit events.
+- Giftogram is the selected gifting provider. The server-only connector uses campaign orders, provider `external_id` idempotency, atomic wallet reservations, failure rollbacks, and HMAC-verified webhook intake. Issuance remains disabled until sandbox credentials are supplied.
+- DocuSeal webhook verification now uses the provider’s timestamped HMAC signature and writes authoritative completion to D1. The supplied PDF was not uploaded because it is an already signed customer contract containing personal and commercial data; a clean master is required.
 
 Verified locally with Node 22: ESLint, Next.js production build, commission tests, production dependency audit, and browser checks of auth, mobile operator, dossier, extraction validation, supplier intake, settings, and customer portal.
 
@@ -24,7 +27,7 @@ A network of **régies / apporteurs** (business introducers) sells **Symphonics*
 electricity to business clients. The platform captures the client's current bill,
 compares it to a Symphonics proposal + margin, produces a **branded offer**, gets
 it **e-signed (DocuSeal)**, and tracks the **commission cascade** that pays the
-network — with earnings redeemable as **gift cards (GoGift)**.
+network — with earnings redeemable as **gift cards through Giftogram**.
 
 **Symphonics has no API yet.** For the first ~100 deals we build the offer
 **manually** from a Symphonics price sheet. The platform's job right now is to make
@@ -55,7 +58,7 @@ R2 (files) + Workers (API, OCR, PDF, webhooks). See _Architecture decisions_ bel
 | Alerts | Winter-band-missing, HC>HP, offer-expiring-<48h |
 | Proposal document | Client-facing, **final prices only** (no buy price / no margin), savings headline, print/PDF |
 | Signature | Signature route + status page + signed state; **mock mode** when unconfigured (to be repointed at DocuSeal) |
-| Persistence | Browser `localStorage` store (survives reload) |
+| Persistence | Browser demo store plus a live Cloudflare D1 schema and server repositories for integrations |
 | Acceptance fixture | JOSH §7.4 reproduces **€2,511/yr** (HPE €2,354 + HCE €7 + €150 standing charge) and all 3 alerts |
 
 ---
@@ -101,7 +104,7 @@ Ordered by dependency. Each row is a shippable unit.
 | E2 | **Org hierarchy / sub-accounts** | Materialized-path tree: OPERATOR → MASTER (régie) → SUB_REGIE (n levels) → TEAM → APPORTEUR. A régie can **add partners/sub-accounts under itself** (self-serve, within limits its parent sets). One master never sees another; a partner sees only its own branch. |
 | E3 | **Roles & scoping** | RBAC per `specs/rights-matrix.md`. Isolation is enforced in the query layer (+ RLS if we use Postgres — see Architecture). Impersonation (banner + reason + audit) for operator/master on their branch. |
 | E4 | **Commission engine (MLM payout)** | Locked math: Symphonics → network **66% of margin M** (Symphonics keeps 34%); first split **50% AX TECH / 50% master régie**; master's share **cascades** down sub-régie → team → apporteur via **configurable grids** (€/MWh, %, signing prime, cap, clawback). Earnings accrue as **credits/commission lines** per contract. |
-| E5 | **GoGift redemption** | Partner **credits** (earned commissions, once validated) are **redeemable as gift cards via the GoGift API**. Needs: GoGift account + API, a wallet/ledger per partner, redemption flow (choose card → deduct credits → issue), and reconciliation against commission lines. Payout policy (when credits vest, min threshold, tax handling) is an open question. |
+| E5 | **Giftogram redemption (BACKEND BUILT · CREDENTIALS PENDING)** | Authenticated redemption route, D1 wallet reservation, `external_id` idempotency, automatic credit release on provider failure, and HMAC webhook inbox are implemented. Remaining: sandbox API key, campaign ID, webhook client secret, and finalized vesting/tax policy. |
 
 ---
 
@@ -109,7 +112,7 @@ Ordered by dependency. Each row is a shippable unit.
 
 | # | Task | Spec |
 |---|---|---|
-| Q1 | Persistent DB (replace localStorage): Postgres+Drizzle **or** Cloudflare D1 — see Architecture decision | `specs/backend-specs.md`, `specs/rights-matrix.md` |
+| Q1 | Move remaining screen repositories from localStorage to the live Cloudflare D1 schema | `specs/backend-specs.md`, `specs/rights-matrix.md` |
 | Q2 | Full workflow engine, back-office validation queue, **échéancier** (renewal alerts J-180/90/30) | Lots 4 & 7 |
 | Q3 | Monthly close + reconciliation + **Factur-X** consolidated invoicing to Symphonics | Lot 6 |
 | Q4 | Symphonics **connector** upgrade (CSV import → real API when available) | Lot 5 |
@@ -123,7 +126,7 @@ Ordered by dependency. Each row is a shippable unit.
 | Layer | Proposal | Note / open question |
 |---|---|---|
 | Hosting | Next.js 16 on Cloudflare via **OpenNext (`@opennextjs/cloudflare`)** or Pages | Confirm OpenNext works with Next 16 App Router + next-intl. |
-| **Database** | **Option A — Cloudflare D1 (SQLite):** simplest, native, cheap. **Option B — Postgres (Neon/Supabase) via Hyperdrive:** keeps spec's `ltree` + **RLS** tenant isolation. | **Decision needed.** D1 = no RLS/ltree (isolation enforced in app + materialized-path). Postgres = spec-compliant isolation but external. For an internal-only first-100 tool, D1 may be enough; for the MLM/commission money-path, Postgres RLS is safer. |
+| **Database** | **Cloudflare D1 (DECIDED · CREATED · MIGRATED):** native SQLite with a materialized-path organization tree. | Tenant isolation must be enforced in every repository query because D1 has no PostgreSQL-style RLS. Financial mutations use integer cents, immutable ledgers, unique source keys, and provider idempotency. |
 | Files | **R2** for bill uploads, generated offers/contracts, signed docs | Signed-URL access; EU jurisdiction. |
 | Background / API | **Workers** (+ Queues/Cron) for OCR calls, PDF render, DocuSeal webhooks, monthly close | Long OCR/PDF jobs → Queues; Cron for échéancier + monthly close. |
 | PDF rendering | **Cloudflare Browser Rendering** (Puppeteer binding) | Plain Playwright won't run on Workers. |
@@ -133,19 +136,18 @@ Ordered by dependency. Each row is a shippable unit.
 
 ## ⚠️ Known limitations (demo today)
 
-- Data is per-browser (`localStorage`) — no DB, no sharing between devices/users yet.
+- Existing demo screens still read `localStorage`; the durable D1 schema exists, but those UI repositories have not all been migrated yet.
 - Uploaded PDFs recorded by name/size only (bytes not stored) — fixed by D3.
-- Signature is mock until DocuSeal is wired (B1).
+- Real DocuSeal code is wired, but production signing remains inactive until a sanitized template is uploaded and secrets are configured.
 - Brand is placeholder (generic lightning mark) until A1–A2.
 - Margin base fixed to electron+CEE+capacity default (OQ2 — confirm before billing).
 
 ## ❓ Open questions to unblock
 
-- **DB:** Cloudflare D1 (simple, no RLS) vs Postgres+Hyperdrive (spec RLS/ltree)? — see Architecture.
-- **DocuSeal:** cloud or self-hosted (EU)? Do you have a contract template?
+- **DocuSeal:** confirm EU Cloud vs self-hosted and provide the unsigned/blank Symphonics master. The current PDF is a completed contract and cannot safely become a reusable template.
 - **OCR:** ~~provider~~ decided = Gemini 3 Flash (ADC). Local dev needs `gcloud auth application-default login` (ADC ≠ `gcloud auth login`). Confirm exact `GEMINI_MODEL` id + EU region for the endpoint; which suppliers' bills first (EDF confirmed via JOSH).
 - **Auth:** ~~build vs buy~~ decided = Clerk. Remaining: how Clerk `userId`/`orgId` map to the in-app org tree + (if Postgres) RLS GUCs.
-- **GoGift:** account + API access? Credit vesting rules, minimum redemption, tax/1099-equivalent handling?
+- **Giftogram:** sandbox API key, API campaign ID, webhook client secret, credit vesting rules, minimum redemption, and tax treatment.
 - **Commission:** confirm downstream grid defaults per level (OQ3) and margin base (OQ2) before any real payout.
 - **Symphonics manual offer:** confirm the exact price-sheet format reps will receive (drives D1). See `docs/offer-workflow.md`.
 
