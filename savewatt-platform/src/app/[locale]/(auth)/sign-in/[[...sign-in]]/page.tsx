@@ -118,6 +118,17 @@ export default async function SignInPage({
           }}
         />
       </div>
+      {!isAdmin && (
+        <p className="mt-5 text-center text-sm text-muted">
+          Pas encore de compte ?{" "}
+          <Link
+            className="font-semibold text-accent hover:text-accent-hover"
+            href={`/${locale}/sign-up?type=${loginType?.toLowerCase()}`}
+          >
+            Créer mon espace {accountLabel}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
