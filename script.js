@@ -110,14 +110,6 @@ if (reducedMotion.matches || !('IntersectionObserver' in window)) {
   revealTargets.forEach((element) => revealObserver.observe(element));
 }
 
-const hero = document.querySelector('.hero');
-hero?.addEventListener('pointermove', (event) => {
-  if (reducedMotion.matches) return;
-  const rect = hero.getBoundingClientRect();
-  hero.style.setProperty('--spotlight-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
-  hero.style.setProperty('--spotlight-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
-});
-
 document.querySelectorAll('[data-magnetic]').forEach((button) => {
   button.addEventListener('pointermove', (event) => {
     if (reducedMotion.matches || window.innerWidth < 920) return;
@@ -183,6 +175,83 @@ reducedMotion.addEventListener?.('change', () => {
     element.style.removeProperty('--motion-scale');
   });
   document.querySelectorAll('[data-magnetic]').forEach((button) => button.style.removeProperty('transform'));
+});
+
+function initializeGsapMotion() {
+  const gsap = window.gsap;
+  const ScrollTrigger = window.ScrollTrigger;
+  if (!gsap || !ScrollTrigger) return;
+
+  gsap.registerPlugin(ScrollTrigger);
+  const media = gsap.matchMedia();
+
+  media.add('(prefers-reduced-motion: no-preference)', () => {
+    gsap.utils.toArray('[data-gsap-image]:not(.hero-visual)').forEach((plate) => {
+      const image = plate.querySelector('img');
+      if (!image) return;
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: plate,
+          start: 'top 92%',
+          end: 'bottom 8%',
+          scrub: 0.8,
+        },
+      })
+        .fromTo(image, { opacity: 0.5, scale: 0.88 }, { opacity: 1, scale: 1, duration: 0.55, ease: 'none' })
+        .to(image, { opacity: 0.35, scale: 0.96, duration: 0.45, ease: 'none' });
+    });
+
+    return () => ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+  });
+
+  media.add('(min-width: 821px) and (prefers-reduced-motion: no-preference)', () => {
+    const cards = gsap.utils.toArray('[data-stack-card]');
+    const animations = cards.slice(0, -1).map((card, index) => gsap.to(card, {
+      opacity: 0.58,
+      scale: 0.94 - (index * 0.008),
+      ease: 'none',
+      scrollTrigger: {
+        trigger: cards[index + 1],
+        start: 'top 72%',
+        end: 'top 34%',
+        scrub: true,
+      },
+    }));
+
+    return () => animations.forEach((animation) => animation.kill());
+  });
+}
+
+initializeGsapMotion();
+
+document.querySelectorAll('[data-outcome-carousel]').forEach((carousel) => {
+  const track = carousel.querySelector('[data-outcome-track]');
+  const slides = Array.from(carousel.querySelectorAll('[data-outcome-slide]'));
+  const current = carousel.querySelector('[data-outcome-current]');
+  const previous = carousel.querySelector('[data-outcome-previous]');
+  const next = carousel.querySelector('[data-outcome-next]');
+  const windowElement = carousel.querySelector('.outcome-window');
+  let activeIndex = 0;
+
+  function showSlide(index) {
+    if (!track || !slides.length) return;
+    activeIndex = (index + slides.length) % slides.length;
+    track.style.transform = `translateX(-${activeIndex * 100}%)`;
+    slides.forEach((slide, slideIndex) => {
+      slide.setAttribute('aria-hidden', String(slideIndex !== activeIndex));
+    });
+    if (current) current.textContent = String(activeIndex + 1).padStart(2, '0');
+  }
+
+  previous?.addEventListener('click', () => showSlide(activeIndex - 1));
+  next?.addEventListener('click', () => showSlide(activeIndex + 1));
+  windowElement?.setAttribute('aria-live', 'polite');
+  windowElement?.setAttribute('tabindex', '0');
+  windowElement?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') showSlide(activeIndex - 1);
+    if (event.key === 'ArrowRight') showSlide(activeIndex + 1);
+  });
+  showSlide(0);
 });
 
 function setFieldValidity(field, isValid) {

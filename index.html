@@ -17,10 +17,10 @@
     <meta name="theme-color" content="#FDFDFB" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600&amp;family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
     <link rel="icon" href="public/assets/generated-v3/A01-favicon-32.png" sizes="32x32" />
     <link rel="apple-touch-icon" href="public/assets/generated-v3/A01-apple-touch-180.png" />
-    <link rel="stylesheet" href="styles.css?v=20260916-02" />
+    <link rel="stylesheet" href="styles.css?v=20260916-03" />
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"Organization","@id":"https://www.savewatt.fr/#organization","name":"AX TECH","alternateName":"ECOLED WAVE CONCEPT","url":"https://www.savewatt.fr/","email":"contact@savewatt.fr","taxID":"751982760","vatID":"FR86751982760","brand":{"@type":"Brand","name":"SaveWatt","logo":"https://www.savewatt.fr/public/assets/generated-v3/A01-app-512.png"},"address":{"@type":"PostalAddress","streetAddress":"8 rue Marbeau","postalCode":"75016","addressLocality":"Paris","addressCountry":"FR"}}
     </script>
@@ -37,36 +37,42 @@
       <nav class="mobile-menu" id="mobile-menu" data-mobile-menu aria-label="Navigation mobile" hidden><a href="#entreprises">Entreprises</a><a href="#regies">Régies</a><a href="#plateforme">Plateforme</a><a href="#faq">FAQ</a><a href="/connexion">Connexion</a><a href="#contact">Nous contacter</a></nav>
     </header>
 
-    <main id="contenu">
+    <main class="site-main" id="contenu">
       <section class="hero section-light image-section" id="top">
         <div class="container hero-grid reveal">
           <div class="hero-copy">
             <p class="kicker">SAVEWATT · L’ÉNERGIE DES PROFESSIONNELS</p>
-            <h1>Réduisez vos dépenses d’électricité.</h1>
-            <p class="hero-lede">Un contrat mieux adapté à votre entreprise. De nouvelles opportunités pour votre réseau commercial. Avec SaveWatt, avancez de la première analyse au contrat signé.</p>
-            <div class="audience-paths" data-reveal-children>
-              <article class="audience-path audience-enterprise"><span class="path-label">Vous représentez une entreprise</span><h2>Comparez avant de vous engager.</h2><p>Identifiez ce qui pèse sur votre facture et recevez un comparatif gratuit pour choisir votre prochain contrat.</p><a class="button" href="#comparatif" data-magnetic>Recevoir mon comparatif gratuit</a></article>
-              <article class="audience-path audience-partner"><span class="path-label">Vous êtes une régie ou un apporteur</span><h2>Pilotez tout votre parcours de vente.</h2><p>Développez votre portefeuille et suivez vos offres, vos signatures et vos commissions au même endroit.</p><a class="button button-secondary" href="#devenir-partenaire" data-magnetic>Demander une démo partenaire</a></article>
+            <h1 class="hero-title-wide"><span>Réduisez vos coûts</span><span>d’électricité.</span></h1>
+            <p class="hero-lede">SaveWatt compare votre contrat actuel, vous présente une offre claire et vous accompagne jusqu’à la signature.</p>
+            <div class="hero-action">
+              <a class="button hero-cta" href="#comparatif" data-magnetic>Recevoir mon comparatif gratuit</a>
+              <p>Régie ou apporteur ? <a href="#regies">Découvrir l’espace partenaire</a></p>
             </div>
           </div>
-          <picture class="hero-visual technical-plate" data-scroll-image data-motion-depth="24" data-motion-rotate="2.4" data-motion-lift="12" data-clip-reveal>
+          <picture class="hero-visual technical-plate" data-scroll-image data-gsap-image data-motion-depth="24" data-motion-rotate="2.4" data-motion-lift="12" data-clip-reveal>
             <source media="(max-width: 639px)" type="image/avif" srcset="public/assets/generated-v4/A16-hero-dual-journey-mobile.avif" /><source media="(max-width: 639px)" type="image/webp" srcset="public/assets/generated-v4/A16-hero-dual-journey-mobile.webp" /><source media="(max-width: 639px)" srcset="public/assets/generated-v4/A16-hero-dual-journey-mobile.png" />
             <source type="image/avif" srcset="public/assets/generated-v4/A16-hero-dual-journey-desktop.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A16-hero-dual-journey-desktop.webp" />
             <img src="public/assets/generated-v4/A16-hero-dual-journey-desktop.png" width="1448" height="1086" alt="Deux parcours SaveWatt convergent : l’analyse d’une facture d’entreprise et le réseau commercial d’une régie aboutissent à un contrat validé." fetchpriority="high" />
           </picture>
         </div>
+        <div class="value-marquee" aria-label="Les bénéfices de SaveWatt">
+          <div class="value-marquee-track">
+            <span>Comparatif clair</span><span>Contrat adapté</span><span>Parcours simplifié</span><span>Ventes suivies</span><span>Commissions visibles</span>
+            <span aria-hidden="true">Comparatif clair</span><span aria-hidden="true">Contrat adapté</span><span aria-hidden="true">Parcours simplifié</span><span aria-hidden="true">Ventes suivies</span><span aria-hidden="true">Commissions visibles</span>
+          </div>
+        </div>
       </section>
 
       <section class="section-light image-section" id="entreprises">
-        <div class="container section-heading reveal"><p class="kicker">01 — POUR LES ENTREPRISES</p><h2>Comprenez vos coûts. Choisissez en confiance.</h2><p class="lede">Prix de l’énergie, abonnement, puissance : SaveWatt vous aide à comprendre votre facture et à évaluer une nouvelle offre sur la base de votre consommation.</p></div>
+        <div class="container section-heading reveal"><p class="kicker">POUR LES ENTREPRISES</p><h2>Comprenez vos coûts. <span class="inline-art inline-art-comparison" aria-hidden="true"></span> Choisissez en confiance.</h2><p class="lede">Prix de l’énergie, abonnement, puissance : SaveWatt vous aide à comprendre votre facture et à évaluer une nouvelle offre sur la base de votre consommation.</p></div>
         <div class="container enterprise-layout">
-          <div class="journey-list reveal" data-reveal-children>
-            <article><span>01</span><div><h3>Partez de votre contrat actuel</h3><p>Une facture récente permet de comprendre vos besoins et de préparer votre étude personnalisée.</p></div></article>
-            <article><span>02</span><div><h3>Nous analysons votre contrat</h3><p>Repérez les postes de dépense à optimiser et les conditions à prendre en compte avant de changer.</p></div></article>
-            <article><span>03</span><div><h3>Recevez un comparatif lisible</h3><p>Comparez votre contrat et l’offre proposée à consommation équivalente, avec les écarts expliqués.</p></div></article>
-            <article><span>04</span><div><h3>Signez en ligne si l’offre vous convient</h3><p>Vous décidez après avoir étudié les prix, la durée et les conditions. SaveWatt vous accompagne dans les démarches.</p></div></article>
+          <div class="journey-list reveal" data-stack-list>
+            <article data-stack-card style="--stack-index: 0"><span>01</span><div><h3>Partez de votre contrat actuel</h3><p>Une facture récente permet de comprendre vos besoins et de préparer votre étude personnalisée.</p></div></article>
+            <article data-stack-card style="--stack-index: 1"><span>02</span><div><h3>Nous analysons votre contrat</h3><p>Repérez les postes de dépense à optimiser et les conditions à prendre en compte avant de changer.</p></div></article>
+            <article data-stack-card style="--stack-index: 2"><span>03</span><div><h3>Recevez un comparatif lisible</h3><p>Comparez votre contrat et l’offre proposée à consommation équivalente, avec les écarts expliqués.</p></div></article>
+            <article data-stack-card style="--stack-index: 3"><span>04</span><div><h3>Signez en ligne si l’offre vous convient</h3><p>Vous décidez après avoir étudié les prix, la durée et les conditions. SaveWatt vous accompagne dans les démarches.</p></div></article>
           </div>
-          <picture class="comparison-art technical-plate reveal" data-scroll-image data-motion-depth="18" data-motion-rotate="1.8" data-motion-lift="10" data-clip-reveal>
+          <picture class="comparison-art technical-plate reveal" data-scroll-image data-gsap-image data-motion-depth="18" data-motion-rotate="1.8" data-motion-lift="10" data-clip-reveal>
             <source media="(max-width: 639px)" type="image/avif" srcset="public/assets/generated-v4/A17-customer-comparison-mobile.avif" /><source media="(max-width: 639px)" type="image/webp" srcset="public/assets/generated-v4/A17-customer-comparison-mobile.webp" /><source media="(max-width: 639px)" srcset="public/assets/generated-v4/A17-customer-comparison-mobile.png" />
             <source type="image/avif" srcset="public/assets/generated-v4/A17-customer-comparison-desktop.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A17-customer-comparison-desktop.webp" />
             <img src="public/assets/generated-v4/A17-customer-comparison-desktop.png" width="1774" height="887" alt="Parcours de comparaison : contrat actuel analysé, ligne de coût vérifiée, offres comparées et nouveau contrat validé." loading="lazy" />
@@ -77,17 +83,17 @@
 
       <section class="section-inset image-section" id="regies">
         <div class="container partner-layout">
-          <picture class="hierarchy-art technical-plate reveal" data-scroll-image data-motion-depth="18" data-motion-rotate="2" data-motion-lift="8" data-clip-reveal><source type="image/avif" srcset="public/assets/generated-v4/A18-regie-hierarchy.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A18-regie-hierarchy.webp" /><img src="public/assets/generated-v4/A18-regie-hierarchy.png" width="1254" height="1254" alt="Hiérarchie commerciale cloisonnée entre opérateur, masters, sous-régies, équipes et apporteurs." loading="lazy" /></picture>
-          <div class="partner-copy reveal"><p class="kicker">02 — POUR LES RÉGIES ET APPORTEURS</p><h2>Développez vos ventes. Gardez la main sur votre réseau.</h2><p class="lede">Consacrez plus de temps à vos clients. SaveWatt réunit vos équipes, vos opportunités et vos commissions pour vous aider à faire grandir votre activité.</p><ul class="feature-checks"><li><strong>Organisation hiérarchique</strong><span>Organisez vos régies, équipes et apporteurs à mesure que votre réseau grandit.</span></li><li><strong>Parcours configurable</strong><span>Retrouvez les prochaines actions et les pièces à réunir pour faire avancer chaque dossier.</span></li><li><strong>Suivi commercial</strong><span>Gardez une vue d’ensemble sur vos opportunités, vos échéances et vos signatures.</span></li><li><strong>Commissions traçables</strong><span>Suivez vos commissions contrat par contrat, avec le détail des montants et des statuts.</span></li></ul><a class="button button-dark" href="#devenir-partenaire">Découvrir le parcours partenaire</a></div>
+          <picture class="hierarchy-art technical-plate reveal" data-scroll-image data-gsap-image data-motion-depth="18" data-motion-rotate="2" data-motion-lift="8" data-clip-reveal><source type="image/avif" srcset="public/assets/generated-v4/A18-regie-hierarchy.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A18-regie-hierarchy.webp" /><img src="public/assets/generated-v4/A18-regie-hierarchy.png" width="1254" height="1254" alt="Hiérarchie commerciale cloisonnée entre opérateur, masters, sous-régies, équipes et apporteurs." loading="lazy" /></picture>
+          <div class="partner-copy reveal"><p class="kicker">POUR LES RÉGIES ET APPORTEURS</p><h2>Développez vos ventes. Gardez la main sur votre réseau.</h2><p class="lede">Consacrez plus de temps à vos clients. SaveWatt réunit vos équipes, vos opportunités et vos commissions pour vous aider à faire grandir votre activité.</p><ul class="feature-checks"><li><strong>Organisation hiérarchique</strong><span>Organisez vos régies, équipes et apporteurs à mesure que votre réseau grandit.</span></li><li><strong>Parcours configurable</strong><span>Retrouvez les prochaines actions et les pièces à réunir pour faire avancer chaque dossier.</span></li><li><strong>Suivi commercial</strong><span>Gardez une vue d’ensemble sur vos opportunités, vos échéances et vos signatures.</span></li><li><strong>Commissions traçables</strong><span>Suivez vos commissions contrat par contrat, avec le détail des montants et des statuts.</span></li></ul><a class="button button-dark" href="#devenir-partenaire">Découvrir le parcours partenaire</a></div>
         </div>
       </section>
 
       <section class="section-light platform-section image-section" id="plateforme">
-        <div class="container section-heading reveal"><p class="kicker">03 — LA PLATEFORME</p><h2>Moins de suivi dispersé. Plus de dossiers qui avancent.</h2><p class="lede">Retrouvez vos clients, vos offres et vos actions dans un même espace. Votre équipe sait où en est chaque dossier et quelle est la prochaine étape.</p></div>
+        <div class="container section-heading reveal"><p class="kicker">LA PLATEFORME SAVEWATT</p><h2>Moins de suivi dispersé. Plus de dossiers qui avancent.</h2><p class="lede">Retrouvez vos clients, vos offres et vos actions dans un même espace. Votre équipe sait où en est chaque dossier et quelle est la prochaine étape.</p></div>
         <div class="container capability-grid reveal" data-reveal-children>
           <article><span>01</span><h3>Clients, sites et contrats</h3><p>Retrouvez les coordonnées, sites et échéances de chaque client sans multiplier les fichiers.</p></article><article><span>02</span><h3>Analyse des dépenses</h3><p>Disposez des informations utiles pour comprendre le contrat et préparer une proposition adaptée.</p></article><article><span>03</span><h3>Offres à jour</h3><p>Retrouvez les propositions disponibles et leur validité pour répondre à vos clients au bon moment.</p></article><article><span>04</span><h3>Comparatif avant/après</h3><p>Présentez les prix, volumes, abonnements et écarts sur un périmètre cohérent.</p></article><article><span>05</span><h3>Offre et signature</h3><p>Générez l’offre client, transmettez-la pour signature et suivez son statut.</p></article><article><span>06</span><h3>Facturation et commissions</h3><p>Consultez les commissions liées à vos contrats et suivez leur progression.</p></article>
         </div>
-        <picture class="workflow-art technical-plate container reveal" data-scroll-image data-motion-depth="16" data-motion-rotate="1.5" data-motion-lift="8" data-clip-reveal>
+        <picture class="workflow-art technical-plate container reveal" data-scroll-image data-gsap-image data-motion-depth="16" data-motion-rotate="1.5" data-motion-lift="8" data-clip-reveal>
           <source media="(max-width: 639px)" type="image/avif" srcset="public/assets/generated-v4/A19-commercial-workflow-mobile.avif" /><source media="(max-width: 639px)" type="image/webp" srcset="public/assets/generated-v4/A19-commercial-workflow-mobile.webp" /><source media="(max-width: 639px)" srcset="public/assets/generated-v4/A19-commercial-workflow-mobile.png" />
           <source type="image/avif" srcset="public/assets/generated-v4/A19-commercial-workflow-desktop.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A19-commercial-workflow-desktop.webp" /><img src="public/assets/generated-v4/A19-commercial-workflow-desktop.png" width="1774" height="887" alt="Workflow commercial : facture reçue, données validées, proposition comparée, contrat signé puis suivi." loading="lazy" />
         </picture>
@@ -95,13 +101,29 @@
 
       <section class="section-light operations-section image-section">
         <div class="container operations-layout">
-          <div class="operations-copy reveal"><p class="kicker">04 — VOTRE ACTIVITÉ, SOUS CONTRÔLE</p><h2>Une vision claire de vos contrats et commissions.</h2><p class="lede">Du premier contact au suivi des commissions, retrouvez les informations qui comptent pour piloter votre activité et accompagner vos équipes.</p><div class="control-grid" data-reveal-children><article><h3>Un espace pour chaque équipe</h3><p>Chaque collaborateur retrouve les clients et dossiers dont il a la charge.</p></article><article><h3>Vos commissions en détail</h3><p>Reliez chaque montant au contrat concerné et consultez son statut depuis votre espace.</p></article><article><h3>Vos documents au même endroit</h3><p>Retrouvez factures, propositions et contrats dans votre espace réservé.</p></article><article><h3>Le suivi sans les recherches</h3><p>Consultez l’historique d’un dossier pour répondre à un client ou préparer votre prochaine action.</p></article></div></div>
-          <picture class="commission-art technical-plate reveal" data-scroll-image data-motion-depth="20" data-motion-rotate="2" data-motion-lift="10" data-clip-reveal><source type="image/avif" srcset="public/assets/generated-v4/A20-commission-cascade.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A20-commission-cascade.webp" /><img src="public/assets/generated-v4/A20-commission-cascade.png" width="1254" height="1254" alt="Consommations rapprochées, relevé validé et commissions distribuées aux niveaux commerciaux concernés." loading="lazy" /></picture>
+          <div class="operations-copy reveal"><p class="kicker">PILOTEZ VOTRE ACTIVITÉ</p><h2>Une vision claire de vos contrats et commissions.</h2><p class="lede">Du premier contact au suivi des commissions, retrouvez les informations qui comptent pour piloter votre activité et accompagner vos équipes.</p><div class="control-grid" data-reveal-children><article><h3>Un espace pour chaque équipe</h3><p>Chaque collaborateur retrouve les clients et dossiers dont il a la charge.</p></article><article><h3>Vos commissions en détail</h3><p>Reliez chaque montant au contrat concerné et consultez son statut depuis votre espace.</p></article><article><h3>Vos documents au même endroit</h3><p>Retrouvez factures, propositions et contrats dans votre espace réservé.</p></article><article><h3>Le suivi sans les recherches</h3><p>Consultez l’historique d’un dossier pour répondre à un client ou préparer votre prochaine action.</p></article></div></div>
+          <picture class="commission-art technical-plate reveal" data-scroll-image data-gsap-image data-motion-depth="20" data-motion-rotate="2" data-motion-lift="10" data-clip-reveal><source type="image/avif" srcset="public/assets/generated-v4/A20-commission-cascade.avif" /><source type="image/webp" srcset="public/assets/generated-v4/A20-commission-cascade.webp" /><img src="public/assets/generated-v4/A20-commission-cascade.png" width="1254" height="1254" alt="Consommations rapprochées, relevé validé et commissions distribuées aux niveaux commerciaux concernés." loading="lazy" /></picture>
+        </div>
+      </section>
+
+      <section class="outcome-section section-dark" aria-labelledby="outcome-title">
+        <div class="container outcome-layout reveal">
+          <div class="outcome-intro"><p class="kicker">SAVEWATT AU QUOTIDIEN</p><h2 id="outcome-title">Une expérience plus simple, du devis à la commission.</h2></div>
+          <div class="outcome-carousel" data-outcome-carousel>
+            <div class="outcome-window">
+              <div class="outcome-track" data-outcome-track>
+                <article class="outcome-slide" data-outcome-slide><span>Pour votre entreprise</span><h3>Voir clairement les écarts</h3><p>Comparez le prix, l’abonnement, la durée et les conditions avant de prendre votre décision.</p></article>
+                <article class="outcome-slide" data-outcome-slide><span>Pour votre réseau</span><h3>Faire avancer chaque dossier</h3><p>Retrouvez l’étape en cours, la prochaine action et les informations utiles à votre équipe.</p></article>
+                <article class="outcome-slide" data-outcome-slide><span>Pour votre pilotage</span><h3>Relier chaque commission à son contrat</h3><p>Consultez les montants et les statuts sans reprendre plusieurs fichiers ou échanges.</p></article>
+              </div>
+            </div>
+            <div class="outcome-controls"><p><span data-outcome-current>01</span> / 03</p><div><button type="button" data-outcome-previous aria-label="Voir le bénéfice précédent">←</button><button type="button" data-outcome-next aria-label="Voir le bénéfice suivant">→</button></div></div>
+          </div>
         </div>
       </section>
 
       <section class="section-inset faq-section" id="faq">
-        <div class="container narrow reveal"><p class="kicker">05 — QUESTIONS FRÉQUENTES</p><h2>Les réponses utiles avant de commencer.</h2><div class="faq-list" data-reveal-children>
+        <div class="container narrow reveal"><p class="kicker">QUESTIONS FRÉQUENTES</p><h2>Les réponses utiles avant de commencer.</h2><div class="faq-list" data-reveal-children>
           <details><summary>Le comparatif est-il gratuit et sans engagement ?</summary><div><p>Oui. L’analyse et le comparatif sont gratuits. Vous recevez les prix et les conditions de l’offre, puis vous décidez librement de la suite.</p></div></details>
           <details><summary>Que vais-je recevoir avec mon comparatif ?</summary><div><p>Une comparaison de votre contrat actuel et de l’offre proposée, à consommation équivalente. SaveWatt vous explique les écarts de prix, l’abonnement, la durée et les conditions pour vous aider à choisir.</p></div></details>
           <details><summary>Quels éléments faut-il pour commencer ?</summary><div><p>Laissez vos coordonnées et quelques informations sur votre entreprise. Un conseiller SaveWatt vous accompagne ensuite pour réunir une facture récente et les informations de votre contrat dans votre espace réservé.</p></div></details>
@@ -113,7 +135,7 @@
       </section>
 
       <section class="section-dark conversion-section" id="contact">
-        <div class="container section-heading reveal"><p class="kicker">06 — PARLONS DE VOTRE PROJET</p><h2>Votre prochaine étape commence ici.</h2><p class="lede">Un comparatif pour votre entreprise ou une démonstration pour votre réseau : dites-nous ce dont vous avez besoin.</p></div>
+        <div class="container section-heading reveal"><p class="kicker">PARLONS DE VOTRE PROJET</p><h2>Votre prochaine étape commence ici.</h2><p class="lede">Un comparatif pour votre entreprise ou une démonstration pour votre réseau : dites-nous ce dont vous avez besoin.</p></div>
         <div class="container contact-form-wrap">
           <span class="form-anchor" id="comparatif"></span><span class="form-anchor" id="demande-comparatif"></span><span class="form-anchor" id="devenir-partenaire"></span>
           <form class="lead-form reveal" data-lead-form data-lead-type="comparatif" novalidate>
@@ -163,6 +185,8 @@
     </main>
 
     <footer class="site-footer section-dark"><div class="container footer-grid"><div><a class="brand footer-brand" href="#top"><img src="public/assets/generated-v3/A01-favicon-48.png" width="48" height="48" alt="" /><span><strong>Save<span class="brand-watt">Watt</span></strong></span></a><p>Analyse, comparaison et plateforme commerciale pour l’électricité des professionnels.</p></div><nav aria-label="Navigation pied de page"><h2>Navigation</h2><a href="#entreprises">Entreprises</a><a href="#regies">Régies</a><a href="#plateforme">Plateforme</a><a href="#faq">FAQ</a><a href="/connexion">Connexion</a></nav><div><h2>AX TECH</h2><p>ECOLED WAVE CONCEPT<br />8 rue Marbeau<br />75016 Paris<br /><a href="mailto:contact@savewatt.fr">contact@savewatt.fr</a></p></div><nav aria-label="Liens légaux"><h2>Légal</h2><a href="/mentions-legales/">Mentions légales</a><a href="/politique-de-confidentialite/">Politique de confidentialité</a><a href="/cookies/">Gestion des cookies</a><a href="/plan-du-site/">Plan du site</a></nav></div><div class="container footer-bottom"><p>© 2026 AX TECH. SaveWatt est une marque d’AX TECH.</p></div></footer>
-    <script src="script.js?v=20260916-02" defer></script>
+    <script src="public/vendor/gsap/gsap-3.15.0.min.js" defer></script>
+    <script src="public/vendor/gsap/ScrollTrigger-3.15.0.min.js" defer></script>
+    <script src="script.js?v=20260916-03" defer></script>
   </body>
 </html>
