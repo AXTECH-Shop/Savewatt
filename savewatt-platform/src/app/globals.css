@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * Savewatt design tokens — trustworthy B2B energy SaaS.
+ * Neutral Zinc base, one deep-emerald accent. No purple, no neon.
+ * ------------------------------------------------------------------ */
+@theme {
+  --color-bg: #f5f7f5;
+  --color-surface: #ffffff;
+  --color-surface-2: #f9faf9;
+  --color-ink: #101317;      /* off-black, never #000 */
+  --color-muted: #667085;
+  --color-faint: #98a2b3;
+  --color-line: #e6e8ec;
+  --color-line-strong: #d6d9df;
+
+  --color-deep: #052c24;
+  --color-accent: #118a34;
+  --color-accent-bright: #24a247;
+  --color-accent-hover: #0d742b;
+  --color-accent-soft: #e8f5eb;
+  --color-accent-ink: #075523;
+  --color-lime: #b7f52a;
+
+  --color-positive: #0e7a4f;
+  --color-warning: #b25e09;
+  --color-warning-soft: #fbf1e3;
+  --color-danger: #c0362c;
+  --color-danger-soft: #fbeceb;
+
+  --radius-card: 1rem;
+  --radius-xl2: 1.25rem;
+
+  --shadow-diffuse: 0 20px 40px -24px rgba(16, 19, 23, 0.14);
+  --shadow-soft: 0 1px 2px rgba(16, 19, 23, 0.04), 0 1px 1px rgba(16, 19, 23, 0.03);
+
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-plex-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+/* Intrinsic-width tables must scroll inside their grid cell, not widen the page. */
+.grid > * {
+  min-width: 0;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-lime) 65%, white);
+  color: var(--color-deep);
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-accent) 42%, transparent);
+  outline-offset: 3px;
+}
+
+.auth-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 78% 16%, rgba(183, 245, 42, 0.16), transparent 36%);
+  background-size: 56px 56px, 56px 56px, 100% 100%;
+}
+
+/* Tabular numerics for all money/energy figures. */
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Tactile press feedback (taste rule 5). */
+.press {
+  transition:
+    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.press:active {
+  transform: translateY(1px) scale(0.995);
+}
+
+/* Staggered list reveal without JS. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-line);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
