@@ -11,6 +11,9 @@ status: build_ready_plan
 
 # SAVEWATT - HOMEPAGE & LANDING PAGE PRODUCTION PLAN
 
+> **September 2026 pivot:** docs/LANDING-PIVOT-2026-09.md is now the source
+> of truth for the production homepage and supersedes conflicting sections.
+
 ## French-first copy, layout, assets, responsive behavior, motion, SEO and trust requirements
 
 ---

@@ -1,5 +1,9 @@
 # SaveWatt Branding
 
+> **Superseded positioning:** the current identity and commercial model are
+> defined in docs/LANDING-PIVOT-2026-09.md. SaveWatt is a brand of AX TECH
+> and Symphonics is its approved supplier partner.
+
 ## Brand Core
 
 SaveWatt is an independent French `bureau d'etudes` focused on auditing energy invoices, recovering undue charges, and optimizing contracts durably.

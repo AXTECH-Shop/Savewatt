@@ -1,5 +1,9 @@
 # SaveWatt SEO Plan
 
+> **September 2026 pivot:** use the entity model, audiences and claims policy
+> in docs/LANDING-PIVOT-2026-09.md. Older independence and CEE-first themes
+> below are retained only as historical planning context.
+
 ## SEO Strategy
 
 SaveWatt should launch as a compact multi-page site, not a single-page brochure.

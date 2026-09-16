@@ -8,6 +8,9 @@ last_updated: 2026-06-06
 
 # SaveWatt Website Build Handoff
 
+> **September 2026 pivot:** docs/LANDING-PIVOT-2026-09.md supersedes every
+> conflicting identity, offer, copy, CTA and asset instruction in this file.
+
 This is the website builder's starting document. It consolidates the approved
 scope and points to the detailed source of truth for each implementation area.
 If a summary here conflicts with a linked specialist document, use the

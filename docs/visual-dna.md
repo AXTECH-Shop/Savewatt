@@ -1,5 +1,9 @@
 # SAVEWATT - VISUAL DNA, PAGE ART DIRECTION & ASSET SYSTEM
 
+> **September 2026 pivot:** retain the visual language below, but use the v4
+> asset register and positioning in docs/LANDING-PIVOT-2026-09.md wherever
+> this document conflicts.
+
 ## Swiss Technical Editorial x Colored Isometric Explainers
 
 ### Version 3.0 - French master - 6 June 2026
