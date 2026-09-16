@@ -19,3 +19,5 @@
 - Added a mandatory D1 email whitelist for internal SaveWatt operator and finance accounts.
 - Configured the Cloudflare Worker custom domain at `app.savewatt.fr`.
 - Removed the landing-page theme switcher and connected every `Connexion` link to the hosted application.
+- Split customer and partner login selection onto `app.savewatt.fr` and internal access onto `admin.savewatt.fr`.
+- Enforced hostname-level role separation so internal accounts cannot enter the customer app and external accounts cannot enter administration.

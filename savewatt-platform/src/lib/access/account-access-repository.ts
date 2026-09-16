@@ -2,6 +2,7 @@ import "server-only";
 
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { isAppRole, type AppRole } from "@/lib/access-control";
+import { isInternalRole } from "@/lib/access/access-surface";
 
 export const REGISTRATION_TYPES = ["CUSTOMER", "PARTNER"] as const;
 
@@ -27,8 +28,6 @@ export interface RegistrationRequestInput {
   displayName: string;
   registrationType: RegistrationType;
 }
-
-const INTERNAL_ROLES: AppRole[] = ["SUPER_ADMIN", "OPERATOR_FINANCE"];
 
 export function isRegistrationType(value: unknown): value is RegistrationType {
   return typeof value === "string" && REGISTRATION_TYPES.includes(value as RegistrationType);
@@ -78,7 +77,7 @@ export class AccountAccessRepository {
     email: string,
     membership: ActiveMembership,
   ): Promise<boolean> {
-    if (!INTERNAL_ROLES.includes(membership.role)) return true;
+    if (!isInternalRole(membership.role)) return true;
 
     const row = await this.database
       .prepare(
