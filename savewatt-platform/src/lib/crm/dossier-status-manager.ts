@@ -5,7 +5,7 @@ const ALLOWED_TRANSITIONS: Record<DossierStatus, DossierStatus[]> = {
   draft: ["uploaded", "lost"],
   uploaded: ["analyzed", "lost"],
   analyzed: ["proposalReady", "lost"],
-  proposalReady: ["lost"],
+  proposalReady: ["sent", "lost"],
   sent: ["lost"],
   signed: [],
   lost: [],

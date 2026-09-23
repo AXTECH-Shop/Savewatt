@@ -106,6 +106,83 @@ export class LeadRepository {
     return created;
   }
 
+  async findExistingKeys(
+    actor: WorkspaceActor,
+    keys: { sirens: string[]; emails: string[]; phones: string[] },
+  ): Promise<{ sirens: Set<string>; emails: Set<string>; phones: Set<string> }> {
+    const scope = this.scopePolicy.resourcePredicate(actor, "resource_org", "lead.owner_user_id");
+    const find = async (table: "leads" | "clients", column: "siren" | "contact_email" | "contact_phone", values: string[]) => {
+      const found = new Set<string>();
+      for (const value of values) {
+        const row = await this.database
+          .prepare(
+            `SELECT 1 AS found FROM ${table} lead
+             JOIN organizations resource_org ON resource_org.id = lead.organization_id
+             WHERE lead.${column} = ? AND ${scope.sql} LIMIT 1`,
+          )
+          .bind(value, ...scope.bindings)
+          .first<{ found: number }>();
+        if (row) found.add(value);
+      }
+      return found;
+    };
+    const [leadSirens, clientSirens, leadEmails, clientEmails, leadPhones, clientPhones] = await Promise.all([
+      find("leads", "siren", keys.sirens),
+      find("clients", "siren", keys.sirens),
+      find("leads", "contact_email", keys.emails),
+      find("clients", "contact_email", keys.emails),
+      find("leads", "contact_phone", keys.phones),
+      find("clients", "contact_phone", keys.phones),
+    ]);
+    return {
+      sirens: new Set([...leadSirens, ...clientSirens]),
+      emails: new Set([...leadEmails, ...clientEmails]),
+      phones: new Set([...leadPhones, ...clientPhones]),
+    };
+  }
+
+  async createMany(actor: WorkspaceActor, inputs: CreateLeadInput[]): Promise<void> {
+    this.scopePolicy.assertCanWrite(actor);
+    const statements: D1PreparedStatement[] = [];
+    for (const input of inputs) {
+      const leadId = randomUUID();
+      statements.push(
+        this.database
+          .prepare(
+            `INSERT INTO leads (
+               id, organization_id, owner_user_id, legal_name, siren, contact_name,
+               contact_email, contact_phone, pdl, segment, source, notes
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            leadId,
+            actor.orgId,
+            actor.userId,
+            input.legalName,
+            input.siren ?? null,
+            input.contactName ?? null,
+            input.contactEmail ?? null,
+            input.contactPhone ?? null,
+            input.pdl ?? null,
+            input.segment ?? null,
+            input.source ?? null,
+            input.notes ?? null,
+          ),
+        this.database
+          .prepare(
+            `INSERT INTO audit_events (
+               id, organization_id, actor_user_id, action, resource_type,
+               resource_id, metadata_json
+             ) VALUES (?, ?, ?, 'LEAD_IMPORTED', 'LEAD', ?, ?)`,
+          )
+          .bind(randomUUID(), actor.orgId, actor.userId, leadId, JSON.stringify({ legalName: input.legalName })),
+      );
+    }
+    for (let index = 0; index < statements.length; index += 90) {
+      await this.database.batch(statements.slice(index, index + 90));
+    }
+  }
+
   async convert(actor: WorkspaceActor, leadId: string): Promise<ConversionResult> {
     this.scopePolicy.assertCanWrite(actor);
     const lead = await this.find(actor, leadId);

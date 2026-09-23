@@ -32,6 +32,9 @@
       "bucket_name": "savewatt-documents"
     }
   ],
+  "browser": {
+    "binding": "BROWSER"
+  },
   "observability": {
     "enabled": true
   }
