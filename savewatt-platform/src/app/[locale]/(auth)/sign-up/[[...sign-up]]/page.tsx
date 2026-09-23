@@ -1,5 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { isRegistrationType } from "@/lib/access/account-access-repository";
 
 export default async function SignUpPage({
@@ -14,18 +15,19 @@ export default async function SignUpPage({
   const registrationType = isRegistrationType(type?.toUpperCase())
     ? type.toUpperCase()
     : null;
+  const t = await getTranslations("auth.signUp");
 
   if (!registrationType) {
     return (
       <div>
         <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
-          Créer un espace
+          {t("eyebrow")}
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">
-          Quel accès vous correspond ?
+          {t("choiceTitle")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Choisissez votre profil pour démarrer avec le bon parcours.
+          {t("choiceDescription")}
         </p>
         <div className="mt-7 grid gap-3">
           <Link
@@ -33,11 +35,11 @@ export default async function SignUpPage({
             href={`/${locale}/sign-up?type=customer`}
           >
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
-              Entreprise cliente
+              {t("customerEyebrow")}
             </span>
-            <strong className="mt-2 block text-lg text-ink">Suivre mon étude et mon contrat</strong>
+            <strong className="mt-2 block text-lg text-ink">{t("customerTitle")}</strong>
             <span className="mt-1 block text-sm leading-5 text-muted">
-              Accédez à vos offres, signatures et documents SaveWatt.
+              {t("customerDescription")}
             </span>
           </Link>
           <Link
@@ -45,45 +47,45 @@ export default async function SignUpPage({
             href={`/${locale}/sign-up?type=partner`}
           >
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
-              Régie ou commercial
+              {t("partnerEyebrow")}
             </span>
-            <strong className="mt-2 block text-lg text-ink">Piloter mes dossiers et commissions</strong>
+            <strong className="mt-2 block text-lg text-ink">{t("partnerTitle")}</strong>
             <span className="mt-1 block text-sm leading-5 text-muted">
-              Demandez le rattachement à votre organisation commerciale.
+              {t("partnerDescription")}
             </span>
           </Link>
           <div className="rounded-2xl border border-dashed border-line-strong bg-surface-2 p-5">
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-              Équipe interne SaveWatt
+              {t("internalEyebrow")}
             </span>
-            <strong className="mt-2 block text-base text-ink">Accès sur invitation uniquement</strong>
+            <strong className="mt-2 block text-base text-ink">{t("internalTitle")}</strong>
             <span className="mt-1 block text-sm leading-5 text-muted">
-              Les comptes internes sont créés et autorisés par un administrateur SaveWatt.
+              {t("internalDescription")}
             </span>
           </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted">
-          Vous avez déjà un compte ?{" "}
+          {t("existingAccount")} {" "}
           <Link className="font-semibold text-accent hover:text-accent-hover" href={`/${locale}/sign-in`}>
-            Se connecter
+            {t("signIn")}
           </Link>
         </p>
       </div>
     );
   }
 
-  const accountLabel = registrationType === "CUSTOMER" ? "entreprise cliente" : "partenaire";
+  const accountLabel = registrationType === "CUSTOMER" ? t("customerAccountLabel") : t("partnerAccountLabel");
   return (
     <div>
       <Link className="text-sm font-medium text-muted hover:text-ink" href={`/${locale}/sign-up`}>
-        ← Changer de profil
+        ← {t("changeProfile")}
       </Link>
       <p className="mt-5 font-mono text-xs uppercase tracking-[0.16em] text-accent">
         Compte {accountLabel}
       </p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">Créez votre espace</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">{t("createTitle")}</h1>
       <p className="mt-2 text-sm leading-6 text-muted">
-        Une fois votre adresse vérifiée, nous rattacherons votre compte au bon périmètre.
+        {t("createDescription")}
       </p>
       <div className="mt-7 overflow-hidden rounded-2xl border border-line bg-surface shadow-diffuse">
         <SignUp

@@ -200,7 +200,7 @@ CREATE TABLE gift_redemptions (
   organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   wallet_id TEXT NOT NULL REFERENCES wallet_accounts(id) ON DELETE RESTRICT,
-  provider TEXT NOT NULL CHECK (provider IN ('GIFTOGRAM')),
+  provider TEXT NOT NULL CHECK (provider IN ('TREMENDOUS')),
   external_id TEXT NOT NULL UNIQUE,
   campaign_id TEXT NOT NULL,
   provider_order_id TEXT,
@@ -218,7 +218,7 @@ CREATE INDEX gift_redemptions_order_idx ON gift_redemptions(provider_order_id);
 
 CREATE TABLE provider_webhook_events (
   id TEXT PRIMARY KEY,
-  provider TEXT NOT NULL CHECK (provider IN ('DOCUSEAL', 'GIFTOGRAM')),
+  provider TEXT NOT NULL CHECK (provider IN ('DOCUSEAL', 'TREMENDOUS')),
   provider_event_key TEXT NOT NULL,
   event_type TEXT NOT NULL,
   payload_sha256 TEXT NOT NULL,

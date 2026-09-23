@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/:locale/portal/offer/(.*)",
   "/api/docuseal/webhook(.*)",
+  "/api/gifting/webhook(.*)",
 ]);
 
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);

@@ -33,8 +33,14 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
   const email = user?.primaryEmailAddress?.emailAddress?.trim() ?? "";
   if (!email) throw new WorkspaceAccessError("EMAIL_REQUIRED");
 
+  const displayName = user?.fullName ?? user?.firstName ?? "Utilisateur SaveWatt";
+
   const accessRepository = new AccountAccessRepository();
-  const membership = await accessRepository.findActiveMembership(userId);
+  const membership = await accessRepository.findOrProvisionWhitelistedMembership({
+    clerkUserId: userId,
+    email,
+    displayName,
+  });
   if (!membership) throw new WorkspaceAccessError("ACCESS_PENDING");
 
   const internalAccessAllowed = await accessRepository.isInternalUserWhitelisted(
@@ -45,7 +51,7 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
 
   return {
     userId,
-    displayName: user?.fullName ?? user?.firstName ?? "Utilisateur SaveWatt",
+    displayName,
     email,
     role: membership.role,
     orgId: membership.organizationId,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { DocusealForm } from "@docuseal/react";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import { Card, CardBody } from "@/components/ui/card";
 export default function SignPage() {
   const { id } = useParams<{ id: string }>();
   const d = useDossier(id);
+  const locale = useLocale();
   const t = useTranslations("signature");
   const tc = useTranslations("common");
   const ts = useTranslations("status");
@@ -93,14 +94,14 @@ export default function SignPage() {
                   src={signing.url}
                   email={d.contactEmail}
                   name={d.contactName}
-                  language="fr"
+                  language={locale}
                   host={process.env.NEXT_PUBLIC_DOCUSEAL_EMBED_HOST}
                   backgroundColor="#FDFDFB"
                   withTitle={false}
                   onComplete={() => setAwaitingWebhook(true)}
                 />
               </div>
-              {awaitingWebhook && <p role="status" className="mt-4 rounded-xl bg-accent-soft p-3 text-center text-sm text-accent-ink">Signature reçue. Vérification et archivage en cours.</p>}
+              {awaitingWebhook && <p role="status" className="mt-4 rounded-xl bg-accent-soft p-3 text-center text-sm text-accent-ink">{t("webhookPending")}</p>}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4 text-center">
@@ -125,7 +126,7 @@ export default function SignPage() {
                   {copied ? t("linkCopied") : t("copyLink")}
                 </Button>
                 <Button variant="ghost" onClick={markSigned} className="w-full">
-                  Simuler la signature
+                  {t("markSigned")}
                 </Button>
               </div>
             </div>

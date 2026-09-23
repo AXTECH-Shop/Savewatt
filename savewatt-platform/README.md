@@ -70,7 +70,14 @@ npm run db:migrate:local
 npm run db:migrate:remote
 ```
 
+## Gemini API
+
+Bill extraction uses the Gemini Developer API with a restricted `GOOGLE_API_KEY`.
+Keep it in `.env.local` for local development and set it with
+`wrangler secret put GOOGLE_API_KEY` before deploying the Worker. Do not expose
+it through a `NEXT_PUBLIC_` variable.
+
 ## Stack
 
-Next.js 16 (App Router) · TypeScript · Tailwind v4 · Clerk · next-intl · Gemini via ADC · Phosphor icons.
+Next.js 16 (App Router) · TypeScript · Tailwind v4 · Clerk · next-intl · Gemini API · Phosphor icons.
 Deploy target: **Cloudflare Workers** through OpenNext, with D1 for transactional data and R2 planned for documents.

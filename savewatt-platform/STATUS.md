@@ -85,8 +85,8 @@ Ordered by dependency. Each row is a shippable unit.
 ### C. Backend OCR / bill extraction (evaluate + integrate)
 | # | Task | Detail |
 |---|---|---|
-| C1 | **OCR/extraction = Google Gemini 3 Flash (DECIDED)** | Via Google Agent Platform, **ADC only — no API keys** (org policy). Auth already done via `gcloud auth login`. Record model/config in `specs/ai-services.md`. |
-| C2 | **Extraction pipeline (BACKEND BUILT · PROVIDER-AGNOSTIC)** | Canonical unit-aware schema `src/lib/extraction/schema.ts` (works across EDF/TotalEnergies/Engie/… — captures raw printed value **+ unit** and normalizes prices→€/MWh and abonnement→€/month; unified PDL/PRM; BASE/HP-HC/4-cadran/Tempo/EJP). Gemini ADC client `gemini.ts` with a synonym-mapping, all-suppliers prompt + strict JSON + confidence + warnings; deterministic `normalize.ts` safety net; `POST /api/extract` (auth-gated, PDF/img, 10 MB). **TODO:** human validation split-view UI + feed the comparator; test against JOSH (EDF), totalbill (TotalEnergies) + an Engie bill; move off Node runtime for Cloudflare. |
+| C1 | **OCR/extraction = Google Gemini 3.6 Flash (DECIDED)** | Via the Gemini Developer API with a restricted Cloudflare Worker `GOOGLE_API_KEY` secret. The project requires active Gemini API billing credits. Record model/config in `specs/ai-services.md`. |
+| C2 | **Extraction pipeline (BACKEND BUILT · PROVIDER-AGNOSTIC)** | Canonical unit-aware schema `src/lib/extraction/schema.ts` (works across EDF/TotalEnergies/Engie/… — captures raw printed value **+ unit** and normalizes prices→€/MWh and abonnement→€/month; unified PDL/PRM; BASE/HP-HC/4-cadran/Tempo/EJP). Gemini API-key client `gemini.ts` with a synonym-mapping, all-suppliers prompt + strict JSON + confidence + warnings; deterministic `normalize.ts` safety net; `POST /api/extract` (auth-gated, PDF/img, 10 MB). **TODO:** human validation split-view UI + feed the comparator; test against JOSH (EDF), totalbill (TotalEnergies) + an Engie bill. |
 | C3 | **Replace manual figures** | Extraction feeds the current-contract card and comparator instead of the sample/manual entry (see D2 for the manual fallback). |
 
 ### D. Manual offer builder (no Symphonics API)
@@ -145,7 +145,7 @@ Ordered by dependency. Each row is a shippable unit.
 ## ❓ Open questions to unblock
 
 - **DocuSeal:** confirm EU Cloud vs self-hosted and provide the unsigned/blank Symphonics master. The current PDF is a completed contract and cannot safely become a reusable template.
-- **OCR:** ~~provider~~ decided = Gemini 3 Flash (ADC). Local dev needs `gcloud auth application-default login` (ADC ≠ `gcloud auth login`). Confirm exact `GEMINI_MODEL` id + EU region for the endpoint; which suppliers' bills first (EDF confirmed via JOSH).
+- **OCR:** provider decided = Gemini 3.6 Flash through the Gemini API. The restricted `GOOGLE_API_KEY` is configured locally and as a Worker secret; add Gemini API prepayment credits before live extraction. Confirm supplier priority (EDF confirmed via JOSH).
 - **Auth:** ~~build vs buy~~ decided = Clerk. Remaining: how Clerk `userId`/`orgId` map to the in-app org tree + (if Postgres) RLS GUCs.
 - **Giftogram:** sandbox API key, API campaign ID, webhook client secret, credit vesting rules, minimum redemption, and tax treatment.
 - **Commission:** confirm downstream grid defaults per level (OQ3) and margin base (OQ2) before any real payout.

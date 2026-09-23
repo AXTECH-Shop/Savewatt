@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 
-export type IntegrationProvider = "DOCUSEAL" | "GIFTOGRAM";
+export type IntegrationProvider = "DOCUSEAL" | "TREMENDOUS";
 
 export interface ProviderEventInput {
   provider: IntegrationProvider;

@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FilePdf, UploadSimple, CheckCircle, X } from "@phosphor-icons/react";
-import type { UploadedFile } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
 export function UploadDropzone({
@@ -12,16 +11,16 @@ export function UploadDropzone({
   onChange,
 }: {
   label: string;
-  file?: UploadedFile;
-  onChange: (f?: UploadedFile) => void;
+  file?: File;
+  onChange: (file?: File) => void;
 }) {
   const t = useTranslations("newDossier");
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
 
   function take(files: FileList | null) {
-    const f = files?.[0];
-    if (f) onChange({ name: f.name, size: f.size });
+    const selected = files?.[0];
+    if (selected) onChange(selected);
   }
 
   return (

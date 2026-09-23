@@ -1,12 +1,15 @@
 import { SignIn } from "@clerk/nextjs";
+import { getTranslations } from "next-intl/server";
 
 export default async function SignInPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const t = await getTranslations("auth.signIn");
+
   return (
     <div>
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">Connexion sécurisée</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">Retrouvez votre activité</h1>
-      <p className="mt-2 text-sm leading-6 text-muted">Accédez uniquement aux dossiers et équipes rattachés à votre organisation.</p>
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">{t("eyebrow")}</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">{t("title")}</h1>
+      <p className="mt-2 text-sm leading-6 text-muted">{t("description")}</p>
       <div className="mt-7 overflow-hidden rounded-2xl border border-line bg-surface shadow-diffuse">
         <SignIn
           routing="path"

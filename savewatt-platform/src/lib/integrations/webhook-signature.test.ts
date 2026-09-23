@@ -4,13 +4,15 @@ import { describe, it } from "node:test";
 import { WebhookSignatureVerifier } from "./webhook-signature.ts";
 
 describe("WebhookSignatureVerifier", () => {
-  it("validates Giftogram HMAC signatures over the raw payload", () => {
-    const payload = '{"event_type":"order.created","data":{"id":"order-1"}}';
-    const secret = "giftogram-test-secret";
+  it("validates Tremendous HMAC signatures over the raw payload", () => {
+    const payload = '{"event":"ORDERS.CREATED","uuid":"event-1"}';
+    const secret = "tremendous-test-secret";
     const signature = createHmac("sha256", secret).update(payload).digest("hex");
+    const header = `sha256=${signature}`;
 
-    assert.equal(WebhookSignatureVerifier.verifyGiftogram(payload, signature, secret), true);
-    assert.equal(WebhookSignatureVerifier.verifyGiftogram(`${payload} `, signature, secret), false);
+    assert.equal(WebhookSignatureVerifier.verifyTremendous(payload, header, secret), true);
+    assert.equal(WebhookSignatureVerifier.verifyTremendous(`${payload} `, header, secret), false);
+    assert.equal(WebhookSignatureVerifier.verifyTremendous(payload, signature, secret), false);
   });
 
   it("validates fresh DocuSeal timestamped signatures and rejects stale ones", () => {

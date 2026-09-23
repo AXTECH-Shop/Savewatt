@@ -6,7 +6,9 @@ function safeHexMatch(received: string, expected: string): boolean {
 }
 
 export class WebhookSignatureVerifier {
-  static verifyGiftogram(rawPayload: string, signature: string, secret: string): boolean {
+  static verifyTremendous(rawPayload: string, signatureHeader: string, secret: string): boolean {
+    if (!signatureHeader.startsWith("sha256=")) return false;
+    const signature = signatureHeader.slice("sha256=".length);
     const expected = createHmac("sha256", secret).update(rawPayload).digest("hex");
     return safeHexMatch(signature, expected);
   }

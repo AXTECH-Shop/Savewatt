@@ -14,12 +14,22 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "vars": {
+    "TREMENDOUS_BASE_URL": "https://api.tremendous.com/api/v2",
+    "TREMENDOUS_FUNDING_SOURCE_ID": "BALANCE"
+  },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "savewatt",
       "database_id": "f9966fb7-be92-497b-9e4a-b3444fc841d0",
       "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DOCUMENTS",
+      "bucket_name": "savewatt-documents"
     }
   ],
   "observability": {

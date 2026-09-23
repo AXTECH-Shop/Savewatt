@@ -4,32 +4,26 @@ import type { ExtractionResult } from "./schema";
 import { normalizeResult } from "./normalize";
 
 /**
- * Gemini-based, provider-agnostic bill extraction on Google Agent Platform (Vertex).
+ * Gemini-based, provider-agnostic bill extraction through the Gemini API.
  *
- * Auth: Application Default Credentials only — org policy disallows API keys.
- * Locally run `gcloud auth application-default login`; in Cloud, ADC is ambient.
- *
- * Runtime: Node (google-auth-library). On Cloudflare this must move to a
- * Node-compatible worker or a sidecar service — see STATUS.
+ * Auth: API key supplied as the server-only GOOGLE_API_KEY environment variable.
  */
 let client: GoogleGenAI | null = null;
 function getClient(): GoogleGenAI {
   if (client) return client;
-  const project = process.env.GOOGLE_CLOUD_PROJECT;
-  if (!project) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
     throw new Error(
-      "GOOGLE_CLOUD_PROJECT is not set. Configure ADC (see .env.example) before extracting.",
+      "GOOGLE_API_KEY is not set. Configure the local environment and Cloudflare Worker secret before extracting.",
     );
   }
   client = new GoogleGenAI({
-    vertexai: true,
-    project,
-    location: process.env.GOOGLE_CLOUD_LOCATION || "global",
+    apiKey,
   });
   return client;
 }
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-3-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 const SYSTEM_INSTRUCTION = `Tu es un expert de l'analyse de factures d'électricité professionnelles françaises, TOUS FOURNISSEURS confondus (EDF, TotalEnergies, Engie, Alpiq, Ekwateur, Vattenfall, Octopus, etc.).
 

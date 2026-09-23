@@ -1,19 +1,24 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/workspace/page-header";
 import { MetricStrip } from "@/components/workspace/metric-strip";
 import { PipelineBoard } from "@/components/workspace/pipeline-board";
-import { demoDeals } from "@/lib/demo-workspace";
+import { PipelineQueryManager } from "@/lib/crm/pipeline-query-manager";
+import { resolveServerActor } from "@/lib/server-access";
 
-export default function TeamPipelinePage() {
+export default async function TeamPipelinePage() {
+  const t = await getTranslations("team.pipeline");
+  const actor = await resolveServerActor();
+  const deals = await new PipelineQueryManager().list(actor);
   return (
     <div className="rise">
-      <PageHeader eyebrow="Équipe Paris Ouest" title="Pipeline de l’équipe" description="Repérez les dossiers bloqués, réaffectez une action et gardez les échéances commerciales visibles." />
+      <PageHeader eyebrow="Équipe Paris Ouest" title={t("title")} description={t("description")} />
       <MetricStrip items={[
-        { label: "Dossiers ouverts", value: String(demoDeals.filter((deal) => !["signed", "lost"].includes(deal.status)).length) },
-        { label: "À relancer", value: "2", tone: "warning" },
-        { label: "En signature", value: String(demoDeals.filter((deal) => deal.status === "sent").length) },
-        { label: "Signés ce mois", value: String(demoDeals.filter((deal) => deal.status === "signed").length), tone: "positive" },
+        { label: t("openFiles"), value: String(deals.filter((deal) => !["signed", "lost"].includes(deal.status)).length) },
+        { label: t("toFollowUp"), value: String(deals.filter((deal) => deal.dueAt !== null).length), tone: "warning" },
+        { label: t("signing"), value: String(deals.filter((deal) => deal.status === "sent").length) },
+        { label: t("signedThisMonth"), value: String(deals.filter((deal) => deal.status === "signed").length), tone: "positive" },
       ]} />
-      <PipelineBoard scope="team" />
+      <PipelineBoard deals={deals} />
     </div>
   );
 }

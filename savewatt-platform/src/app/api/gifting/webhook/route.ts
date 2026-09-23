@@ -1,20 +1,18 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ProviderEventRepository } from "@/lib/integrations/provider-event-repository";
 import { WebhookSignatureVerifier } from "@/lib/integrations/webhook-signature";
 
 export const runtime = "nodejs";
 
-interface GiftogramWebhook {
-  event_type?: string;
+interface TremendousWebhook {
   event?: string;
-  id?: string;
-  data?: { id?: string };
+  uuid?: string;
+  payload?: { resource?: { id?: string; type?: string } };
 }
 
 export async function POST(request: Request) {
-  const secret = process.env.GIFTOGRAM_WEBHOOK_SECRET;
-  const signature = request.headers.get("x-giftogram-signature") ?? "";
+  const secret = process.env.TREMENDOUS_WEBHOOK_SECRET;
+  const signature = request.headers.get("Tremendous-Webhook-Signature") ?? "";
   if (!secret) {
     return NextResponse.json({ error: "WEBHOOK_NOT_CONFIGURED" }, { status: 503 });
   }
@@ -23,33 +21,32 @@ export async function POST(request: Request) {
   if (rawPayload.length > 1_000_000) {
     return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
   }
-  if (!WebhookSignatureVerifier.verifyGiftogram(rawPayload, signature, secret)) {
+  if (!WebhookSignatureVerifier.verifyTremendous(rawPayload, signature, secret)) {
     return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 401 });
   }
 
-  let payload: GiftogramWebhook;
+  let payload: TremendousWebhook;
   try {
-    payload = JSON.parse(rawPayload) as GiftogramWebhook;
+    payload = JSON.parse(rawPayload) as TremendousWebhook;
   } catch {
     return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
   }
 
-  const eventType = payload.event_type ?? payload.event;
-  if (!eventType) {
+  const eventType = payload.event;
+  if (!eventType || !payload.uuid) {
     return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
   }
 
-  const payloadHash = createHash("sha256").update(rawPayload).digest("hex");
-  const providerEventKey = `${eventType}:${payload.id ?? payload.data?.id ?? payloadHash}`;
+  const providerEventKey = payload.uuid;
   const repository = new ProviderEventRepository();
   const inserted = await repository.record({
-    provider: "GIFTOGRAM",
+    provider: "TREMENDOUS",
     providerEventKey,
     eventType,
     rawPayload,
   });
   if (!inserted) return NextResponse.json({ accepted: true, duplicate: true });
 
-  await repository.markProcessed("GIFTOGRAM", providerEventKey);
+  await repository.markProcessed("TREMENDOUS", providerEventKey);
   return NextResponse.json({ accepted: true });
 }

@@ -1,90 +1,161 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, FileMagnifyingGlass, Sparkle, UploadSimple } from "@phosphor-icons/react";
-import { Link } from "@/i18n/navigation";
-import { useDossier, store } from "@/lib/store";
-import { joshDossier } from "@/lib/demo-data";
+import {
+  ArrowLeft,
+  CalendarBlank,
+  CheckSquare,
+  ClockCounterClockwise,
+} from "@phosphor-icons/react/dist/ssr";
+import { getLocale, getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { DemoDossierPage } from "@/components/dossiers/demo-dossier-page";
+import { DossierDocumentsPanel } from "@/components/dossiers/dossier-documents-panel";
 import { StatusBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody } from "@/components/ui/card";
-import { CurrentContract } from "@/components/current-contract";
-import { ProposalBuilder } from "@/components/proposal-builder";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
+import { ActivityRepository } from "@/lib/crm/activity-repository";
+import { DossierRepository } from "@/lib/crm/dossier-repository";
+import { DocumentRepository } from "@/lib/documents/document-repository";
+import { resolveServerActor } from "@/lib/server-access";
 
-export default function DossierPage() {
-  const { id } = useParams<{ id: string }>();
-  const d = useDossier(id);
-  const t = useTranslations("common");
-  const ts = useTranslations("status");
-  const tn = useTranslations("current");
-  useLocale();
+export default async function DossierPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const actor = await resolveServerActor();
+  if (actor.isPreview) return <DemoDossierPage />;
 
-  if (!d) {
-    return (
-      <div className="mx-auto max-w-lg py-20 text-center">
-        <p className="text-muted">{t("notFound")}</p>
-        <Link href="/" className="mt-3 inline-block text-accent hover:underline">
-          {t("back")}
-        </Link>
-      </div>
-    );
-  }
+  const { id } = await params;
+  const dossiers = new DossierRepository();
+  const activities = new ActivityRepository();
+  const documents = new DocumentRepository();
+  const [dossier, events, tasks, dossierDocuments] = await Promise.all([
+    dossiers.find(actor, id),
+    activities.listEvents(actor, id),
+    activities.listTasks(actor, id),
+    documents.list(actor, id),
+  ]);
+  if (!dossier) notFound();
 
-  const ready = d.current && d.proposal;
-
-  function loadSample() {
-    const sample = joshDossier();
-    store.update(id, { current: sample.current, proposal: sample.proposal, status: "analyzed" });
-  }
+  const locale = await getLocale();
+  const commonT = await getTranslations("common");
+  const dossierT = await getTranslations("dossier.crm");
+  const statusT = await getTranslations("status");
+  const date = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   return (
     <div className="rise">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-        <ArrowLeft size={16} /> {t("back")}
+      <Link href="/pipeline" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+        <ArrowLeft size={16} /> {commonT("back")}
       </Link>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">{d.clientName}</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.12em] text-faint">
+            {dossierT("eyebrow")}
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
+            {dossier.clientName}
+          </h1>
           <p className="nums mt-1 text-sm text-muted">
-            {d.pdl ?? "—"} · {d.segment}
+            {dossier.pdl ?? dossierT("noPdl")} · {dossier.segment ?? dossierT("noSegment")}
           </p>
         </div>
-        <StatusBadge status={d.status} label={ts(d.status)} />
+        <StatusBadge status={dossier.status} label={statusT(dossier.status)} />
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Link href={`/dossiers/${id}/bills/bill-current/validate`} className="press inline-flex h-10 items-center gap-2 rounded-[0.7rem] border border-line-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2">
-          <FileMagnifyingGlass size={17} /> Valider la facture
-        </Link>
-        <Link href={`/dossiers/${id}/supplier-offer`} className="press inline-flex h-10 items-center gap-2 rounded-[0.7rem] border border-line-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2">
-          <UploadSimple size={17} /> Saisir l’offre fournisseur
-        </Link>
-      </div>
-
-      {!ready ? (
-        <Card className="mt-6">
-          <CardBody className="flex flex-col items-center gap-4 py-12 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
-              <Sparkle size={22} weight="fill" />
-            </span>
-            <div>
-              <p className="text-base font-semibold text-ink">{tn("title")}</p>
-              <p className="mt-1 max-w-md text-sm text-muted">{tn("subtitle")}</p>
-            </div>
-            <Button onClick={loadSample}>
-              <Sparkle size={17} weight="fill" />
-              {ts("analyzed")}
-            </Button>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardBody>
+            <p className="text-xs text-muted">{dossierT("owner")}</p>
+            <p className="mt-1 text-sm font-semibold text-ink">{dossier.ownerName}</p>
           </CardBody>
         </Card>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <CurrentContract current={d.current!} proposal={d.proposal} />
-          <ProposalBuilder dossier={d} />
-        </div>
-      )}
+        <Card>
+          <CardBody>
+            <p className="text-xs text-muted">{dossierT("createdAt")}</p>
+            <p className="mt-1 text-sm font-semibold text-ink">
+              {date.format(dossier.createdAt * 1_000)}
+            </p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <p className="text-xs text-muted">{dossierT("nextAction")}</p>
+            <p className="mt-1 text-sm font-semibold text-ink">
+              {dossier.nextTask ?? dossierT("noNextAction")}
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+
+      <DossierDocumentsPanel
+        dossierId={dossier.id}
+        dossierStatus={dossier.status}
+        dossierVersion={dossier.version}
+        documents={dossierDocuments}
+      />
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckSquare size={19} className="text-accent" /> {dossierT("tasks")}
+            </CardTitle>
+          </CardHeader>
+          <CardBody>
+            {tasks.length === 0 ? (
+              <p className="text-sm text-muted">{dossierT("noTasks")}</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {tasks.map((task) => (
+                  <li key={task.id} className="py-3 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-ink">{task.title}</p>
+                        <p className="mt-1 text-xs text-muted">{task.assigneeName}</p>
+                      </div>
+                      <span className="rounded-full bg-surface-2 px-2 py-1 font-mono text-[10px] text-muted">
+                        {task.status}
+                      </span>
+                    </div>
+                    {task.dueAt && (
+                      <p className="mt-2 inline-flex items-center gap-1 text-xs text-faint">
+                        <CalendarBlank size={13} /> {date.format(task.dueAt * 1_000)}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClockCounterClockwise size={19} className="text-accent" /> {dossierT("timeline")}
+            </CardTitle>
+          </CardHeader>
+          <CardBody>
+            {events.length === 0 ? (
+              <p className="text-sm text-muted">{dossierT("noEvents")}</p>
+            ) : (
+              <ol className="space-y-4">
+                {events.map((event) => (
+                  <li key={event.id} className="border-l-2 border-line pl-4">
+                    <p className="text-sm font-medium text-ink">{event.summary}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {event.actorName ?? dossierT("systemActor")} · {date.format(event.createdAt * 1_000)}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardBody>
+        </Card>
+      </div>
     </div>
   );
 }

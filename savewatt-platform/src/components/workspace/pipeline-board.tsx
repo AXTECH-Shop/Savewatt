@@ -2,21 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Funnel, Kanban, ListBullets, Plus } from "@phosphor-icons/react";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { pathIsInScope } from "@/lib/access-control";
-import { demoDeals, type DemoDeal } from "@/lib/demo-workspace";
+import { demoActionKeys, demoCopyKey, demoDueKeys } from "@/lib/demo-copy";
+import type { PipelineDeal } from "@/lib/crm/crm-types";
 import type { DossierStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { useWorkspace } from "@/components/workspace-provider";
 import { StatusPill } from "./status-pill";
-
-const columns: Array<{ status: DossierStatus; label: string }> = [
-  { status: "uploaded", label: "Documents reçus" },
-  { status: "analyzed", label: "Analyse prête" },
-  { status: "proposalReady", label: "Offre prête" },
-  { status: "sent", label: "En signature" },
-  { status: "signed", label: "Signé" },
-];
 
 const statusTone: Record<DossierStatus, "neutral" | "positive" | "warning" | "danger"> = {
   draft: "neutral",
@@ -28,10 +20,28 @@ const statusTone: Record<DossierStatus, "neutral" | "positive" | "warning" | "da
   lost: "danger",
 };
 
-function DealCard({ deal }: { deal: DemoDeal }) {
+function DealCard({ deal }: { deal: PipelineDeal }) {
+  const locale = useLocale();
+  const t = useTranslations("pipeline");
+  const workspaceT = useTranslations("workspace");
+  const actionKey = deal.nextAction
+    ? demoCopyKey(demoActionKeys, deal.nextAction)
+    : undefined;
+  const dueKey = deal.dueLabel
+    ? demoCopyKey(demoDueKeys, deal.dueLabel)
+    : undefined;
+  const action = actionKey
+    ? workspaceT(actionKey)
+    : deal.nextAction ?? t("noNextAction");
+  const due = dueKey
+    ? workspaceT(dueKey)
+    : deal.dueAt
+      ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(deal.dueAt * 1_000)
+      : t("noDueDate");
+
   return (
     <Link
-      href={`/clients/${deal.id}`}
+      href={`/dossiers/${deal.id}`}
       className="press group block rounded-xl border border-line bg-surface p-4 shadow-soft hover:border-accent/35"
     >
       <div className="flex items-start justify-between gap-3">
@@ -42,55 +52,66 @@ function DealCard({ deal }: { deal: DemoDeal }) {
         <span className="font-mono text-[10px] text-faint">{deal.segment}</span>
       </div>
       <div className="mt-4 border-t border-line pt-3">
-        <p className="text-xs font-medium text-ink">{deal.nextAction}</p>
+        <p className="text-xs font-medium text-ink">{action}</p>
         <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-muted">
           <span>{deal.owner}</span>
-          <span>{deal.dueLabel}</span>
+          <span>{due}</span>
         </div>
       </div>
     </Link>
   );
 }
 
-export function PipelineBoard({ scope = "personal" }: { scope?: "personal" | "team" | "branch" }) {
-  const { actor } = useWorkspace();
+export function PipelineBoard({ deals }: { deals: PipelineDeal[] }) {
+  const locale = useLocale();
+  const t = useTranslations("pipeline");
+  const workspaceT = useTranslations("workspace");
   const [view, setView] = useState<"board" | "list">("board");
   const [query, setQuery] = useState("");
+  const columns: Array<{ status: DossierStatus; label: string }> = [
+    { status: "draft", label: t("columns.draft") },
+    { status: "uploaded", label: t("columns.uploaded") },
+    { status: "analyzed", label: t("columns.analyzed") },
+    { status: "proposalReady", label: t("columns.proposalReady") },
+    { status: "sent", label: t("columns.sent") },
+    { status: "signed", label: t("columns.signed") },
+  ];
+  const currency = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  });
 
-  const deals = useMemo(() => {
-    const scoped = demoDeals.filter((deal) => {
-      if (scope === "personal") return deal.ownerId === actor.userId || actor.isPreview;
-      return pathIsInScope(actor, deal.orgPath) || actor.isPreview;
-    });
+  const filteredDeals = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return scoped;
-    return scoped.filter((deal) =>
+    if (!normalized) return deals;
+    return deals.filter((deal) =>
       [deal.client, deal.pdl, deal.owner, deal.status].some((value) =>
-        value.toLowerCase().includes(normalized),
+        value?.toLowerCase().includes(normalized),
       ),
     );
-  }, [actor, query, scope]);
+  }, [deals, query]);
 
   return (
     <section className="mt-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex h-10 min-w-0 max-w-md flex-1 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3">
           <Funnel size={16} className="text-faint" />
-          <span className="sr-only">Filtrer les dossiers</span>
+          <span className="sr-only">{t("filterLabel")}</span>
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Client, PDL, responsable ou statut"
+            placeholder={t("filterPlaceholder")}
             className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint"
           />
         </label>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-line bg-surface p-1" aria-label="Mode d’affichage">
+          <div className="flex rounded-lg border border-line bg-surface p-1" aria-label={t("viewMode")}>
             <button
               onClick={() => setView("board")}
               className={`press rounded-md p-2 ${view === "board" ? "bg-accent-soft text-accent" : "text-muted"}`}
-              aria-label="Afficher en colonnes"
+              aria-label={t("boardView")}
               aria-pressed={view === "board"}
             >
               <Kanban size={17} />
@@ -98,7 +119,7 @@ export function PipelineBoard({ scope = "personal" }: { scope?: "personal" | "te
             <button
               onClick={() => setView("list")}
               className={`press rounded-md p-2 ${view === "list" ? "bg-accent-soft text-accent" : "text-muted"}`}
-              aria-label="Afficher en liste"
+              aria-label={t("listView")}
               aria-pressed={view === "list"}
             >
               <ListBullets size={17} />
@@ -106,16 +127,16 @@ export function PipelineBoard({ scope = "personal" }: { scope?: "personal" | "te
           </div>
           <Link href="/new">
             <Button>
-              <Plus size={17} weight="bold" /> Nouveau dossier
+              <Plus size={17} weight="bold" /> {t("newDossier")}
             </Button>
           </Link>
         </div>
       </div>
 
       {view === "board" ? (
-        <div className="mt-5 grid gap-3 overflow-x-auto pb-3 lg:grid-cols-5">
+        <div className="mt-5 grid gap-3 overflow-x-auto pb-3 lg:grid-cols-6">
           {columns.map((column) => {
-            const columnDeals = deals.filter((deal) => deal.status === column.status);
+            const columnDeals = filteredDeals.filter((deal) => deal.status === column.status);
             return (
               <div key={column.status} className="min-w-[17rem] rounded-2xl bg-surface-2 p-3 lg:min-w-0">
                 <div className="flex items-center justify-between px-1 pb-3">
@@ -127,7 +148,7 @@ export function PipelineBoard({ scope = "personal" }: { scope?: "personal" | "te
                     <DealCard key={deal.id} deal={deal} />
                   ))}
                   {columnDeals.length === 0 && (
-                    <p className="rounded-xl border border-dashed border-line px-3 py-8 text-center text-xs text-faint">Aucun dossier</p>
+                    <p className="rounded-xl border border-dashed border-line px-3 py-8 text-center text-xs text-faint">{t("empty")}</p>
                   )}
                 </div>
               </div>
@@ -137,17 +158,21 @@ export function PipelineBoard({ scope = "personal" }: { scope?: "personal" | "te
       ) : (
         <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-surface">
           <div className="hidden grid-cols-[1.3fr_0.85fr_0.75fr_0.8fr_0.7fr] gap-4 border-b border-line px-5 py-3 text-xs font-medium uppercase tracking-[0.08em] text-faint md:grid">
-            <span>Client</span><span>Responsable</span><span>Statut</span><span>Prochaine action</span><span className="text-right">Gain estimé</span>
+            <span>{t("columns.client")}</span><span>{t("columns.owner")}</span><span>{t("status")}</span><span>{t("nextAction")}</span><span className="text-right">{t("estimatedSaving")}</span>
           </div>
           <ul className="divide-y divide-line">
-            {deals.map((deal) => (
+            {filteredDeals.map((deal) => (
               <li key={deal.id}>
-                <Link href={`/clients/${deal.id}`} className="press grid gap-2 px-5 py-4 hover:bg-surface-2 md:grid-cols-[1.3fr_0.85fr_0.75fr_0.8fr_0.7fr] md:items-center md:gap-4">
+                <Link href={`/dossiers/${deal.id}`} className="press grid gap-2 px-5 py-4 hover:bg-surface-2 md:grid-cols-[1.3fr_0.85fr_0.75fr_0.8fr_0.7fr] md:items-center md:gap-4">
                   <span><strong className="block text-sm text-ink">{deal.client}</strong><span className="nums text-xs text-muted">{deal.pdl}</span></span>
                   <span className="text-sm text-muted">{deal.owner}</span>
                   <span><StatusPill tone={statusTone[deal.status]}>{columns.find((column) => column.status === deal.status)?.label ?? deal.status}</StatusPill></span>
-                  <span className="text-sm text-muted">{deal.nextAction}</span>
-                  <span className="nums text-right text-sm font-semibold text-ink">{deal.annualSavingEur ? `${deal.annualSavingEur.toLocaleString("fr-FR")} €` : "—"}</span>
+                  <span className="text-sm text-muted">
+                    {deal.nextAction && demoCopyKey(demoActionKeys, deal.nextAction)
+                      ? workspaceT(demoCopyKey(demoActionKeys, deal.nextAction)!)
+                      : deal.nextAction ?? t("noNextAction")}
+                  </span>
+                  <span className="nums text-right text-sm font-semibold text-ink">{deal.annualSavingEur ? currency.format(deal.annualSavingEur) : "—"}</span>
                 </Link>
               </li>
             ))}

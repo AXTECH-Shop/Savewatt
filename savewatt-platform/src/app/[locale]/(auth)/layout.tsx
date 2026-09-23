@@ -1,6 +1,9 @@
 import { BrandLockup } from "@/components/brand";
+import { getTranslations } from "next-intl/server";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("auth.layout");
+
   return (
     <main className="grid min-h-[100dvh] bg-bg lg:grid-cols-[minmax(0,1.05fr)_minmax(28rem,0.95fr)]">
       <section className="relative hidden overflow-hidden bg-deep px-12 py-10 text-white lg:flex lg:flex-col">
@@ -10,19 +13,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="relative mt-auto max-w-xl pb-10">
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-lime">
-            Espace professionnel
+            {t("eyebrow")}
           </p>
           <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.05em]">
-            Chaque dossier avance. Chaque commission reste traçable.
+            {t("title")}
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-white/68">
-            De la facture client à la signature, pilotez vos offres, votre réseau et vos
-            échéances depuis un espace sécurisé.
+            {t("description")}
           </p>
           <div className="mt-10 grid grid-cols-3 border-y border-white/15 py-5 text-sm text-white/72">
-            <span>Comparaison</span>
-            <span className="border-x border-white/15 px-5">Signature</span>
-            <span className="pl-5">Commissions</span>
+            <span>{t("comparison")}</span>
+            <span className="border-x border-white/15 px-5">{t("signature")}</span>
+            <span className="pl-5">{t("commissions")}</span>
           </div>
         </div>
       </section>

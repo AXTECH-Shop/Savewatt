@@ -1,7 +1,20 @@
+import { getLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/workspace/page-header";
 import { StatusPill } from "@/components/workspace/status-pill";
 
-const params = [["Accise", "20,50 €/MWh", "01/02/2026"], ["CTA", "21,93 %", "01/08/2026"], ["TVA énergie", "20,00 %", "01/01/2026"], ["TURPE 7", "Version HTA-BT", "01/08/2025"]];
-export default function RegulatoryPage() {
-  return <div className="rise"><PageHeader eyebrow="Opérateur" title="Paramètres réglementaires" description="Référentiel daté utilisé pour contrôler les composantes réglementées des comparatifs." /><section className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface"><table className="w-full text-sm"><thead className="bg-surface-2 text-xs uppercase tracking-wider text-faint"><tr><th className="px-5 py-3 text-left">Paramètre</th><th className="px-5 py-3 text-left">Valeur</th><th className="px-5 py-3 text-left">Effet</th><th className="px-5 py-3 text-right">État</th></tr></thead><tbody className="divide-y divide-line">{params.map(([name, value, date]) => <tr key={name}><td className="px-5 py-4 font-medium text-ink">{name}</td><td className="px-5 py-4 font-mono text-muted">{value}</td><td className="px-5 py-4 text-muted">{date}</td><td className="px-5 py-4 text-right"><StatusPill tone="positive">Active</StatusPill></td></tr>)}</tbody></table></section></div>;
+const parameters = [
+  ["excise", 20.5, "currency", "2026-02-01"],
+  ["cta", 21.93, "percent", "2026-08-01"],
+  ["energyVat", 20, "percent", "2026-01-01"],
+  ["turpe7", null, "version", "2025-08-01"],
+] as const;
+
+export default async function RegulatoryPage() {
+  const t = await getTranslations("operator");
+  const locale = await getLocale();
+  const currency = new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
+  const percent = new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 2 });
+  const date = new Intl.DateTimeFormat(locale);
+
+  return <div className="rise"><PageHeader eyebrow={t("operator")} title={t("regulatorySettings")} description={t("regulatorySettingsDescription")} /><section className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface"><table className="w-full text-sm"><thead className="bg-surface-2 text-xs uppercase tracking-wider text-faint"><tr><th className="px-5 py-3 text-left">{t("parameter")}</th><th className="px-5 py-3 text-left">{t("value")}</th><th className="px-5 py-3 text-left">{t("effectiveDate")}</th><th className="px-5 py-3 text-right">{t("state")}</th></tr></thead><tbody className="divide-y divide-line">{parameters.map(([name, value, format, effectiveDate]) => <tr key={name}><td className="px-5 py-4 font-medium text-ink">{t(name)}</td><td className="px-5 py-4 font-mono text-muted">{format === "currency" ? `${currency.format(value ?? 0)}/MWh` : format === "percent" ? percent.format((value ?? 0) / 100) : t("turpeVersion")}</td><td className="px-5 py-4 text-muted">{date.format(new Date(`${effectiveDate}T00:00:00Z`))}</td><td className="px-5 py-4 text-right"><StatusPill tone="positive">{t("active")}</StatusPill></td></tr>)}</tbody></table></section></div>;
 }

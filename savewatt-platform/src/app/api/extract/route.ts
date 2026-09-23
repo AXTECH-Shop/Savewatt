@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { extractBill } from "@/lib/extraction/gemini";
 import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
 
-// google-auth-library (ADC) requires Node, not the edge runtime.
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
