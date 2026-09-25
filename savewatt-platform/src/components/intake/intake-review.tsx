@@ -169,7 +169,7 @@ export function IntakeReview({ draft }: { draft: IntakeDraft }) {
             ))}
           </ul>
           {issues.includes("REFERENCE_TERMS_MISSING") ? (
-            <Link href="/intake/tarifs" className="mt-3 inline-block font-medium underline">
+            <Link href="/settings/symphonics" className="mt-3 inline-block font-medium underline">
               {t("review.configureReference")}
             </Link>
           ) : null}

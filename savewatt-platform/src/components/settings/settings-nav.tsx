@@ -9,6 +9,7 @@ import { useWorkspace } from "@/components/workspace-provider";
 const internalItems = [
   ["/settings/margins", "margins"],
   ["/settings/pricing", "pricing"],
+  ["/settings/symphonics", "symphonics"],
 ] as const;
 
 const networkItems = [

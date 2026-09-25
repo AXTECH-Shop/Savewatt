@@ -84,7 +84,7 @@ export default async function IntakePage() {
             <p className="mt-2 text-xs leading-5 text-muted">{t("publicLinkHint")}</p>
           </section>
           <Link
-            href="/intake/tarifs"
+            href="/settings/symphonics"
             className="block rounded-2xl border border-line bg-surface p-5 text-sm font-medium text-accent hover:bg-surface-2"
           >
             {tr("title")} →
