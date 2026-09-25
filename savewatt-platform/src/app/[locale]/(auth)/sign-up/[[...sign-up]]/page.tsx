@@ -1,6 +1,9 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { resolveAccessSurface } from "@/lib/access/access-surface";
 import { isRegistrationType } from "@/lib/access/account-access-repository";
 
 export default async function SignUpPage({
@@ -11,10 +14,11 @@ export default async function SignUpPage({
   searchParams: Promise<{ type?: string }>;
 }) {
   const { locale } = await params;
+  const surface = resolveAccessSurface((await headers()).get("host"));
+  if (surface === "ADMIN") redirect(`/${locale}/sign-in`);
   const { type } = await searchParams;
-  const registrationType = isRegistrationType(type?.toUpperCase())
-    ? type.toUpperCase()
-    : null;
+  const normalizedType = type?.toUpperCase();
+  const registrationType = isRegistrationType(normalizedType) ? normalizedType : null;
   const t = await getTranslations("auth.signUp");
 
   if (!registrationType) {

@@ -8,6 +8,10 @@
     {
       "pattern": "app.savewatt.fr",
       "custom_domain": true
+    },
+    {
+      "pattern": "admin.savewatt.fr",
+      "custom_domain": true
     }
   ],
   "assets": {

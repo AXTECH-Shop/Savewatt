@@ -1,7 +1,14 @@
 import { AppShell } from "@/components/app-shell";
 import { WorkspaceProvider } from "@/components/workspace-provider";
 import { NotificationRepository } from "@/lib/notifications/notification-repository";
+import {
+  ADMIN_ORIGIN,
+  APP_ORIGIN,
+  isInternalRole,
+  resolveAccessSurface,
+} from "@/lib/access/access-surface";
 import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 async function unreadNotificationCount(actor: { orgId: string; userId: string; isPreview: boolean }) {
@@ -30,6 +37,14 @@ export default async function ProtectedAppLayout({
       redirect(`/${locale}/access-pending`);
     }
     throw error;
+  }
+
+  const surface = resolveAccessSurface((await headers()).get("host"));
+  if (surface === "ADMIN" && !isInternalRole(actor.role)) {
+    redirect(`${APP_ORIGIN}/${locale}`);
+  }
+  if (surface === "APP" && isInternalRole(actor.role)) {
+    redirect(`${ADMIN_ORIGIN}/${locale}`);
   }
 
   const unreadNotifications = await unreadNotificationCount(actor);

@@ -1,5 +1,6 @@
 import { SignOutButton } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
@@ -8,6 +9,12 @@ import {
   isRegistrationType,
 } from "@/lib/access/account-access-repository";
 import { homeForRole } from "@/lib/access-control";
+import {
+  ADMIN_ORIGIN,
+  APP_ORIGIN,
+  isInternalRole,
+  resolveAccessSurface,
+} from "@/lib/access/access-surface";
 
 export default async function AccessPendingPage({
   params,
@@ -16,6 +23,8 @@ export default async function AccessPendingPage({
 }) {
   const { locale } = await params;
   const t = await getTranslations("auth.pending");
+  const surface = resolveAccessSurface((await headers()).get("host"));
+  const isAdmin = surface === "ADMIN";
   const { userId } = await auth();
   if (!userId) redirect(`/${locale}/sign-in`);
 
@@ -35,10 +44,13 @@ export default async function AccessPendingPage({
       email,
       membership,
     );
-    if (internalAccessAllowed) redirect(`/${locale}${homeForRole(membership.role)}`);
+    if (internalAccessAllowed) {
+      const targetOrigin = isInternalRole(membership.role) ? ADMIN_ORIGIN : APP_ORIGIN;
+      redirect(`${targetOrigin}/${locale}${homeForRole(membership.role)}`);
+    }
   }
 
-  if (email && isRegistrationType(registrationType)) {
+  if (!isAdmin && email && isRegistrationType(registrationType)) {
     await accessRepository.recordPendingRegistration({
       clerkUserId: userId,
       email,
@@ -52,16 +64,24 @@ export default async function AccessPendingPage({
   return (
     <div>
       <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
-        {t("eyebrow")}
+        {isAdmin ? "Accès interne" : t("eyebrow")}
       </p>
       <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">
-        {isPartner ? t("partnerTitle") : t("customerTitle")}
+        {isAdmin
+          ? "Ce compte n’est pas encore autorisé."
+          : isPartner
+            ? t("partnerTitle")
+            : t("customerTitle")}
       </h1>
       <p className="mt-3 text-sm leading-6 text-muted">
-        {t("description")}
+        {isAdmin
+          ? "Un administrateur SaveWatt doit ajouter cette adresse à la liste interne et lui attribuer un rôle avant toute connexion."
+          : t("description")}
       </p>
       <div className="mt-7 rounded-2xl border border-line bg-surface p-5 shadow-diffuse">
-        <p className="text-sm font-semibold text-ink">{t("requestRecorded")}</p>
+        <p className="text-sm font-semibold text-ink">
+          {isAdmin ? "Autorisation requise" : t("requestRecorded")}
+        </p>
         <p className="mt-1 text-sm text-muted">{email || t("emailUnavailable")}</p>
         <p className="mt-4 text-xs leading-5 text-faint">
           {t("supportLead")} {" "}

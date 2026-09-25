@@ -2,6 +2,7 @@ import "server-only";
 
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { isAppRole, type AppRole } from "@/lib/access-control";
+import { isInternalRole } from "@/lib/access/access-surface";
 
 export const REGISTRATION_TYPES = ["CUSTOMER", "PARTNER"] as const;
 
@@ -230,7 +231,7 @@ export class AccountAccessRepository {
     email: string,
     membership: ActiveMembership,
   ): Promise<boolean> {
-    if (!INTERNAL_ROLES.includes(membership.role)) return true;
+    if (!isInternalRole(membership.role)) return true;
 
     const row = await this.database
       .prepare(
