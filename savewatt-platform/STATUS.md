@@ -8,6 +8,9 @@ _Last updated: 2026-09-25_
 - **Email moved to Cloudflare Email Service** (`send_email` binding `EMAIL`, sender `offres@savewatt.fr`); Resend sender, webhook, and Svix verifier removed. No provider delivery callbacks yet — delivery rows stay `SENT`.
 - **R2** bucket `savewatt-documents` created in the EU jurisdiction; D1 migrations through 0015 applied remotely; app deployed to `app.savewatt.fr`.
 - **Live proof** (`tmp/pdf-analysis/run-bill-to-offer.mjs`): Vertex extraction of the EDF bill → validated extraction → Symphonics terms → offer v1 (10 €/MWh) → 17 561 € TTC/an, 2 238 €/an savings → both PDFs.
+- **Delivery callbacks**: Email Service lifecycle events (queue `savewatt-email-events`, subscription on savewatt.fr) are consumed by the custom Worker entry `worker.ts` → `src/lib/offers/offer-delivery-events.ts`. Sending only records the delivery as `QUEUED`; the offer version becomes `SENT` and the dossier `sent` when `message.delivered` arrives; bounces/failures/rejections mark the delivery and write a timeline event.
+- **Clerk production** instance created for `savewatt.fr` (Google sign-in disabled until custom OAuth credentials exist). Cutover pending DNS: add the Clerk CNAMEs, then copy `.env.clerk-production` → `.env.production.local`, put `CLERK_SECRET_KEY`/`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` Worker secrets, rebuild and deploy.
+- **DocuSeal** kept in the codebase but inactive (no secrets configured).
 
 ## Implementation update — 2026-09-25
 

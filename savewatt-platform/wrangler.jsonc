@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "savewatt-platform",
-  "main": ".open-next/worker.js",
+  "main": "./worker.ts",
   "compatibility_date": "2026-09-16",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
@@ -46,6 +46,16 @@
       "remote": true
     }
   ],
+  "queues": {
+    "consumers": [
+      {
+        "queue": "savewatt-email-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5
+      }
+    ]
+  },
   "browser": {
     "binding": "BROWSER"
   },

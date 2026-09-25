@@ -49,3 +49,20 @@ interface R2Bucket {
   get(key: string): Promise<R2ObjectBody | null>;
   delete(key: string): Promise<void>;
 }
+
+interface QueueMessage<Body = unknown> {
+  readonly id: string;
+  readonly body: Body;
+  ack(): void;
+  retry(): void;
+}
+
+interface MessageBatch<Body = unknown> {
+  readonly queue: string;
+  readonly messages: readonly QueueMessage<Body>[];
+}
+
+interface ExportedHandler<Env = unknown, QueueBody = unknown> {
+  fetch?: (request: Request, env: Env, ctx: unknown) => Response | Promise<Response>;
+  queue?: (batch: MessageBatch<QueueBody>, env: Env, ctx: unknown) => void | Promise<void>;
+}

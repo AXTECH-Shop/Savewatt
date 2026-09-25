@@ -25,11 +25,10 @@ interface PdfArtifact {
 
 export interface DeliveryResult {
   deliveryId: string;
-  state: "SENT" | "FAILED";
+  state: "QUEUED" | "DELIVERED" | "FAILED";
   recipientEmail: string;
   providerMessageId: string | null;
   error: string | null;
-  offerVersionStatus: OfferVersionRecord["status"];
 }
 
 interface DeliveryRow {
@@ -97,6 +96,9 @@ export class OfferDeliveryManager {
     if (!["DRAFT", "APPROVED"].includes(version.status)) {
       throw new CrmError("CRM_CONFLICT", 409, "status");
     }
+    if (await this.hasDeliveryInFlight(offerVersionId)) {
+      throw new CrmError("CRM_CONFLICT", 409, "delivery");
+    }
 
     const meta = await this.clientMeta(actor, version.dossierId);
     const recipient = (options.recipientEmail ?? meta.contactEmail ?? "").trim().toLowerCase();
@@ -146,31 +148,36 @@ export class OfferDeliveryManager {
       throw new CrmError("CRM_UNAVAILABLE", outcome.kind === "skipped" ? 503 : 502, "email");
     }
 
+    // Accepted by Email Service only: the version becomes SENT (and the dossier
+    // `sent`) when the delivered callback arrives (offer-delivery-events.ts).
     const delivery = await this.recordDelivery(
       actor,
       offerVersionId,
       options.idempotencyKey,
       recipient,
-      "SENT",
+      "QUEUED",
       providerMessageId,
       null,
     );
-    await this.offerVersions.updateStatus(actor, offerVersionId, "SENT");
-
-    if (meta.dossierStatus === "proposalReady") {
-      try {
-        await this.dossiers.updateStatus(actor, version.dossierId, "sent", meta.dossierVersion);
-      } catch {
-        // Dossier may already be advanced; delivery stays authoritative.
-      }
-    }
-    await this.recordEvent(actor, version.dossierId, "OFFER_SENT", {
+    await this.recordEvent(actor, version.dossierId, "OFFER_QUEUED", {
       offerVersionId,
       versionNo: version.versionNo,
       recipient,
       deliveryId: delivery.id,
     });
     return this.toResult(delivery);
+  }
+
+  private async hasDeliveryInFlight(offerVersionId: string): Promise<boolean> {
+    const row = await this.database
+      .prepare(
+        `SELECT 1 AS found FROM offer_deliveries
+         WHERE offer_version_id = ? AND state = 'QUEUED' AND created_at > unixepoch() - 1800
+         LIMIT 1`,
+      )
+      .bind(offerVersionId)
+      .first<{ found: number }>();
+    return Boolean(row);
   }
 
   /**
@@ -350,11 +357,15 @@ export class OfferDeliveryManager {
   private toResult(row: DeliveryRow): DeliveryResult {
     return {
       deliveryId: row.id,
-      state: row.state === "SENT" || row.state === "DELIVERED" ? "SENT" : "FAILED",
+      state:
+        row.state === "DELIVERED"
+          ? "DELIVERED"
+          : row.state === "QUEUED" || row.state === "SENT"
+            ? "QUEUED"
+            : "FAILED",
       recipientEmail: row.recipient_email,
       providerMessageId: row.provider_message_id,
       error: row.error,
-      offerVersionStatus: "SENT",
     };
   }
 

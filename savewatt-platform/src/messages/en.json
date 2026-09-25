@@ -352,7 +352,7 @@
     "sendCta": "Send to client",
     "sending": "Sending…",
     "sendError": "Sending failed.",
-    "sendDone": "Offer sent to the client.",
+    "sendDone": "Offer in transit. It becomes “Sent” once the recipient's mail server confirms delivery.",
     "recipientEmail": "Recipient email (optional)",
     "recipientPlaceholder": "Default: client contact email",
     "downloadPdf": "Budget forecast (PDF)",

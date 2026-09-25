@@ -352,7 +352,7 @@
     "sendCta": "Envoyer au client",
     "sending": "Envoi…",
     "sendError": "L'envoi a échoué.",
-    "sendDone": "Offre envoyée au client.",
+    "sendDone": "Offre en cours d'acheminement. Elle passera à « Envoyée » dès que le serveur du destinataire en confirme la réception.",
     "recipientEmail": "Email du destinataire (optionnel)",
     "recipientPlaceholder": "Email du contact client par défaut",
     "downloadPdf": "Budget prévisionnel (PDF)",
