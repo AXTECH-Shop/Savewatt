@@ -1,12 +1,12 @@
 # Savewatt — AI Services
 
-> In scope for v1: **structured bill extraction** with operator validation. Provider: Google Gemini through Vertex AI / Google Agent Platform using Application Default Credentials (ADC) only. No API key is accepted by the application.
+> In scope for v1: **structured bill extraction** with operator validation. Provider: Google Gemini Developer API using a restricted `GOOGLE_API_KEY` stored as a Cloudflare Worker secret. Standard Vertex AI Model Garden requests require OAuth/ADC and are not used by this Worker.
 
 ## 1. Feature inventory (v1)
 
 | Feature | Status | Model | Human gate |
 |---|---|---|---|
-| Bill field extraction (PDF/photo → strict JSON) | v1 | `GEMINI_MODEL` (target family: Gemini 3 Flash; exact regional ID is deployment configuration) | **Required** — validation screen B6 |
+| Bill field extraction (PDF/photo → strict JSON) | v1 | `GEMINI_MODEL=gemini-3.6-flash` | **Required** — validation screen B6 |
 | Extraction confidence scoring | v1 | derived from model + rule checks | surfaced as chips |
 | (Later) offer summary / anomaly narrative | backlog | — | — |
 
@@ -62,7 +62,8 @@ Per-supplier recognition hints (EDF, Engie, TotalEnergies, Alpiq, Ekwateur, Vatt
 - **Strict JSON schema**, temperature 0, no free-text side-channel; reject/repair non-conforming output.
 - **No PII in logs**: prompts/outputs with client data are not written to app logs in clear; stored under KMS-enc where retained.
 - **Human validation is mandatory** before data is trusted downstream (comparator/offer).
-- EU data-handling posture; confirm the Vertex AI location and Google Cloud data-processing terms before production.
-- **Authentication:** `gcloud auth application-default login` for local development; workload identity/ADC in production. `gcloud auth login` alone is insufficient.
+- Confirm Gemini API data-handling terms before processing live customer bills; Gemini Developer API does not provide the Vertex regional endpoint control previously planned.
+- **Authentication:** a `GOOGLE_API_KEY` restricted to `generativelanguage.googleapis.com` is held in `.env.local` for local development and as a Cloudflare Worker secret in production. It must never be exposed through a `NEXT_PUBLIC_` variable.
+- **Billing:** the project must have active Gemini API prepayment credits before live extraction can succeed.
 - **Cost controls:** cap pages per bill, reject oversized files, cache supplier context, and batch only inside a scoped queue job.
 - **Eval fixture:** the JOSH §7.4 bill is a golden extraction test (expected fields + expected flags) — part of the Lot 2 blocking tests.

@@ -1,29 +1,34 @@
 import "server-only";
-import { GoogleGenAI, Type } from "@google/genai";
 import type { ExtractionResult } from "./schema";
 import { normalizeResult } from "./normalize";
+import { getGoogleAccessToken } from "./google-auth";
 
 /**
- * Gemini-based, provider-agnostic bill extraction through the Gemini API.
- *
- * Auth: API key supplied as the server-only GOOGLE_API_KEY environment variable.
+ * Gemini-based, provider-agnostic bill extraction through Vertex AI (EU data
+ * residency by default), billed to the GCP project credits.
  */
-let client: GoogleGenAI | null = null;
-function getClient(): GoogleGenAI {
-  if (client) return client;
-  const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "GOOGLE_API_KEY is not set. Configure the local environment and Cloudflare Worker secret before extracting.",
-    );
-  }
-  client = new GoogleGenAI({
-    apiKey,
-  });
-  return client;
-}
+const Type = {
+  OBJECT: "OBJECT",
+  ARRAY: "ARRAY",
+  STRING: "STRING",
+  NUMBER: "NUMBER",
+  BOOLEAN: "BOOLEAN",
+} as const;
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+
+function vertexEndpoint(): string {
+  const project = process.env.VERTEX_PROJECT_ID;
+  if (!project) throw new Error("VERTEX_PROJECT_ID is not set.");
+  const location = process.env.VERTEX_LOCATION || "eu";
+  const host =
+    location === "global"
+      ? "aiplatform.googleapis.com"
+      : location === "eu" || location === "us"
+        ? `aiplatform.${location}.rep.googleapis.com`
+        : `${location}-aiplatform.googleapis.com`;
+  return `https://${host}/v1/projects/${project}/locations/${location}/publishers/google/models/${GEMINI_MODEL}:generateContent`;
+}
 
 const SYSTEM_INSTRUCTION = `Tu es un expert de l'analyse de factures d'électricité professionnelles françaises, TOUS FOURNISSEURS confondus (EDF, TotalEnergies, Engie, Alpiq, Ekwateur, Vattenfall, Octopus, etc.).
 
@@ -159,26 +164,42 @@ export interface BillInput {
 
 /** Extract a structured current-contract from any French electricity bill (PDF or image). */
 export async function extractBill(input: BillInput): Promise<ExtractionResult> {
-  const response = await getClient().models.generateContent({
-    model: MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { inlineData: { data: input.data, mimeType: input.mimeType } },
-          { text: PROMPT },
-        ],
-      },
-    ],
-    config: {
-      temperature: 0,
-      systemInstruction: SYSTEM_INSTRUCTION,
-      responseMimeType: "application/json",
-      responseSchema: RESPONSE_SCHEMA,
+  const response = await fetch(vertexEndpoint(), {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${await getGoogleAccessToken()}`,
+      "content-type": "application/json",
     },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { data: input.data, mimeType: input.mimeType } },
+            { text: PROMPT },
+          ],
+        },
+      ],
+      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+      generationConfig: {
+        temperature: 0,
+        responseMimeType: "application/json",
+        responseSchema: RESPONSE_SCHEMA,
+      },
+    }),
   });
+  const body = (await response.json()) as {
+    candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(`Vertex AI ${response.status}: ${body.error?.message ?? "erreur inconnue"}`);
+  }
 
-  const text = response.text;
+  const text = body.candidates?.[0]?.content?.parts
+    ?.filter((part) => part.text && !part.thought)
+    .map((part) => part.text)
+    .join("");
   if (!text) throw new Error("Réponse vide du modèle d'extraction.");
   return normalizeResult(JSON.parse(text) as ExtractionResult);
 }

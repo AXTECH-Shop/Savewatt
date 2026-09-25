@@ -226,7 +226,13 @@ export function OfferWorkspace({
               <OfferSendBar offerVersionId={selected.id} disabled={busy !== null} />
             )}
             {selected.status === "SENT" && (
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end gap-2">
+                <a
+                  href={`/api/crm/offer-versions/${selected.id}/pdf?kind=marketing`}
+                  className="press inline-flex h-10 items-center gap-2 rounded-lg border border-line px-4 text-sm font-medium text-ink hover:border-accent hover:text-accent"
+                >
+                  <FilePdf size={16} /> {t("downloadMarketingPdf")}
+                </a>
                 <a
                   href={`/api/crm/offer-versions/${selected.id}/pdf`}
                   className="press inline-flex h-10 items-center gap-2 rounded-lg border border-line px-4 text-sm font-medium text-ink hover:border-accent hover:text-accent"

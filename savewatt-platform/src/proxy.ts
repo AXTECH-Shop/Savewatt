@@ -15,6 +15,8 @@ const isPublicRoute = createRouteMatcher([
   "/:locale/portal/offer/(.*)",
   "/api/docuseal/webhook(.*)",
   "/api/gifting/webhook(.*)",
+  // Cron does its own auth (Bearer CRON_SECRET).
+  "/api/cron/followups(.*)",
 ]);
 
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);

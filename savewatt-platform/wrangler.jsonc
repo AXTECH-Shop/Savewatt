@@ -16,7 +16,10 @@
   },
   "vars": {
     "TREMENDOUS_BASE_URL": "https://api.tremendous.com/api/v2",
-    "TREMENDOUS_FUNDING_SOURCE_ID": "BALANCE"
+    "TREMENDOUS_FUNDING_SOURCE_ID": "BALANCE",
+    "VERTEX_PROJECT_ID": "project-f5aa049c-0f7c-40c8-bf5",
+    "VERTEX_LOCATION": "eu",
+    "GEMINI_MODEL": "gemini-3.6-flash"
   },
   "d1_databases": [
     {
@@ -29,7 +32,14 @@
   "r2_buckets": [
     {
       "binding": "DOCUMENTS",
-      "bucket_name": "savewatt-documents"
+      "bucket_name": "savewatt-documents",
+      "jurisdiction": "eu"
+    }
+  ],
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "remote": true
     }
   ],
   "browser": {

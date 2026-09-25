@@ -13,6 +13,7 @@ import type {
 } from "./offer-types";
 import type { ComparisonResult } from "@/lib/compare";
 import type { CurrentContract, Proposal } from "@/lib/types";
+import type { BudgetPrevisionnel } from "./estimate";
 
 interface OfferVersionRow {
   id: string;
@@ -26,9 +27,12 @@ interface OfferVersionRow {
   margin_override_reason: string | null;
   comparison_json: string;
   client_price_lines_json: string;
+  budget_json: string | null;
   sha256: string;
   pdf_r2_key: string | null;
   pdf_sha256: string | null;
+  pdf_marketing_r2_key: string | null;
+  pdf_marketing_sha256: string | null;
   created_at: number;
 }
 
@@ -39,6 +43,7 @@ export interface OfferVersionSnapshot {
   marginOverrideReason: string | null;
   comparison: ComparisonResult;
   clientPriceLines: ClientPriceLine[];
+  budget?: BudgetPrevisionnel | null;
 }
 
 export class OfferVersionRepository {
@@ -94,8 +99,8 @@ export class OfferVersionRepository {
              id, organization_id, dossier_id, version_no, status,
              current_contract_json, supplier_offer_json, margin_eur_mwh,
              margin_override_reason, comparison_json, client_price_lines_json,
-             sha256, created_by_user_id
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             budget_json, sha256, created_by_user_id
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -109,6 +114,7 @@ export class OfferVersionRepository {
           snapshot.marginOverrideReason,
           JSON.stringify(snapshot.comparison),
           JSON.stringify(snapshot.clientPriceLines),
+          snapshot.budget ? JSON.stringify(snapshot.budget) : null,
           sha256,
           actor.userId,
         )
@@ -164,9 +170,12 @@ export class OfferVersionRepository {
       marginOverrideReason: row.margin_override_reason,
       comparison: JSON.parse(row.comparison_json) as ComparisonResult,
       clientPriceLines: JSON.parse(row.client_price_lines_json) as ClientPriceLine[],
+      budget: row.budget_json ? (JSON.parse(row.budget_json) as BudgetPrevisionnel) : null,
       sha256: row.sha256,
       pdfR2Key: row.pdf_r2_key,
       pdfSha256: row.pdf_sha256,
+      pdfMarketingR2Key: row.pdf_marketing_r2_key,
+      pdfMarketingSha256: row.pdf_marketing_sha256,
       createdAt: row.created_at,
     };
   }

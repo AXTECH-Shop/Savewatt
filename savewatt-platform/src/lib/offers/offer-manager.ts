@@ -9,9 +9,11 @@ import { CrmScopePolicy } from "@/lib/crm/crm-scope-policy";
 import type { Cadran, CurrentContract, Proposal } from "@/lib/types";
 import type { ExtractionResult } from "@/lib/extraction/schema";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
+import { computeBudgetPrevisionnel } from "./estimate";
 import { MarginGridRepository } from "./margin-grid-repository";
 import { OfferVersionRepository } from "./offer-version-repository";
 import type { ClientPriceLine, OfferVersionRecord, OfferVersionStatus, SaveSupplierOfferInput, SupplierOfferRecord } from "./offer-types";
+import { PricingParameterRepository } from "./pricing-parameter-repository";
 import { SupplierOfferRepository } from "./supplier-offer-repository";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -20,6 +22,7 @@ export class OfferManager {
   constructor(
     private readonly supplierOffers = new SupplierOfferRepository(),
     private readonly marginGrids = new MarginGridRepository(),
+    private readonly pricingParameters = new PricingParameterRepository(),
     private readonly offerVersions = new OfferVersionRepository(),
     private readonly dossiers = new DossierRepository(),
     private readonly scopePolicy = new CrmScopePolicy(),
@@ -69,6 +72,10 @@ export class OfferManager {
     if (!supplierOffer) throw new CrmError("OFFER_INPUT_MISSING", 400, "supplierOffer");
     const grid = await this.marginGrids.resolveEffective(actor);
     if (!grid) throw new CrmError("OFFER_MARGIN_GRID_MISSING", 400, "marginGrid");
+    const pricingParams = await this.pricingParameters.resolveEffective(actor);
+    if (!pricingParams) {
+      throw new CrmError("OFFER_PRICING_PARAMETERS_MISSING", 400, "pricingParameters");
+    }
 
     const margin = request.marginEurMwh ?? grid.defaultMarginEurMwh;
     let status: OfferVersionStatus = "DRAFT";
@@ -93,6 +100,19 @@ export class OfferManager {
       cadran: line.cadran,
       priceEurMwh: proposedPrice(proposal, line.electronEurMwh),
     }));
+    // Customer-safe budget prévisionnel: énergie uses final (margin-inclusive)
+    // prices only — électron/margin never appear in budget_json.
+    const budget = computeBudgetPrevisionnel({
+      lines: supplierOffer.lines.map((line) => ({
+        cadran: line.cadran,
+        annualVolumeMwh: line.annualVolumeMwh,
+        finalPriceEurMwh: line.electronEurMwh + margin,
+      })),
+      subscriptionEurMonth: supplierOffer.subscriptionEurMonth,
+      params: pricingParams,
+      powerKw: extraction.bill.subscribedPowerKva ?? 0,
+      termYears: supplierOffer.termYears,
+    });
 
     const created = await this.offerVersions.create(
       actor,
@@ -104,6 +124,7 @@ export class OfferManager {
         marginOverrideReason: reason,
         comparison,
         clientPriceLines,
+        budget,
       },
       status,
     );

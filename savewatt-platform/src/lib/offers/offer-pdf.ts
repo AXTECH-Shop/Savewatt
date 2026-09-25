@@ -7,6 +7,40 @@ export interface OfferPdfMeta {
   pdl: string | null;
 }
 
+/** Shared SaveWatt brand header for all customer-facing offer documents. */
+export function renderBrandHeader(
+  subtitle: string,
+  version: OfferVersionRecord,
+  locale: string,
+): string {
+  const date = version.supplierOffer.validUntil
+    ? new Date(version.supplierOffer.validUntil).toLocaleDateString(locale)
+    : "—";
+  return `<header style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #118a34;padding-bottom:16px;">
+    <div>
+      <p style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.02em;">Save<span style="color:#118a34;">Watt</span></p>
+      <p style="margin:4px 0 0;color:#5b665f;font-size:12px;">Bureau d'études en optimisation énergétique</p>
+    </div>
+    <div style="text-align:right;font-size:12px;color:#5b665f;">
+      <p style="margin:0;font-weight:600;color:#1d2b25;">${escapeHtml(subtitle)}</p>
+      <p style="margin:2px 0 0;">Valable jusqu'au ${date}</p>
+      <p style="margin:2px 0 0;">Version v${version.versionNo}</p>
+    </div>
+  </header>`;
+}
+
+/** Shared legal footer for all customer-facing offer documents. */
+export function renderLegalFooter(version: OfferVersionRecord, locale: string): string {
+  return `<footer style="margin-top:24px;border-top:1px solid #e6e2d8;padding-top:10px;font-size:9px;color:#8a938c;line-height:1.5;">
+    <strong>AX TECH — ECOLED WAVE CONCEPT</strong> · SAS · SIREN 751 982 760 · SIRET 751 982 760 00041 · TVA FR86 751 982 760<br />
+    8 rue Marbeau, 75016 Paris · contact@savewatt.fr<br />
+    Document généré le ${new Date().toLocaleString(locale)} · empreinte ${version.sha256.slice(0, 16)}…
+  </footer>`;
+}
+
+export { renderOfferBudgetHtml } from "./offer-pdf-budget.ts";
+export { renderOfferMarketingHtml } from "./offer-pdf-marketing.ts";
+
 /**
  * Customer-safe offer HTML. Only client-visible values enter the template
  * context: final prices (already margin-inclusive), current supplier/offer,

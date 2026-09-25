@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaveWatt — Platform Canvas</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b25;
+    --bg3: #1e2535;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --muted: #8892a4;
+    --accent: #3ddc97;
+    --accent2: #6c8fff;
+    --accent3: #ff9f43;
+    --accent4: #ff6b6b;
+    --accent5: #a29bfe;
+    --accent6: #ffeaa7;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.6; }
+
+  /* LAYOUT */
+  .shell { display: flex; min-height: 100vh; }
+  .nav { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+  .main { flex: 1; overflow: hidden; }
+
+  /* NAV */
+  .nav-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .nav-logo .logo-badge { display: inline-flex; align-items: center; gap: 8px; }
+  .nav-logo .bolt { background: var(--accent); color: #000; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0; }
+  .nav-logo .brand { font-weight: 700; font-size: 15px; }
+  .nav-logo .sub { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .nav-section { padding: 4px 12px; margin-bottom: 2px; }
+  .nav-section .section-label { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 8px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; cursor: pointer; color: var(--muted); transition: all 0.15s; font-size: 12.5px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(61,220,151,0.12); color: var(--accent); }
+  .nav-item .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* PAGES */
+  .page { display: none; padding: 28px 32px; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .page-header p { color: var(--muted); font-size: 13px; max-width: 640px; line-height: 1.6; }
+  .page-header .tag { display: inline-block; background: rgba(108,143,255,0.15); color: var(--accent2); font-size: 10px; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .card h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .card-accent { border-left: 3px solid var(--accent); }
+  .card-blue { border-left: 3px solid var(--accent2); }
+  .card-orange { border-left: 3px solid var(--accent3); }
+  .card-red { border-left: 3px solid var(--accent4); }
+  .card-purple { border-left: 3px solid var(--accent5); }
+  .card-yellow { border-left: 3px solid var(--accent6); }
+
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* SECTION */
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+
+  /* BADGES */
+  .badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+  .badge-green { background: rgba(61,220,151,0.15); color: var(--accent); }
+  .badge-blue { background: rgba(108,143,255,0.15); color: var(--accent2); }
+  .badge-orange { background: rgba(255,159,67,0.15); color: var(--accent3); }
+  .badge-red { background: rgba(255,107,107,0.15); color: var(--accent4); }
+  .badge-purple { background: rgba(162,155,254,0.15); color: var(--accent5); }
+  .badge-yellow { background: rgba(255,234,167,0.15); color: var(--accent6); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { color: var(--muted); font-weight: 600; text-align: left; padding: 6px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* PILL LIST */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--muted); }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--border2); }
+  .timeline-item { position: relative; margin-bottom: 18px; }
+  .timeline-item::before { content: ''; position: absolute; left: -17px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .timeline-item h4 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .timeline-item p { color: var(--muted); font-size: 11.5px; }
+
+  /* FLOW */
+  .flow-row { display: flex; align-items: stretch; gap: 0; margin-bottom: 16px; overflow-x: auto; }
+  .flow-step { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-width: 140px; flex: 1; position: relative; }
+  .flow-step .step-num { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .flow-step h4 { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .flow-step p { font-size: 11px; color: var(--muted); }
+  .flow-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--muted); font-size: 16px; }
+
+  /* STAT ROW */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+  .stat-card .val { font-size: 22px; font-weight: 700; }
+  .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ANALYSIS RULE */
+  .rule-row { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+  .rule-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .rule-body { flex: 1; }
+  .rule-body h4 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .rule-body p { font-size: 11.5px; color: var(--muted); }
+  .rule-tag { flex-shrink: 0; }
+
+  /* SOURCE ROW */
+  .source-row { display: flex; align-items: flex-start; gap: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; margin-bottom: 8px; }
+  .source-icon { font-size: 18px; flex-shrink: 0; }
+  .source-body { flex: 1; }
+  .source-body h4 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .source-body p { font-size: 11.5px; color: var(--muted); }
+  .source-status { flex-shrink: 0; margin-top: 2px; }
+
+  /* COMPETITOR */
+  .comp-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
+  .comp-card .comp-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .comp-card .comp-since { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+  .comp-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11.5px; }
+  .comp-row .comp-k { color: var(--muted); }
+  .comp-row .comp-v { font-weight: 500; }
+  .strength-list li, .gap-list li { font-size: 11.5px; margin-bottom: 3px; padding-left: 14px; position: relative; }
+  .strength-list li::before { content: '✓'; color: var(--accent); position: absolute; left: 0; }
+  .gap-list li::before { content: '✗'; color: var(--accent4); position: absolute; left: 0; }
+
+  /* ARCH */
+  .arch-layer { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+  .arch-layer .layer-name { font-size: 10px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+  .arch-modules { display: flex; flex-wrap: wrap; gap: 6px; }
+  .arch-mod { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border2); }
+  .arch-mod.reuse { background: rgba(61,220,151,0.08); border-color: rgba(61,220,151,0.25); color: var(--accent); }
+  .arch-mod.new { background: rgba(255,159,67,0.08); border-color: rgba(255,159,67,0.25); color: var(--accent3); }
+  .arch-mod.adapt { background: rgba(108,143,255,0.08); border-color: rgba(108,143,255,0.25); color: var(--accent2); }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 14px; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* MILESTONE */
+  .milestone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .milestone { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .milestone .phase { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .milestone h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .milestone ul { list-style: none; }
+  .milestone li { font-size: 11.5px; color: var(--muted); padding: 3px 0; padding-left: 14px; position: relative; }
+  .milestone li::before { content: '→'; color: var(--accent2); position: absolute; left: 0; font-size: 10px; top: 4px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="logo-badge">
+      <div class="bolt">⚡</div>
+      <div>
+        <div class="brand">SaveWatt</div>
+        <div class="sub">Platform Canvas</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="section-label">Market</div>
+    <div class="nav-item active" onclick="show('overview')"><span class="dot" style="background:#3ddc97"></span>Overview</div>
+    <div class="nav-item" onclick="show('competitors')"><span class="dot" style="background:#ff6b6b"></span>Competitors</div>
+    <div class="nav-item" onclick="show('positioning')"><span class="dot" style="background:#a29bfe"></span>Positioning</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="section-label">Platform</div>
+    <div class="nav-item" onclick="show('datasources')"><span class="dot" style="background:#6c8fff"></span>Data Sources & APIs</div>
+    <div class="nav-item" onclick="show('documents')"><span class="dot" style="background:#ff9f43"></span>Document Types</div>
+    <div class="nav-item" onclick="show('analysis')"><span class="dot" style="background:#ffeaa7"></span>Analysis Engine</div>
+    <div class="nav-item" onclick="show('workflow')"><span class="dot" style="background:#3ddc97"></span>Case Workflow</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="section-label">Build</div>
+    <div class="nav-item" onclick="show('architecture')"><span class="dot" style="background:#a29bfe"></span>Architecture</div>
+    <div class="nav-item" onclick="show('roadmap')"><span class="dot" style="background:#6c8fff"></span>Build Roadmap</div>
+    <div class="nav-item" onclick="show('revenue')"><span class="dot" style="background:#ff9f43"></span>Revenue Model</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div class="tag">Market Overview</div>
+    <h1>The SaveWatt Opportunity</h1>
+    <p>The French B2B energy audit market is large, mostly manual, and ripe for AI disruption. No player currently combines automated invoice parsing with regulatory rule enforcement and a claim management workflow.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="val" style="color:var(--accent)">8/10</div><div class="lbl">B2B invoices contain at least one anomaly</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent2)">€1,500+</div><div class="lbl">/month threshold where audit ROI is justified</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent3)">5 ans</div><div class="lbl">prescription window to claim back overpayments</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent4)">16–24%</div><div class="lbl">average savings recovered across client types</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="section">
+      <div class="section-title">What the market currently looks like</div>
+      <div class="card card-accent" style="margin-bottom:10px">
+        <h3>Traditional bureaux d'études</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Energie2France, DUNE Energie, Opera Energie. Human experts auditing manually. Slow, expensive, not scalable. No software product — pure consulting.</p>
+        <div class="pill-list"><span class="pill">Manual process</span><span class="pill">~4–9 months</span><span class="pill">Expert-dependent</span><span class="pill">Success fee 30–40%</span></div>
+      </div>
+      <div class="card card-blue">
+        <h3>Energy management platforms</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Enercompil, Homeys, Energrid. Data aggregation + dashboards. They surface consumption data but don't detect billing errors or manage claims.</p>
+        <div class="pill-list"><span class="pill">No error detection</span><span class="pill">No claim workflow</span><span class="pill">SaaS subscription</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">The gap SaveWatt fills</div>
+      <div class="card card-orange" style="margin-bottom:10px">
+        <h3>🎯 AI-powered invoice forensics</h3>
+        <p style="color:var(--muted);font-size:12px">Automated line-by-line invoice parsing + deterministic rule engine for billing anomaly detection. What bureaux do manually in weeks, done in hours.</p>
+      </div>
+      <div class="card card-purple" style="margin-bottom:10px">
+        <h3>📋 Claim case management</h3>
+        <p style="color:var(--muted);font-size:12px">Structured workflow from anomaly → evidence pack → supplier negotiation → refund tracking. No current player offers this end-to-end in software.</p>
+      </div>
+      <div class="card card-yellow">
+        <h3>🔌 Live data integration</h3>
+        <p style="color:var(--muted);font-size:12px">Symphonics partnership gives direct access to Enedis/RTE/GRDF load curve data, enabling TURPE recalibration analysis that manual auditors can only do slowly.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">What you already have that matters here</div>
+    <div class="grid-3">
+      <div class="card card-accent">
+        <h3>iverif.io (your product)</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">AI document validation engine already proven in French CEE market. Configurable field extraction, cross-document rules, validation reports. <strong>Core extraction engine is directly reusable.</strong></p>
+        <span class="badge badge-green">Reuse engine</span>
+      </div>
+      <div class="card card-blue">
+        <h3>CEE codebase (Veloren)</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Tenant-aware backend with document lifecycle, AI extraction pipeline, configurable document types, field schemas, validation rules, workers, checkpoints, activity logs.</p>
+        <span class="badge badge-blue">Port primitives</span>
+      </div>
+      <div class="card card-orange">
+        <h3>Symphonics partnership</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Agrégateur + Responsable d'Équilibre agréé by Enedis and RTE. 250MW on 80,000 sites. Direct path to Enedis/GRDF load curve data — the hard data access problem is already solved.</p>
+        <span class="badge badge-orange">Data moat</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITORS -->
+<div class="page" id="page-competitors">
+  <div class="page-header">
+    <div class="tag">Competitive Landscape</div>
+    <h1>Who You're Up Against</h1>
+    <p>The market splits into manual consulting bureaux (slow, human, scalable only by headcount) and data/monitoring platforms (no billing forensics). There is no AI-native invoice audit + claim platform.</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="comp-card">
+      <div class="comp-name">Energie2France</div>
+      <div class="comp-since">Bureau d'études · Since 1997 · Paris</div>
+      <div class="comp-row"><span class="comp-k">Model</span><span class="comp-v">Pure consulting, success fee</span></div>
+      <div class="comp-row"><span class="comp-k">Target</span><span class="comp-v">Collectivités, grandes entreprises</span></div>
+      <div class="comp-row"><span class="comp-k">Process</span><span class="comp-v">Manual audit, 3–9 months</span></div>
+      <div class="comp-row"><span class="comp-k">Fee</span><span class="comp-v">30–40% of recovered sums</span></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Strengths</div>
+          <ul class="strength-list"><li>30 years brand trust</li><li>Regulatory expertise deep</li><li>Established supplier relationships</li></ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Gaps (your opportunity)</div>
+          <ul class="gap-list"><li>No software layer</li><li>No audit trail SaaS</li><li>Slow delivery (months)</li><li>Not scalable</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-name">DUNE Energie</div>
+      <div class="comp-since">Bureau d'études / Courtier · Paris</div>
+      <div class="comp-row"><span class="comp-k">Model</span><span class="comp-v">33% of first-year savings; free ongoing</span></div>
+      <div class="comp-row"><span class="comp-k">Target</span><span class="comp-v">PME, ETI, industriels</span></div>
+      <div class="comp-row"><span class="comp-k">Process</span><span class="comp-v">12 invoices + K-bis + load curve → manual analysis</span></div>
+      <div class="comp-row"><span class="comp-k">Data needed</span><span class="comp-v">12 invoices, Kbis, courbe de charge</span></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Strengths</div>
+          <ul class="strength-list"><li>Certified Bureau Veritas</li><li>Full mandate handling</li><li>TURPE + accise expertise</li></ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Gaps</div>
+          <ul class="gap-list"><li>No AI / no platform</li><li>Requires energy brokerage tie-in</li><li>Not multi-site automated</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="comp-card">
+      <div class="comp-name">Homeys / Energrid</div>
+      <div class="comp-since">Data aggregation SaaS · Energy monitoring</div>
+      <div class="comp-row"><span class="comp-k">Model</span><span class="comp-v">SaaS subscription per PDL</span></div>
+      <div class="comp-row"><span class="comp-k">What they do</span><span class="comp-v">Aggregate Enedis/GRDF data, dashboards, load curves, index tracking</span></div>
+      <div class="comp-row"><span class="comp-k">What they don't do</span><span class="comp-v">Invoice parsing, billing anomaly detection, claim management, refund tracking</span></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Strengths</div>
+          <ul class="strength-list"><li>Good Enedis API access</li><li>Multi-site dashboard</li><li>ACD/consent digitised</li></ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Gaps = your product</div>
+          <ul class="gap-list"><li>No invoice forensics</li><li>No anomaly rules</li><li>No claim workflow</li><li>No success-fee model</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-name">Opera Energie / DYNAMIS</div>
+      <div class="comp-since">Energy brokers + CEE mandataires · France</div>
+      <div class="comp-row"><span class="comp-k">Model</span><span class="comp-v">Contract negotiation + CEE valorisation</span></div>
+      <div class="comp-row"><span class="comp-k">What they do</span><span class="comp-v">Supplier benchmarking, contract renewal, CEE dossier management</span></div>
+      <div class="comp-row"><span class="comp-k">Average savings</span><span class="comp-v">15–25% on total bill</span></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Strengths</div>
+          <ul class="strength-list"><li>Full CEE mandataire service</li><li>Supplier relationships</li><li>Market benchmarking</li></ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em">Gaps</div>
+          <ul class="gap-list"><li>No retrospective audit</li><li>No 5-year claim recovery</li><li>No AI invoice parsing</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:rgba(61,220,151,0.06);border-color:rgba(61,220,151,0.2)">
+    <h3 style="color:var(--accent);margin-bottom:10px">🎯 The Uncontested Space</h3>
+    <p style="font-size:12.5px;color:var(--muted);line-height:1.7">No player currently combines: <strong style="color:var(--text)">(1) AI-native invoice parsing</strong> of structured French energy invoices + <strong style="color:var(--text)">(2) deterministic regulatory rule engine</strong> for TURPE/accise/puissance anomalies + <strong style="color:var(--text)">(3) claim case management workflow</strong> with supplier negotiation tracking + <strong style="color:var(--text)">(4) live Enedis/GRDF data</strong> for load curve analysis. SaveWatt can own this position. Traditional bureaux are the market validation — the demand is proven. The platform approach gives you 10× the throughput at the same fee rate.</p>
+  </div>
+</div>
+
+<!-- POSITIONING -->
+<div class="page" id="page-positioning">
+  <div class="page-header">
+    <div class="tag">Positioning</div>
+    <h1>SaveWatt Platform Strategy</h1>
+    <p>Position as the operating system for energy invoice recovery — not a bureau d'études, not a monitoring dashboard, but the platform that powers both.</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px">
+    <div class="card card-accent">
+      <h3>B2C / Direct</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">SaveWatt as a service brand. Client uploads invoices, platform runs audit, bureau handles claim. Full-service, success fee model. Target: collectivités, PME, hôtels, copropriétés.</p>
+      <div class="pill-list"><span class="pill">€1,500+/month bills</span><span class="pill">30–40% success fee</span><span class="pill">5 year lookback</span></div>
+    </div>
+    <div class="card card-blue">
+      <h3>B2B SaaS</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">License the platform to other bureaux d'études, energy consultants, accountants. They bring the client relationships, SaveWatt provides the AI engine. Like iverif does for CEE operators.</p>
+      <div class="pill-list"><span class="pill">White-label option</span><span class="pill">Per-audit pricing</span><span class="pill">Monthly SaaS</span></div>
+    </div>
+    <div class="card card-orange">
+      <h3>B2B2B / Distribution</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">Sell through energy brokers, property managers, accounting firms as a value-add tool. They introduce clients, SaveWatt handles audit + claim, split the fee. Symphonics as first distribution partner.</p>
+      <div class="pill-list"><span class="pill">Referral split</span><span class="pill">Symphonics channel</span><span class="pill">Scalable</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">iverif.io → SaveWatt relationship</div>
+    <div class="card">
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.8">
+        <strong style="color:var(--text)">iverif.io</strong> = subsidy dossier validation (pre-submission checking, cross-doc consistency, CEE/BEG/ECO4 rules). Upstream validation for energy operators.<br><br>
+        <strong style="color:var(--text)">SaveWatt</strong> = invoice forensics + retrospective recovery + contract optimisation. Downstream financial recovery for energy consumers.<br><br>
+        They share the same AI extraction + rule engine core (the Veloren codebase). Different domain models, different customers, same platform primitives. The natural play is to build SaveWatt as a second product on the same infrastructure — not a fork, a new bounded product.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- DATA SOURCES -->
+<div class="page" id="page-datasources">
+  <div class="page-header">
+    <div class="tag">Data Sources & APIs</div>
+    <h1>What Data You Need & Where It Comes From</h1>
+    <p>SaveWatt's analytical power comes from combining customer-uploaded invoices with official network operator data. The Symphonics partnership is the key that unlocks the hard data.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tier 1 — Customer-provided (always available)</div>
+    <div class="source-row">
+      <div class="source-icon">📄</div>
+      <div class="source-body">
+        <h4>Energy invoices (PDF/scan) — 5 years</h4>
+        <p>Primary audit material. Electricity + gas, all sites. Customer uploads to platform. AI extracts structured fields per invoice. Core iverif.io competency already built.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">EDF Pro</span><span class="pill">Engie Pro</span><span class="pill">TotalEnergies</span><span class="pill">DIRECT Energie</span><span class="pill">Vattenfall</span><span class="pill">All suppliers</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-green">Available now</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">📑</div>
+      <div class="source-body">
+        <h4>Energy contracts + riders</h4>
+        <p>Contractual subscribed power, tariff option (BT/HTA), FTA choice, pricing schedule, contract duration, renewal clauses. Needed to audit whether billing matches contract terms.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">PDF</span><span class="pill">Extract: puissance, FTA, prix kWh, durée</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-green">Available now</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">✍️</div>
+      <div class="source-body">
+        <h4>Mandat de représentation</h4>
+        <p>Signed authority for SaveWatt to contact suppliers and Enedis on the client's behalf. Digital signing (DocuSign / HelloSign). Scoped per site / per PDL. Required for any claim submission.</p>
+      </div>
+      <div class="source-status"><span class="badge badge-green">Digital only</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tier 2 — Enedis / GRDF (via Symphonics partnership)</div>
+    <div class="source-row">
+      <div class="source-icon">⚡</div>
+      <div class="source-body">
+        <h4>Enedis Data Connect API — PDL load curves</h4>
+        <p>OAuth2-based access to half-hourly consumption curves, power maxima, and contractual data per PDL. Up to 4 years history (35,000 measurement points per client). Used for TURPE/puissance analysis. Symphonics is an accredited Enedis Responsable d'Équilibre — they have the API access.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">Courbe de charge 30-min</span><span class="pill">Puissance max souscrite</span><span class="pill">Index distributeur</span><span class="pill">Données contractuelles</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-orange">Via Symphonics</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">🔵</div>
+      <div class="source-body">
+        <h4>Enedis SGE Service (M023) — technical parameters</h4>
+        <p>Direct API for consultants/courtiers. Request load curves, power readings, technical parameters for a list of PDLs. Returns XML/CSV. Also accessible via Energrid as a managed API layer. Used for TURPE calibration checks.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">R63–C68 data families</span><span class="pill">PDL batch requests</span><span class="pill">XML / CSV output</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-orange">Via Symphonics / Energrid</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">🔶</div>
+      <div class="source-body">
+        <h4>GRDF ADICT API — gas metering data</h4>
+        <p>Equivalent of Enedis SGE for gas. PCE (Point de Comptage et d'Estimation) data access via GRDF. Index history, volumes, contractual parameters. Required for gas invoice audit.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">PCE identification</span><span class="pill">Volumes mensuels</span><span class="pill">ATRD tariff check</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-orange">Via Symphonics</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tier 3 — Regulatory reference databases (public / maintained internally)</div>
+    <div class="source-row">
+      <div class="source-icon">📊</div>
+      <div class="source-body">
+        <h4>CRE TURPE tariff schedules</h4>
+        <p>Commission de Régulation de l'Énergie publishes TURPE rates (currently TURPE 7, active Aug 2025). Needed for per-period rate validation. Changes every 4 years + annual revisions. Must be maintained as a versioned internal database.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">TURPE 5 / 6 / 7 tables</span><span class="pill">HTA / BT / HTB segments</span><span class="pill">FTA options</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-blue">Internal DB</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">🏛️</div>
+      <div class="source-body">
+        <h4>TICFE / accise rate tables (DGDDI)</h4>
+        <p>Electricity excise tax rates by sector + usage category. Exemptions for industrial processes, electrolysis, metallurgy, etc. Required for exemption eligibility detection and DGDDI refund claims.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">Taux normaux / réduits</span><span class="pill">Exonérations par NAF</span><span class="pill">Historique 5 ans</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-blue">Internal DB</span></div>
+    </div>
+    <div class="source-row">
+      <div class="source-icon">🌿</div>
+      <div class="source-body">
+        <h4>CEE fiche catalogue (ADEME / DGEC)</h4>
+        <p>Standardised operation sheets for CEE-eligible renovations. Already deeply familiar from iverif.io work. Used in SaveWatt's CEE valorisation track when clients have eligible renovation works.</p>
+        <div class="pill-list" style="margin-top:6px"><span class="pill">IND / TER / RES fiches</span><span class="pill">kWh cumac calculation</span><span class="pill">Eligibility conditions</span></div>
+      </div>
+      <div class="source-status"><span class="badge badge-green">Already in iverif</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div class="page" id="page-documents">
+  <div class="page-header">
+    <div class="tag">Document Intelligence</div>
+    <h1>Document Types & What to Extract</h1>
+    <p>Every document type has specific fields to extract, specific cross-checks to run, and specific anomaly patterns. This is where the iverif.io configurable document model maps directly onto SaveWatt.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core document type 1 — Electricity invoice (facture électricité)</div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Fields to extract</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">• PDL number</li>
+            <li style="padding:2px 0">• Billing period (dates)</li>
+            <li style="padding:2px 0">• Index début / fin (kWh)</li>
+            <li style="padding:2px 0">• Puissance souscrite (kVA)</li>
+            <li style="padding:2px 0">• Tariff option (Base/HP-HC/EJP/Tempo)</li>
+            <li style="padding:2px 0">• Abonnement HT</li>
+            <li style="padding:2px 0">• Consommation HT</li>
+            <li style="padding:2px 0">• TURPE component (CTA + distribution)</li>
+            <li style="padding:2px 0">• Accise / TICFE amount</li>
+            <li style="padding:2px 0">• TVA (5.5% / 20%)</li>
+            <li style="padding:2px 0">• Total TTC</li>
+            <li style="padding:2px 0">• Relevé réel ou estimé flag</li>
+            <li style="padding:2px 0">• Dépassement de puissance charges</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Anomaly detection rules</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">• Index gap inconsistent with period</li>
+            <li style="padding:2px 0">• Estimated reading flagged as actual</li>
+            <li style="padding:2px 0">• Wrong TURPE rate for segment</li>
+            <li style="padding:2px 0">• Wrong accise rate for client profile</li>
+            <li style="padding:2px 0">• Puissance overcalibrated vs load curve</li>
+            <li style="padding:2px 0">• Dépassement pattern → wrong tariff option</li>
+            <li style="padding:2px 0">• TVA rate wrong for consumption band</li>
+            <li style="padding:2px 0">• Duplicate billing period</li>
+            <li style="padding:2px 0">• Missing discount from contract</li>
+            <li style="padding:2px 0">• CTA formula mismatch</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Claim type</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">→ Supplier direct (billing error)</li>
+            <li style="padding:2px 0">→ Enedis (TURPE recalibration)</li>
+            <li style="padding:2px 0">→ DGDDI (accise exemption refund)</li>
+            <li style="padding:2px 0">→ Contract renegotiation</li>
+            <li style="padding:2px 0">→ Puissance reclass at Enedis</li>
+          </ul>
+          <div style="margin-top:12px"><span class="badge badge-green">High frequency</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core document type 2 — Gas invoice (facture gaz)</div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Fields to extract</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">• PCE number</li>
+            <li style="padding:2px 0">• Billing period</li>
+            <li style="padding:2px 0">• Volume m³ / kWh PCS</li>
+            <li style="padding:2px 0">• Coefficient de conversion</li>
+            <li style="padding:2px 0">• Tariff profile (T1/T2/T3/T4)</li>
+            <li style="padding:2px 0">• Abonnement (ATRD)</li>
+            <li style="padding:2px 0">• Consommation HT</li>
+            <li style="padding:2px 0">• Accise gaz (TICGN)</li>
+            <li style="padding:2px 0">• TVA rate</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Anomaly rules</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">• Wrong ATRD tariff profile vs consumption</li>
+            <li style="padding:2px 0">• Conversion coefficient error</li>
+            <li style="padding:2px 0">• TICGN exemption missed (industrial use)</li>
+            <li style="padding:2px 0">• Estimated readings pattern</li>
+            <li style="padding:2px 0">• Wrong tariff vs actual annual volume</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">Claim type</div>
+          <ul style="list-style:none;font-size:11.5px;color:var(--muted)">
+            <li style="padding:2px 0">→ Supplier (billing error)</li>
+            <li style="padding:2px 0">→ GRDF (ATRD recalibration)</li>
+            <li style="padding:2px 0">→ DGDDI (TICGN exemption)</li>
+          </ul>
+          <div style="margin-top:12px"><span class="badge badge-blue">Medium frequency</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div>
+      <div class="section-title">Document type 3 — Energy contract</div>
+      <div class="card card-blue" style="margin-bottom:8px">
+        <h3>Fields: tariff option, puissance souscrite, prix kWh par segment, remises, durée, clause de renouvellement, formule d'indexation</h3>
+        <p style="color:var(--muted);font-size:12px;margin-top:6px">Compared against invoices to detect: wrong tariff applied, missing negotiated discount, silent auto-renewal at unfavourable price, outdated option vs current usage profile.</p>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">Document type 4 — Mandat + consent</div>
+      <div class="card card-purple" style="margin-bottom:8px">
+        <h3>Fields: client identity, SIREN, PDL/PCE list, scope of representation, duration, Enedis data access consent, GDPR terms</h3>
+        <p style="color:var(--muted);font-size:12px;margin-top:6px">Digital-only. Must be filed before any supplier or GRD contact. Consent valid 3 years (Enedis), revocable. Stored as first-class record with audit log.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="section-title">Document type 5 — Supplier correspondence</div>
+      <div class="card card-orange">
+        <h3>Claim letters, supplier responses, credit notes, dispute acknowledgements</h3>
+        <p style="color:var(--muted);font-size:12px;margin-top:6px">Extracted: claim ref, response date, amount acknowledged, credit/refund confirmed, counter-arguments. Drives case status updates.</p>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">Document type 6 — CEE works documents</div>
+      <div class="card card-yellow">
+        <h3>Devis, factures travaux, attestations RGE, fiches de réception, rapports de mesure</h3>
+        <p style="color:var(--muted);font-size:12px;margin-top:6px">Same iverif.io rule engine, already configured for CEE fiches. Reuse directly. CEE track is secondary revenue when retrofit works identified.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYSIS ENGINE -->
+<div class="page" id="page-analysis">
+  <div class="page-header">
+    <div class="tag">Analysis Engine</div>
+    <h1>What the Platform Actually Analyses</h1>
+    <p>Two-layer architecture: AI extraction (Claude / Gemini for unstructured → structured) then deterministic rule engine for financial checks. Never trust an LLM for a financial calculation.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Layer 1 — AI extraction (reuse Gemini unified processor from Veloren)</div>
+    <div class="rule-row"><div class="rule-icon">🤖</div><div class="rule-body"><h4>Structured field extraction from PDF invoices</h4><p>Extract 30+ fields per invoice: PDL, period, index, puissance, tariff, line amounts, tax components. Same base_processor / gemini_unified_processor pattern from iverif codebase. Configure new SaveWatt field schema.</p></div><div class="rule-tag"><span class="badge badge-green">Reuse from iverif</span></div></div>
+    <div class="rule-row"><div class="rule-icon">🔍</div><div class="rule-body"><h4>Contract term extraction</h4><p>Extract key contract parameters from PDF contracts: tariff option, puissance souscrite, prix/segment, remises, duration. Cross-referenced against invoices.</p></div><div class="rule-tag"><span class="badge badge-green">New field schema</span></div></div>
+    <div class="rule-row"><div class="rule-icon">📝</div><div class="rule-body"><h4>Supplier letter classification</h4><p>Classify incoming supplier responses: refusal, partial acknowledgement, credit note, request for more info, dispute. Extract amounts, dates, reference numbers.</p></div><div class="rule-tag"><span class="badge badge-orange">New document type</span></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Layer 2 — Deterministic rules (Python, versioned, auditable)</div>
+    <div class="rule-row"><div class="rule-icon">📐</div><div class="rule-body"><h4>TURPE rate validation</h4><p>For each invoice period, check: TURPE component amount = f(puissance souscrite, FTA option, period). Compare against CRE published rates for TURPE 5/6/7 applicable in that period. Flag delta &gt; €X or &gt; Y%.</p></div><div class="rule-tag"><span class="badge badge-red">High value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">⚡</div><div class="rule-body"><h4>Puissance calibration vs load curve</h4><p>Pull actual load curve from Enedis (via Symphonics). Find true peak power draw over 12–24 months. If subscribed power &gt; actual peak × 1.1: over-subscribed = over-billing. If subscribed power &lt; actual peak: dépassement penalties. Both are claims.</p></div><div class="rule-tag"><span class="badge badge-red">High value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">🏭</div><div class="rule-body"><h4>Accise / TICFE eligibility check</h4><p>Client NAF code + annual consumption + usage type → check against DGDDI exemption table. If client qualifies for reduced rate (e.g. industrial process &gt; 222 MWh/yr) but was billed at normal rate → DGDDI refund claim for 5 years.</p></div><div class="rule-tag"><span class="badge badge-red">High value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">📅</div><div class="rule-body"><h4>Duplicate period detection</h4><p>Across all invoices for a PDL, check: no two invoices cover overlapping billing periods. Flag overlaps as billing error → supplier claim.</p></div><div class="rule-tag"><span class="badge badge-orange">Medium value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">🔢</div><div class="rule-body"><h4>Index continuity check</h4><p>Invoice N end index should = Invoice N+1 start index (±tolerance for estimated readings). Gaps or jumps indicate: meter read error, estimated reading billed as actual, or reset not credited.</p></div><div class="rule-tag"><span class="badge badge-orange">Medium value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">📋</div><div class="rule-body"><h4>Tariff option optimisation</h4><p>Given load curve shape: is current tariff option (Base vs HP-HC vs Tempo vs EJP) optimal? Simulate alternative options against actual consumption pattern. If cheaper option exists → contract renegotiation recommendation.</p></div><div class="rule-tag"><span class="badge badge-blue">Optimisation</span></div></div>
+    <div class="rule-row"><div class="rule-icon">💰</div><div class="rule-body"><h4>Contract discount enforcement</h4><p>Extract negotiated discount terms from contract. Verify each invoice applies the correct discount. Missing discount = billing error → supplier claim.</p></div><div class="rule-tag"><span class="badge badge-orange">Medium value</span></div></div>
+    <div class="rule-row"><div class="rule-icon">🌿</div><div class="rule-body"><h4>CEE eligibility scan</h4><p>If client has upcoming or recent renovations (LED, insulation, HVAC): check against CEE fiche catalogue. Flag CEE opportunity with estimated kWh cumac value. Hand off to iverif.io dossier preparation flow.</p></div><div class="rule-tag"><span class="badge badge-purple">CEE track</span></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Layer 3 — Financial quantification</div>
+    <div class="card">
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.8">For every confirmed anomaly: <strong style="color:var(--text)">calculate the exact € amount recoverable</strong> per period, per PDL, per anomaly type. Sum to: (a) retrospective recovery = claim on past overpayments, (b) prospective savings = annual saving from contract fix, (c) CEE valorisation value. This is the report the client sees. This is also what triggers the success fee calculation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW -->
+<div class="page" id="page-workflow">
+  <div class="page-header">
+    <div class="tag">Case Workflow</div>
+    <h1>End-to-End Claim Lifecycle</h1>
+    <p>From client onboarding to cash received. This is the workflow the platform manages — beyond what any existing competitor offers in software.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Onboarding flow</div>
+    <div class="flow-row">
+      <div class="flow-step"><div class="step-num">01</div><h4>Lead capture</h4><p>Contact form / partner referral. One recent invoice uploaded for quick pre-screen.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">02</div><h4>Pre-diagnosis</h4><p>AI quick scan. Estimate recoverable amount in 24h. Free. No commitment.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">03</div><h4>Mandate signing</h4><p>Client signs digital mandat. Scope, duration, GDPR, Enedis consent.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">04</div><h4>Full data upload</h4><p>5-year invoices + contracts uploaded. Enedis data pull triggered via Symphonics.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Audit flow</div>
+    <div class="flow-row">
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><div class="step-num">05</div><h4>AI extraction</h4><p>All invoices parsed. Fields extracted. Canonical invoice records created.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><div class="step-num">06</div><h4>Rule engine</h4><p>All 8+ anomaly rules run. Findings ranked by recoverable value.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><div class="step-num">07</div><h4>Human review</h4><p>Analyst validates AI findings. Confirms claim amounts. Marks for escalation.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><div class="step-num">08</div><h4>Audit report</h4><p>PDF report delivered to client. Findings, amounts, recommended actions.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Claim management flow</div>
+    <div class="flow-row">
+      <div class="flow-step" style="border-color:rgba(108,143,255,0.3)"><div class="step-num">09</div><h4>Client approval</h4><p>Client approves claim list. Success fee terms confirmed.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(108,143,255,0.3)"><div class="step-num">10</div><h4>Claim packs</h4><p>Platform generates evidence packs per claim type (supplier / Enedis / DGDDI).</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(108,143,255,0.3)"><div class="step-num">11</div><h4>Submission</h4><p>Claims sent to counterparties. Dates logged. 15-day supplier deadline tracked.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(108,143,255,0.3)"><div class="step-num">12</div><h4>Negotiation</h4><p>Supplier responses logged. Partial offers managed. Mediateur énergie if disputed.</p></div>
+    </div>
+    <div class="flow-row" style="margin-top:10px">
+      <div class="flow-step" style="border-color:rgba(255,159,67,0.3)"><div class="step-num">13</div><h4>Recovery confirmed</h4><p>Refund / credit note received. Amount logged per claim.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(255,159,67,0.3)"><div class="step-num">14</div><h4>Fee trigger</h4><p>Success fee event created. Invoice issued to client. Payment tracked.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(255,159,67,0.3)"><div class="step-num">15</div><h4>Contract optimised</h4><p>New contract terms applied. Savings baseline set. Continuous monitoring begins.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(255,159,67,0.3)"><div class="step-num">16</div><h4>Ongoing watch</h4><p>Monthly invoice verification. Drift alerts. Renewal reminders. Continuous value.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">New domain models needed (not in CEE codebase)</div>
+    <div class="grid-3">
+      <div class="card card-orange">
+        <h3>Core entities</h3>
+        <div class="pill-list">
+          <span class="pill">Customer / Organization</span><span class="pill">Site</span><span class="pill">MeterPoint (PDL/PCE)</span><span class="pill">EnergyContract</span><span class="pill">EnergyInvoice</span><span class="pill">InvoiceLineItem</span><span class="pill">TariffComponent</span><span class="pill">TaxComponent</span>
+        </div>
+      </div>
+      <div class="card card-red">
+        <h3>Claim entities</h3>
+        <div class="pill-list">
+          <span class="pill">AuditCase</span><span class="pill">Opportunity</span><span class="pill">Claim</span><span class="pill">ClaimEvidence</span><span class="pill">CounterpartyResponse</span><span class="pill">RecoveredAmount</span><span class="pill">Mandate</span>
+        </div>
+      </div>
+      <div class="card card-green">
+        <h3>Revenue entities</h3>
+        <div class="pill-list">
+          <span class="pill">SavingsBaseline</span><span class="pill">SuccessFeeEvent</span><span class="pill">FeeInvoice</span><span class="pill">Supplier</span><span class="pill">CEEPartner</span><span class="pill">CEEOpportunity</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="page" id="page-architecture">
+  <div class="page-header">
+    <div class="tag">Technical Architecture</div>
+    <h1>What to Reuse vs Build New</h1>
+    <p>Fork the Veloren CEE codebase as a new SaveWatt repo. Port the infrastructure primitives. Replace the CEE domain model entirely. Do not mix domains in one repo.</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(61,220,151,0.5)"></div>Reuse from CEE/iverif codebase (minimal changes)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(108,143,255,0.5)"></div>Adapt (port + refactor for new domain)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(255,159,67,0.5)"></div>New build (no equivalent in current codebase)</div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">Infrastructure & DevOps</div>
+    <div class="arch-modules">
+      <span class="arch-mod reuse">FastAPI backend</span>
+      <span class="arch-mod reuse">PostgreSQL + SQLAlchemy</span>
+      <span class="arch-mod reuse">Celery + Redis workers</span>
+      <span class="arch-mod reuse">Prometheus metrics</span>
+      <span class="arch-mod reuse">PDF storage (S3/GCS)</span>
+      <span class="arch-mod reuse">Activity logger</span>
+      <span class="arch-mod reuse">API cost tracker</span>
+      <span class="arch-mod reuse">Processing checkpoints</span>
+      <span class="arch-mod reuse">JWT auth + tenant isolation</span>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">AI Extraction Pipeline</div>
+    <div class="arch-modules">
+      <span class="arch-mod reuse">base_processor.py</span>
+      <span class="arch-mod reuse">gemini_unified_processor.py</span>
+      <span class="arch-mod reuse">AI provider abstraction</span>
+      <span class="arch-mod reuse">Field schema model</span>
+      <span class="arch-mod reuse">ExtractedField model</span>
+      <span class="arch-mod adapt">DocumentType model (new SaveWatt types)</span>
+      <span class="arch-mod adapt">unified_processor (new invoice prompt)</span>
+      <span class="arch-mod new">Invoice normalisation layer</span>
+      <span class="arch-mod new">Multi-invoice reconciliation</span>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">Rule & Validation Engine</div>
+    <div class="arch-modules">
+      <span class="arch-mod reuse">rule_evaluator.py (expression engine)</span>
+      <span class="arch-mod reuse">ValidationRule model</span>
+      <span class="arch-mod reuse">ValidationResult model</span>
+      <span class="arch-mod reuse">Human review / override pattern</span>
+      <span class="arch-mod new">TURPE rate DB + validator</span>
+      <span class="arch-mod new">Accise/TICFE eligibility checker</span>
+      <span class="arch-mod new">Puissance calibration engine (needs load curve)</span>
+      <span class="arch-mod new">Index continuity checker</span>
+      <span class="arch-mod new">Tariff option simulator</span>
+      <span class="arch-mod new">Opportunity ranker (€ value)</span>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">Data Integrations</div>
+    <div class="arch-modules">
+      <span class="arch-mod new">Enedis Data Connect OAuth2 client</span>
+      <span class="arch-mod new">Enedis SGE / M023 API client (via Symphonics)</span>
+      <span class="arch-mod new">GRDF ADICT API client</span>
+      <span class="arch-mod new">Load curve parser (XML/CSV → canonical)</span>
+      <span class="arch-mod new">CRE TURPE rate tables (versioned DB)</span>
+      <span class="arch-mod new">DGDDI accise tables (versioned DB)</span>
+      <span class="arch-mod reuse">CEE fiche DB (from iverif)</span>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">Domain Model (all new — no reuse from CEE)</div>
+    <div class="arch-modules">
+      <span class="arch-mod new">Customer / Organisation</span>
+      <span class="arch-mod new">Site</span>
+      <span class="arch-mod new">MeterPoint (PDL/PCE)</span>
+      <span class="arch-mod new">EnergyContract</span>
+      <span class="arch-mod new">EnergyInvoice + LineItems</span>
+      <span class="arch-mod new">AuditCase</span>
+      <span class="arch-mod new">Opportunity</span>
+      <span class="arch-mod new">Claim + Evidence</span>
+      <span class="arch-mod new">CounterpartyResponse</span>
+      <span class="arch-mod new">SavingsBaseline</span>
+      <span class="arch-mod new">SuccessFeeEvent</span>
+      <span class="arch-mod new">Mandate</span>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-name">Frontend (all new — CEE UI is too domain-specific)</div>
+    <div class="arch-modules">
+      <span class="arch-mod adapt">Next.js + Tailwind stack (same)</span>
+      <span class="arch-mod new">Client onboarding wizard</span>
+      <span class="arch-mod new">Invoice upload + status tracking</span>
+      <span class="arch-mod new">Audit report viewer</span>
+      <span class="arch-mod new">Opportunity explorer</span>
+      <span class="arch-mod new">Claim case manager</span>
+      <span class="arch-mod new">Recovery tracker (dashboard)</span>
+      <span class="arch-mod new">Success fee accounting</span>
+      <span class="arch-mod new">Mandate management</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:rgba(255,107,107,0.06);border-color:rgba(255,107,107,0.2)">
+    <h3 style="color:var(--accent4);margin-bottom:8px">⚠️ Code health issues to fix before reuse</h3>
+    <p style="font-size:12px;color:var(--muted)">From the code analysis: <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">unified_processor_service.py</code> passes <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">dossier_process_id</code> into <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">ExtractedField</code>, but that column is not defined in <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">extracted_field.py</code> — migration drift. Resolve this before porting the extraction pipeline into SaveWatt or you inherit the bug.</p>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="page" id="page-roadmap">
+  <div class="page-header">
+    <div class="tag">Build Roadmap</div>
+    <h1>3-Phase Build Plan</h1>
+    <p>Start with the minimum viable audit report. Add claim workflow. Add live data integrations. Revenue starts in Phase 1 with the first paying client.</p>
+  </div>
+
+  <div class="milestone-grid">
+    <div class="milestone">
+      <div class="phase">Phase 1 · 6–8 weeks</div>
+      <h4 style="color:var(--accent)">🎯 MVP: Invoice Audit Report</h4>
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Objective: upload one client's 5-year invoice set and produce a quantified anomaly report within 72h</p>
+      <ul>
+        <li>Fork Veloren → new SaveWatt repo</li>
+        <li>Fix dossier_process_id drift bug</li>
+        <li>New EnergyInvoice domain model</li>
+        <li>New document type: electricity invoice</li>
+        <li>Gemini extraction with invoice field schema</li>
+        <li>5 core anomaly rules (TURPE, accise, index, period, duplicate)</li>
+        <li>PDF audit report generation</li>
+        <li>Client upload portal (basic)</li>
+        <li>Mandate signing integration</li>
+        <li>First pilot client (manual Symphonics data)</li>
+      </ul>
+    </div>
+    <div class="milestone">
+      <div class="phase">Phase 2 · 8–12 weeks</div>
+      <h4 style="color:var(--accent2)">📋 Claim Management + Live Data</h4>
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Objective: manage the full claim lifecycle in the platform and integrate live Enedis/GRDF data</p>
+      <ul>
+        <li>Enedis Data Connect integration</li>
+        <li>Symphonics API connector (SGE/M023)</li>
+        <li>Puissance calibration engine</li>
+        <li>Claim + Evidence domain models</li>
+        <li>Claim case workflow UI</li>
+        <li>Evidence pack generator (PDF)</li>
+        <li>Counterparty response tracking</li>
+        <li>Recovery dashboard</li>
+        <li>SuccessFeeEvent + invoicing</li>
+        <li>Gas invoice document type</li>
+      </ul>
+    </div>
+    <div class="milestone">
+      <div class="phase">Phase 3 · 10–14 weeks</div>
+      <h4 style="color:var(--accent3)">🚀 Scale & SaaS Layer</h4>
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Objective: white-label the platform for other bureaux d'études + add CEE track</p>
+      <ul>
+        <li>Tariff option simulator (HP-HC vs Base)</li>
+        <li>Contract renegotiation workflow</li>
+        <li>CEE opportunity scanner</li>
+        <li>CEE ↔ iverif.io handoff flow</li>
+        <li>Multi-client SaaS licensing</li>
+        <li>Symphonics distribution integration</li>
+        <li>DGDDI claim pack generator</li>
+        <li>Ongoing monitoring + alert engine</li>
+        <li>White-label mode for partner bureaux</li>
+        <li>Reporting + analytics dashboard</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:24px">
+    <div class="section-title">First milestone to prove the concept (2 weeks)</div>
+    <div class="flow-row">
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><h4>One real invoice set</h4><p>Get 1–2 years of invoices from a known contact (Symphonics customer?). Real PDFs, real PDL.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><h4>Extraction prototype</h4><p>Run Gemini on the invoices with a new SaveWatt field schema. Get structured JSON per invoice.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><h4>3 rules hardcoded</h4><p>Index continuity, TURPE line check, duplicate period. Find one real anomaly.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(61,220,151,0.3)"><h4>One-page report</h4><p>"We found €X in potential recovery on your last 2 years of bills." That's the pitch demo.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div class="page" id="page-revenue">
+  <div class="page-header">
+    <div class="tag">Revenue Model</div>
+    <h1>How SaveWatt Makes Money</h1>
+    <p>Three revenue streams, all tied to value delivered. Success-fee model means zero friction for clients to start.</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="card card-accent">
+      <h3>Stream 1 — Recovery fee</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">Fee charged on amounts actually recovered from suppliers / GRD / DGDDI. Zero advance from client.</p>
+      <div style="font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px">30–40%</div>
+      <div style="font-size:11px;color:var(--muted)">of recovered sums</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
+        <strong style="color:var(--text)">Example:</strong> Commune with €290K/yr bill. Recover €41K → SaveWatt earns €12–16K per client.<br><br>
+        Industry benchmark: DUNE Energie charges 33% of first-year savings.
+      </div>
+    </div>
+    <div class="card card-blue">
+      <h3>Stream 2 — Ongoing savings fee</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">% of annual savings from contract optimisation (TURPE recalibration, tariff change, puissance reduction), charged for 12–24 months.</p>
+      <div style="font-size:22px;font-weight:700;color:var(--accent2);margin-bottom:4px">15–25%</div>
+      <div style="font-size:11px;color:var(--muted)">of annual savings, for 1–2 years</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
+        <strong style="color:var(--text)">Example:</strong> Industrial site saves €18K/yr on TURPE. SaveWatt earns €3–4.5K/yr for 2 years = €6–9K additional.
+      </div>
+    </div>
+    <div class="card card-orange">
+      <h3>Stream 3 — CEE brokerage</h3>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">When SaveWatt identifies CEE-eligible works, it acts as mandataire CEE. Monetise kWh cumac by selling to obligés (energy suppliers). Commission on the CEE value.</p>
+      <div style="font-size:22px;font-weight:700;color:var(--accent3);margin-bottom:4px">15–25%</div>
+      <div style="font-size:11px;color:var(--muted)">of CEE prime value (~€7–10/MWh cumac)</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
+        Handed to iverif.io for dossier assembly. Tight integration between the two products = cross-sell revenue.
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Revenue per client type (illustrative)</div>
+    <table>
+      <thead>
+        <tr><th>Client Profile</th><th>Annual Bill</th><th>Recovery (one-time)</th><th>Annual Savings</th><th>SaveWatt Revenue (Yr 1)</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Commune (8,000 hab.)</td><td>€290K</td><td>€41K → fee €14K</td><td>€20K/yr → fee €4K/yr</td><td style="color:var(--accent);font-weight:600">~€18K</td><td>TURPE + accise + puissance</td></tr>
+        <tr><td>Site industriel</td><td>€540K</td><td>€96K → fee €32K</td><td>€35K/yr → fee €7K/yr</td><td style="color:var(--accent);font-weight:600">~€39K</td><td>Highest anomaly density</td></tr>
+        <tr><td>Groupe hôtelier</td><td>€180K</td><td>€22.5K → fee €7.5K</td><td>€12K/yr → fee €2.5K/yr</td><td style="color:var(--accent);font-weight:600">~€10K</td><td>Multi-site = high volume</td></tr>
+        <tr><td>Copropriété tertiaire</td><td>€96K</td><td>€14.8K → fee €5K</td><td>€8K/yr → fee €1.6K/yr</td><td style="color:var(--accent);font-weight:600">~€6.6K</td><td>Easy onboarding</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">SaaS licensing (Phase 3 — B2B platform)</div>
+    <div class="card card-purple">
+      <h3>License the platform to other bureaux d'études</h3>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px">Other energy consultants use SaveWatt as their back-office engine. They bring the client, SaveWatt does the AI analysis. Monthly SaaS fee (€500–2,000/month per seat) + per-audit fee (€200–500 per audit case). The same model iverif.io uses for CEE operators. This is the 10× scale play — you don't need to sell to every client directly, you sell to the firms that already have the clients.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  document.querySelector('.main').scrollTop = 0;
+}
+</script>
+</body>
+</html>

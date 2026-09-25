@@ -10,7 +10,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const actor = await api.actor();
     const { id } = await params;
-    const pdf = await new OfferDeliveryManager().getPdf(actor, id);
+    const kind = new URL(request.url).searchParams.get("kind") === "marketing" ? "marketing" : "budget";
+    const pdf = await new OfferDeliveryManager().getPdf(actor, id, kind);
     if (!pdf) {
       return NextResponse.json({ error: "CRM_NOT_FOUND" }, { status: 404 });
     }

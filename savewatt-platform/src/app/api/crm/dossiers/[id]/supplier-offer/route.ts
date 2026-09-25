@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { CrmApiManager } from "@/lib/crm/crm-api-manager";
 import { OfferManager } from "@/lib/offers/offer-manager";
+import { serializeSupplierOfferForActor } from "@/lib/offers/offer-visibility";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const actor = await api.actor();
     const { id } = await params;
     const supplierOffer = await new OfferManager().getSupplierOffer(actor, id);
-    return NextResponse.json({ supplierOffer });
+    return NextResponse.json({ supplierOffer: serializeSupplierOfferForActor(actor, supplierOffer) });
   } catch (error) {
     return api.error(error);
   }
@@ -22,7 +23,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const actor = await api.actor();
     const { id } = await params;
     const supplierOffer = await new OfferManager().saveSupplierOffer(actor, id, await api.json(request));
-    return NextResponse.json({ supplierOffer });
+    return NextResponse.json({ supplierOffer: serializeSupplierOfferForActor(actor, supplierOffer) });
   } catch (error) {
     return api.error(error);
   }

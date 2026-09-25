@@ -1,39 +1,38 @@
 # SaveWatt Documentation Index
 
-## Start Here
+SaveWatt is a commercial brand operated by **AX TECH — ECOLED WAVE CONCEPT**, with
+**Symphonics** as the approved supplier partner. The business has two sides:
 
-The website builder should begin with:
+1. A public marketing site (already shipped) that lets enterprises request a free
+   comparison against a Symphonics proposal, and lets régies / business introducers
+   request a demo of the sales, hierarchy, document, contract and commission workflow.
+2. A multi-tenant B2B platform for managing commercial régies (sales hierarchy,
+   invoice analysis, offer building, e-signature, supplier API, commissions).
 
-1. `docs/BUILD-HANDOFF.md` - consolidated implementation contract
-2. `docs/landingpageplan.md` - exact homepage copy and section behavior
-3. `docs/visual-dna.md` - design system, responsive rules and asset direction
-4. `public/assets/generated-v3/README.md` - generated image inventory
+Older June 2026 documents describing SaveWatt as an *independent bureau d'études*
+doing invoice-error recovery have been removed — that positioning is superseded.
 
-## Specialist Documents
+## Source of Truth
 
 | Document | Purpose |
 |---|---|
-| `website-plan.md` | Sitemap, page roles and launch priorities |
-| `branding.md` | Positioning, voice and trust signals |
-| `copy-platform.md` | Messaging system and secondary-page direction |
-| `seo-plan.md` | Search themes, metadata and structured-data strategy |
-| `competitor-analysis.md` | Competitive positioning |
-| `vision.md` | Product and business vision |
+| `LANDING-PIVOT-2026-09.md` | Pivot decision record — identity, audiences, claims and commercial disclosure. Supersedes all prior positioning. |
+| `prompt_plateforme_regies_symphonics.md` | Full specification for the régies commercial-management platform (the current build focus). |
+| `offer-workflow.md` | How a SaveWatt offer is built from a Symphonics proposal (manual, first ~100 deals). |
+| `visual-dna.md` | Visual language / design system retained for the live landing page. |
 
-## Process Archive
+## Platform Specifications
 
-These documents explain how the planning team was assembled. They are useful
-background but are not implementation requirements:
+The engineering specs for the platform live outside this folder in `specs/`
+(`backend-specs.md`, `frontend-specs.md`, `api-docs.md`, `ai-services.md`,
+`cloud-architecture.md`, `design-system.md`, `decisions.md`, `delivery-lots.md`,
+`rights-matrix.md`, `brief-normalized.md`, `open-questions.md`, `preferences.yaml`).
+The platform application itself is in `savewatt-platform/`.
 
-- `skill-stack.md`
-- `team-assembly.md`
+## Test Data
 
-## Asset Location
+Real anonymized invoices used for the platform's invoice-analysis test case (see
+§7.4 of `prompt_plateforme_regies_symphonics.md`):
 
-Production image assets are stored in:
-
-```text
-public/assets/generated-v3/
-```
-
-Do not ship `contact-sheet.png`; it is a visual QA artifact.
+- `eDF_Facture_20260914_134622.pdf`
+- `Josh_Rue_du_Poteau_50066947359734 (1).pdf`

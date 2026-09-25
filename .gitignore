@@ -8,3 +8,9 @@ build/
 .env
 .env.*
 !.env.example
+
+# local agent tooling and client documents (personal data — never commit)
+.claude/
+.planning/
+.playwright-mcp/
+docs/*.pdf

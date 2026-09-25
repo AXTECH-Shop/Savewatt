@@ -4,4 +4,4 @@ This file is kept for tools that request `llm.txt`. The canonical AI-readable co
 
 https://www.savewatt.fr/llms.txt
 
-SaveWatt is a commercial brand operated by AX TECH — ECOLED WAVE CONCEPT (SAS, SIREN 751 982 760). It offers French businesses a free comparison between their current electricity contract and a Symphonics proposal, and provides sales workflow and commission-management tools for régies and business introducers. AX TECH is remunerated by Symphonics when a customer subscribes, with no separate surcharge billed to the customer.
+SaveWatt is an independent French energy-billing audit service. It helps organizations audit electricity and gas invoices, identify overbilling, recover confirmed overpayments, optimize contracts and subscribed power, and check CEE opportunities when relevant.

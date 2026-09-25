@@ -5,7 +5,8 @@ export type CrmErrorCode =
   | "CRM_CONFLICT"
   | "CRM_UNAVAILABLE"
   | "OFFER_INPUT_MISSING"
-  | "OFFER_MARGIN_GRID_MISSING";
+  | "OFFER_MARGIN_GRID_MISSING"
+  | "OFFER_PRICING_PARAMETERS_MISSING";
 
 export class CrmError extends Error {
   readonly code: CrmErrorCode;

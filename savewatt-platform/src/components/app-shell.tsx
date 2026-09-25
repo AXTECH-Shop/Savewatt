@@ -192,7 +192,13 @@ function MobileDrawer({ open, close }: { open: boolean; close: () => void }) {
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  unreadNotifications = 0,
+}: {
+  children: React.ReactNode;
+  unreadNotifications?: number;
+}) {
   const t = useTranslations("shell");
   const tNav = useTranslations("nav");
   const { actor } = useWorkspace();
@@ -252,7 +258,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </label>
           <Link href="/notifications" className="press relative rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-ink" aria-label={t("notifications")}>
             <Bell size={19} />
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
+            {unreadNotifications > 0 && (
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
+            )}
           </Link>
           <UserButton />
         </header>

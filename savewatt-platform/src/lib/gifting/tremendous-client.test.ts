@@ -29,7 +29,10 @@ afterEach(() => {
 describe("TremendousClient", () => {
   it("creates an idempotent EUR email reward through the sandbox API", async () => {
     process.env.TREMENDOUS_API_KEY = "TEST_real_sandbox_key";
-    process.env.TREMENDOUS_BASE_URL = "https://testflight.tremendous.com/api/v2/";
+    // cloudflare-env.d.ts pins TREMENDOUS_BASE_URL to the wrangler var literal;
+    // override via a plain record for the sandbox test.
+    (process.env as Record<string, string | undefined>).TREMENDOUS_BASE_URL =
+      "https://testflight.tremendous.com/api/v2/";
     process.env.TREMENDOUS_CAMPAIGN_ID = "CAMPAIGN123";
     process.env.TREMENDOUS_FUNDING_SOURCE_ID = "BALANCE";
 

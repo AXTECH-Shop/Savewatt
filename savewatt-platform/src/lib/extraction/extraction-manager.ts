@@ -6,7 +6,7 @@ import { DocumentStorageManager } from "@/lib/cloudflare/document-storage-manage
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { DocumentRepository } from "@/lib/documents/document-repository";
 import { CrmError } from "@/lib/crm/crm-errors";
-import { extractBill } from "./gemini";
+import { extractBill, GEMINI_MODEL } from "./gemini";
 import { ExtractionRepository, type ExtractionRecord } from "./extraction-repository";
 import type { ExtractionResult } from "./schema";
 
@@ -43,7 +43,7 @@ export class ExtractionManager {
     const extraction = await this.extractions.create(actor, {
       documentId: document.id,
       dossierId: document.dossierId,
-      model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
+      model: GEMINI_MODEL,
       result,
     });
     await this.recordEvent(actor, document.dossierId, "EXTRACTION_COMPLETED", {

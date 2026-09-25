@@ -1,6 +1,45 @@
 # Savewatt Platform — Status & Task Plan
 
-_Last updated: 2026-09-22_
+_Last updated: 2026-09-25_
+
+## Implementation update — 2026-09-25 (deployed)
+
+- **OCR moved to Vertex AI (EU)**: `gemini-3.6-flash` on `aiplatform.eu.rep.googleapis.com`, billed to GCP project `project-f5aa049c-0f7c-40c8-bf5`. Keyless auth via Workload Identity Federation (pool `savewatt-workers`, provider `savewatt-platform`, direct principal with `roles/aiplatform.user`); the Worker signs its own OIDC JWT with the `GCP_WIF_PRIVATE_KEY` secret (`src/lib/extraction/google-auth.ts`). The Gemini API key path is gone. Verified on 5 real bills (EDF ×2, ENGIE ×2, TotalEnergies).
+- **Email moved to Cloudflare Email Service** (`send_email` binding `EMAIL`, sender `offres@savewatt.fr`); Resend sender, webhook, and Svix verifier removed. No provider delivery callbacks yet — delivery rows stay `SENT`.
+- **R2** bucket `savewatt-documents` created in the EU jurisdiction; D1 migrations through 0015 applied remotely; app deployed to `app.savewatt.fr`.
+- **Live proof** (`tmp/pdf-analysis/run-bill-to-offer.mjs`): Vertex extraction of the EDF bill → validated extraction → Symphonics terms → offer v1 (10 €/MWh) → 17 561 € TTC/an, 2 238 €/an savings → both PDFs.
+
+## Implementation update — 2026-09-25
+
+**Production is live** (worker `79a7cc19-d8b6-44e5-90e8-4b3132850927` at app.savewatt.fr) and transactional email is dual-driver:
+
+- **Deployed to Cloudflare**: remote D1 migrated to `0015` (0005–0014 had never been applied remotely — schema drift fixed), R2 bucket `savewatt-documents` (EU), random `CRON_SECRET` / `PORTAL_TOKEN_SECRET` secrets set. Smoke checks pass: API auth walls 401, portal invalid-link page 200, cron endpoint answers its own Bearer auth.
+- **Cloudflare Email Service**: `send_email` binding `EMAIL` configured (unrestricted, `remote: true` for local dev). New dual-driver sender `src/lib/email/transactional-email.ts`: prefers the EMAIL binding, falls back to Resend when `RESEND_API_KEY` is set, explicit no-op skip when neither exists, no cross-driver retry (no double-send risk). Attachments (both offer PDFs) are supported by the binding per `@cloudflare/workers-types` `EmailAttachment`. Offer delivery and the follow-up sweep both route through it.
+- **Webhook auth fix**: `/api/webhooks/resend` and `/api/cron/followups` bypass Clerk (they authenticate themselves via svix signature / Bearer CRON_SECRET) — verified live: Resend webhook returns 503 `WEBHOOK_NOT_CONFIGURED` until `RESEND_WEBHOOK_SECRET` is provided, cron returns 401 `UNAUTHORIZED` from the route itself. Restored the Resend webhook route with svix verification (`verifyResend`) and delivery-state mapping.
+- **Known limitation**: signed-out page requests 404 (`x-clerk-auth-reason: protect-rewrite, dev-browser-missing`) because the deployment still uses Clerk **development** keys — a Clerk production instance (`pk_live`/`sk_live`, domain `app.savewatt.fr` authorized) is required; client bundle must be rebuilt with the live publishable key.
+- **Prerequisites remaining with the user**: onboard `savewatt.fr` in Cloudflare Email Service (dashboard → Compute → Email Service → Email Sending → Onboard Domain; adds MX/SPF/DKIM/DMARC), Clerk production keys, Resend keys (only if the Resend fallback/driver is wanted), Gemini billing top-up (extraction API currently 402).
+- Tests: 61 lib tests green (email driver selection, capability rule, no-driver skip, no-double-send), i18n parity green, lint clean, production build green.
+
+## Implementation update — 2026-09-23
+
+The offer engine now reproduces the **Symphonics budget prévisionnel** exactly (validated to the euro against the real Josh / AX TECH proposal) and delivers **two PDFs** per offer — a technical budget document and a marketing one-pager:
+
+- **Pricing model spec**: `specs/symphonics-pricing-model.md` documents the deduced formula, the worked reconciliation (engine output matches Symphonics' 16 812 € TTC line-by-line), the full variable inventory with admin/régie/customer visibility, and the contract mechanics (Art. 5.5 ±20 % tolerance band, Art. 9.3.1.3 termination indemnity, 5 000 € deposit, TURPE pass-through).
+- **Configurable pricing parameters** (migration `0014`; applied remotely 2026-09-24): versioned, org-scoped `pricing_parameters` (CEE, capacity, accise, CTA, TVA, TURPE fixed + per-cadran variable rates) seeded with the validated constants; `margin_grids` gain a `role_scope` (ADMIN/REGIE, régie max capped by the admin grid, repository-enforced); `offer_versions` gain `budget_json` plus `pdf_marketing_r2_key`/`pdf_marketing_sha256`.
+- **Estimate engine** (`src/lib/offers/estimate.ts`, pure): `computeBudgetPrevisionnel` produces the full budget breakdown (énergie, abonnement, CEE, capacité, acheminement fixe/variable, accise, CTA, HT, TVA, TTC) and `deriveAnnualCadranVolumes` annualizes partial extractions with the validated seasonal split. `createOfferVersion` stores the customer-safe budget snapshot on every new version.
+- **Régie secrecy by construction**: `offer-visibility.ts` strips électron buy price, CEE/capacity components, margin, and grid bounds from every API response for non-operator roles (offer versions, supplier offer, margin grids; régie roles get 403 on grid/pricing internals). Operator-only APIs: `GET/POST /api/crm/pricing-parameters`; margin grids accept `role_scope`.
+- **Dual PDFs**: `renderOfferBudgetHtml` (Symphonics-style technical budget) and `renderOfferMarketingHtml` (savings hero, benefits, simplified comparison, TTC summary, CTA) rendered through the `BROWSER` binding, both archived in R2 with SHA-256 each, both attached to the Resend delivery email (marketing first). `GET /api/crm/offer-versions/[id]/pdf?kind=marketing` serves the marketing PDF; versions predating 0014 recompute the budget server-side from their immutable snapshot.
+- **Settings UI now writable for the operator**: `/settings/margins` edits ADMIN + REGIE margin grids, new `/settings/pricing` edits the pass-through rates and TURPE grid (each save = new version); both entries hidden from régie roles.
+- **End-to-end replay (local)**: real Josh dossier (PDL 50066947359734, Courtry) seeded into local D1 with a validated EDF extraction and the Symphonics supplier terms; v1 (margin 0) reconciles to 16 812 € TTC exactly, v2 (default 10 €/MWh margin) yields 17 561 € TTC/an and 2 238 €/an savings. Artifacts in `tmp/pdf-analysis/output/` (HTML + PDF + PNG).
+- Tests: 46 lib tests green (budget reconciliation replay, forecast helper, régie serializer, dual-template secrecy), i18n parity green, lint clean, production build green.
+
+### Still demo / pending (see GitHub issues)
+
+- Signature screen UI still reads the localStorage dossier for display; the DocuSeal webhook remains authoritative in D1 (issue #15 covers the clean template + full rebinding).
+- Public token portal `/portal/offer/[token]` remains hard-coded (issue #14).
+- Commission persistence, finance close, back-office transmission: unchanged (issues #16–#18).
+- Migrations through `0015` are applied remotely; deploy completed 2026-09-25 (see update above).
+- Resend key/domain activation still pending (delivery path unchanged otherwise).
 
 ## Implementation update — 2026-09-22
 

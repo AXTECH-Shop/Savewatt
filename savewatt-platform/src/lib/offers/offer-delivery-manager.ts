@@ -7,9 +7,21 @@ import { DocumentStorageManager } from "@/lib/cloudflare/document-storage-manage
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
-import { renderOfferHtml } from "./offer-pdf";
+import { sendEmail, type EmailBinding } from "@/lib/email/email-sender";
+import { computeBudgetPrevisionnel, type BudgetPrevisionnel } from "./estimate";
+import { renderOfferBudgetHtml } from "./offer-pdf-budget";
+import { renderOfferMarketingHtml } from "./offer-pdf-marketing";
 import { OfferVersionRepository } from "./offer-version-repository";
+import { PricingParameterRepository } from "./pricing-parameter-repository";
 import type { OfferVersionRecord } from "./offer-types";
+
+export type OfferPdfKind = "budget" | "marketing";
+
+interface PdfArtifact {
+  bytes: ArrayBuffer;
+  sha256: string;
+  r2Key: string;
+}
 
 export interface DeliveryResult {
   deliveryId: string;
@@ -43,18 +55,29 @@ interface ClientMeta {
 export class OfferDeliveryManager {
   constructor(
     private readonly offerVersions = new OfferVersionRepository(),
+    private readonly pricingParameters = new PricingParameterRepository(),
     private readonly dossiers = new DossierRepository(),
     private readonly database: D1Database = DatabaseManager.getDatabase(),
   ) {}
 
-  async getPdf(actor: WorkspaceActor, offerVersionId: string): Promise<{ bytes: ArrayBuffer; fileName: string } | null> {
+  async getPdf(
+    actor: WorkspaceActor,
+    offerVersionId: string,
+    kind: OfferPdfKind = "budget",
+  ): Promise<{ bytes: ArrayBuffer; fileName: string } | null> {
     const version = await this.offerVersions.find(actor, offerVersionId);
-    if (!version || !version.pdfR2Key) return null;
-    const object = await DocumentStorageManager.getBucket().get(version.pdfR2Key);
+    if (!version) return null;
+    const r2Key = kind === "marketing" ? version.pdfMarketingR2Key : version.pdfR2Key;
+    if (!r2Key) return null;
+    const object = await DocumentStorageManager.getBucket().get(r2Key);
     if (!object) return null;
+    const fileName =
+      kind === "marketing"
+        ? `offre-savewatt-v${version.versionNo}.pdf`
+        : `budget-previsionnel-savewatt-v${version.versionNo}.pdf`;
     return {
       bytes: await new Response(object.body).arrayBuffer(),
-      fileName: `offre-savewatt-v${version.versionNo}.pdf`,
+      fileName,
     };
   }
 
@@ -81,9 +104,9 @@ export class OfferDeliveryManager {
       throw new CrmError("CRM_INVALID_INPUT", 400, "recipientEmail");
     }
 
-    let pdf: { bytes: ArrayBuffer; sha256: string; r2Key: string };
+    let pdfs: { budget: PdfArtifact; marketing: PdfArtifact };
     try {
-      pdf = await this.ensurePdf(version, meta);
+      pdfs = await this.ensurePdfs(actor, version, meta);
     } catch (error) {
       await this.recordDelivery(actor, offerVersionId, options.idempotencyKey, recipient, "FAILED", null, errorMessage(error));
       throw error instanceof CrmError ? error : new CrmError("CRM_UNAVAILABLE", 502, "pdf");
@@ -92,38 +115,35 @@ export class OfferDeliveryManager {
     const locale = "fr";
     const subject = `Votre offre d'énergie SaveWatt — ${meta.clientName}`;
     const html = this.emailHtml(version, meta, locale);
-    const pdfBase64 = base64FromBytes(new Uint8Array(pdf.bytes));
 
     let providerMessageId: string | null = null;
-    try {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${resendApiKey()}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "SaveWatt <offres@savewatt.fr>",
-          to: [recipient],
-          subject,
-          html,
-          attachments: [
-            {
-              filename: `offre-savewatt-v${version.versionNo}.pdf`,
-              content: pdfBase64,
-            },
-          ],
-        }),
-      });
-      const body = (await response.json()) as { id?: string; message?: string };
-      if (!response.ok) {
-        throw new Error(body.message ?? `Resend responded ${response.status}`);
-      }
-      providerMessageId = body.id ?? null;
-    } catch (error) {
-      const message = errorMessage(error);
+    const outcome = await sendEmail(
+      {
+        to: [recipient],
+        subject,
+        html,
+        attachments: [
+          {
+            filename: `offre-savewatt-v${version.versionNo}.pdf`,
+            content: base64FromBytes(new Uint8Array(pdfs.marketing.bytes)),
+            type: "application/pdf",
+          },
+          {
+            filename: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`,
+            content: base64FromBytes(new Uint8Array(pdfs.budget.bytes)),
+            type: "application/pdf",
+          },
+        ],
+      },
+      getCloudflareContext().env.EMAIL as EmailBinding | undefined,
+    );
+    if (outcome.kind === "sent") {
+      providerMessageId = outcome.providerMessageId;
+    } else {
+      const message =
+        outcome.kind === "skipped" ? "EMAIL binding missing" : outcome.error;
       await this.recordDelivery(actor, offerVersionId, options.idempotencyKey, recipient, "FAILED", null, message);
-      throw new CrmError("CRM_UNAVAILABLE", 502, "email");
+      throw new CrmError("CRM_UNAVAILABLE", outcome.kind === "skipped" ? 503 : 502, "email");
     }
 
     const delivery = await this.recordDelivery(
@@ -153,43 +173,99 @@ export class OfferDeliveryManager {
     return this.toResult(delivery);
   }
 
-  /** Render (once) and archive the immutable PDF for this offer version. */
-  private async ensurePdf(
+  /**
+   * Render (once) and archive both immutable PDFs for this offer version:
+   * the Symphonics-style budget prévisionnel and the marketing one-pager.
+   */
+  private async ensurePdfs(
+    actor: WorkspaceActor,
     version: OfferVersionRecord,
     meta: ClientMeta,
-  ): Promise<{ bytes: ArrayBuffer; sha256: string; r2Key: string }> {
-    if (version.pdfR2Key) {
-      const object = await DocumentStorageManager.getBucket().get(version.pdfR2Key);
-      if (object) {
-        return { bytes: await new Response(object.body).arrayBuffer(), sha256: version.pdfSha256 ?? "", r2Key: version.pdfR2Key };
-      }
-    }
-
-    const html = renderOfferHtml(version, meta, "fr");
+  ): Promise<{ budget: PdfArtifact; marketing: PdfArtifact }> {
     const browser = getCloudflareContext().env.BROWSER;
     if (!browser) {
       throw new CrmError("CRM_UNAVAILABLE", 503, "browser");
     }
+    const budget = await this.ensureBudget(actor, version);
+    const budgetVersion = budget === version.budget ? version : { ...version, budget };
+    const [budgetPdf, marketingPdf] = await Promise.all([
+      this.ensureArtifact(browser, version, "budget", () =>
+        renderOfferBudgetHtml(budgetVersion, meta, "fr"),
+      ),
+      this.ensureArtifact(browser, version, "marketing", () =>
+        renderOfferMarketingHtml(budgetVersion, meta, "fr"),
+      ),
+    ]);
+    await this.database
+      .prepare(
+        `UPDATE offer_versions
+         SET pdf_r2_key = ?, pdf_sha256 = ?, pdf_marketing_r2_key = ?, pdf_marketing_sha256 = ?
+         WHERE id = ?`,
+      )
+      .bind(budgetPdf.r2Key, budgetPdf.sha256, marketingPdf.r2Key, marketingPdf.sha256, version.id)
+      .run();
+    return { budget: budgetPdf, marketing: marketingPdf };
+  }
+
+  private async ensureArtifact(
+    browser: { fetch(input: string, init?: RequestInit): Promise<Response> },
+    version: OfferVersionRecord,
+    kind: OfferPdfKind,
+    render: () => string,
+  ): Promise<PdfArtifact> {
+    const existingKey = kind === "marketing" ? version.pdfMarketingR2Key : version.pdfR2Key;
+    if (existingKey) {
+      const object = await DocumentStorageManager.getBucket().get(existingKey);
+      if (object) {
+        return {
+          bytes: await new Response(object.body).arrayBuffer(),
+          sha256: kind === "marketing" ? version.pdfMarketingSha256 ?? "" : version.pdfSha256 ?? "",
+          r2Key: existingKey,
+        };
+      }
+    }
     const response = await browser.fetch("https://example.com/pdf", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ html, options: { format: "A4", printBackground: true } }),
+      body: JSON.stringify({ html: render(), options: { format: "A4", printBackground: true } }),
     });
     if (!response.ok) {
       throw new CrmError("CRM_UNAVAILABLE", 502, "pdf");
     }
     const bytes = await response.arrayBuffer();
     const sha256 = createHash("sha256").update(new Uint8Array(bytes)).digest("hex");
-    const r2Key = `offers/${version.organizationId}/${version.dossierId}/${version.id}/v${version.versionNo}.pdf`;
+    const suffix = kind === "marketing" ? `-marketing` : "";
+    const r2Key = `offers/${version.organizationId}/${version.dossierId}/${version.id}/v${version.versionNo}${suffix}.pdf`;
     await DocumentStorageManager.getBucket().put(r2Key, bytes, {
       httpMetadata: { contentType: "application/pdf" },
-      customMetadata: { offerVersionId: version.id, snapshotSha256: version.sha256 },
+      customMetadata: { offerVersionId: version.id, snapshotSha256: version.sha256, kind },
     });
-    await this.database
-      .prepare(`UPDATE offer_versions SET pdf_r2_key = ?, pdf_sha256 = ? WHERE id = ?`)
-      .bind(r2Key, sha256, version.id)
-      .run();
     return { bytes, sha256, r2Key };
+  }
+
+  /**
+   * Budget snapshot for rendering. Versions created before migration 0014 have
+   * no budget_json: recompute it from the immutable snapshot inputs and the
+   * effective pricing parameters (derived data, server-side only).
+   */
+  private async ensureBudget(
+    actor: WorkspaceActor,
+    version: OfferVersionRecord,
+  ): Promise<BudgetPrevisionnel> {
+    if (version.budget) return version.budget;
+    const params = await this.pricingParameters.resolveEffective(actor);
+    if (!params) throw new CrmError("OFFER_PRICING_PARAMETERS_MISSING", 400, "pricingParameters");
+    return computeBudgetPrevisionnel({
+      lines: version.supplierOffer.lines.map((line) => ({
+        cadran: line.cadran,
+        annualVolumeMwh: line.annualVolumeMwh,
+        finalPriceEurMwh: line.electronEurMwh + version.marginEurMwh,
+      })),
+      subscriptionEurMonth: version.supplierOffer.subscriptionEurMonth,
+      params,
+      powerKw: version.currentContract.subscribedPowerKva ?? 0,
+      termYears: version.supplierOffer.termYears,
+    });
   }
 
   private async clientMeta(actor: WorkspaceActor, dossierId: string): Promise<ClientMeta> {
@@ -223,7 +299,8 @@ export class OfferDeliveryManager {
       <p>Votre offre d'énergie personnalisée pour <strong>${meta.clientName}</strong> est prête :
       une économie estimée à <strong>${money.format(version.comparison.annualSaving)} par an</strong>
       sur ${version.comparison.termYears} an(s), à périmètre identique.</p>
-      <p>Retrouvez le détail complet des prix et de la comparaison dans le document PDF joint.</p>
+      <p>Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
+      prévisionnel détaillé (consommation, prix par cadran, décomposition complète HT/TTC).</p>
       <p style="color:#5b665f;font-size:12px;">Cette offre est valable jusqu'au ${version.supplierOffer.validUntil ?? "—"}.
       SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p>
       <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
@@ -296,12 +373,6 @@ export class OfferDeliveryManager {
       .bind(randomUUID(), actor.orgId, dossierId, actor.userId, eventType, eventType, JSON.stringify(metadata))
       .run();
   }
-}
-
-function resendApiKey(): string {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new CrmError("CRM_UNAVAILABLE", 503, "email");
-  return key;
 }
 
 function errorMessage(error: unknown): string {

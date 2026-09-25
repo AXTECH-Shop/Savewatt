@@ -7,20 +7,28 @@ import { useWorkspace } from "@/components/workspace-provider";
 
 const adminItems = [
   ["/settings/workflows", "workflows"],
-  ["/settings/margins", "margins"],
   ["/settings/commissions", "commissions"],
   ["/settings/templates", "documents"],
   ["/settings/branding", "branding"],
+] as const;
+
+// Grid internals and pass-through rates are operator-only (régie roles 403).
+const internalItems = [
+  ["/settings/margins", "margins"],
+  ["/settings/pricing", "pricing"],
 ] as const;
 
 export function SettingsNav() {
   const t = useTranslations("settingsNav");
   const pathname = usePathname();
   const { actor } = useWorkspace();
+  const isInternal = ["SUPER_ADMIN", "OPERATOR_FINANCE"].includes(actor.role);
   const canAdminister = ["SUPER_ADMIN", "MASTER_ADMIN", "SUB_REGIE_ADMIN"].includes(actor.role);
-  const items = canAdminister
-    ? [...adminItems, ["/settings/sessions", "sessions"] as const]
-    : [["/settings/sessions", "sessions"] as const];
+  const items = [
+    ...(isInternal ? internalItems : []),
+    ...(canAdminister ? adminItems : []),
+    ["/settings/sessions", "sessions"] as const,
+  ];
 
   return (
     <nav aria-label={t("label")} className="mb-6 flex gap-1 overflow-x-auto border-b border-line pb-px">

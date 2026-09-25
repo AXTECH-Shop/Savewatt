@@ -1,7 +1,17 @@
 import { AppShell } from "@/components/app-shell";
 import { WorkspaceProvider } from "@/components/workspace-provider";
+import { NotificationRepository } from "@/lib/notifications/notification-repository";
 import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
 import { redirect } from "next/navigation";
+
+async function unreadNotificationCount(actor: { orgId: string; userId: string; isPreview: boolean }) {
+  if (actor.isPreview) return 0;
+  try {
+    return await new NotificationRepository().unreadCount(actor.orgId, actor.userId);
+  } catch {
+    return 0;
+  }
+}
 
 export default async function ProtectedAppLayout({
   children,
@@ -22,9 +32,11 @@ export default async function ProtectedAppLayout({
     throw error;
   }
 
+  const unreadNotifications = await unreadNotificationCount(actor);
+
   return (
     <WorkspaceProvider actor={actor}>
-      <AppShell>{children}</AppShell>
+      <AppShell unreadNotifications={unreadNotifications}>{children}</AppShell>
     </WorkspaceProvider>
   );
 }

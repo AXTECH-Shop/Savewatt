@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (error) {
     if (error instanceof CrmError && error.code === "CRM_UNAVAILABLE") {
       return NextResponse.json(
-        { error: error.code, field: error.field, hint: "Configure RESEND_API_KEY and the BROWSER binding." },
+        { error: error.code, field: error.field, hint: "Configure the EMAIL (Cloudflare Email Service) and BROWSER bindings." },
         { status: error.status },
       );
     }

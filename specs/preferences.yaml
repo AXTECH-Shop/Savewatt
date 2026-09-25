@@ -1,0 +1,100 @@
+# Savewatt — Architecture preferences (SOURCE OF TRUTH for the spec pack)
+# These are HARD CONSTRAINTS. The imposed stack from the brief overrides the
+# arch-orchestrator default (Cloudflare) template.
+
+project:
+  name: Savewatt
+  codename: savewatt
+  description: >
+    B2B multi-tenant SaaS to operate energy commercial régies (sales networks).
+    Operator (AX TECH) → Master régies → unlimited sub-régies → teams → apporteurs.
+    Supplier partner: Symphonics (electricity C2–C5). Bill capture + LLM extraction,
+    comparator, offer, Yousign e-sign, transmission to Symphonics, monthly consumption
+    feed, cascading commissions, Factur-X invoicing.
+  domain: France energy retail (électricité B2B; C2/C3/C4/C5, TURPE, accise, CTA, CEE, capacité)
+  languages: [fr]        # FR default, i18n-ready
+  compliance: [RGPD, OWASP-ASVS-L2]
+
+frontend:
+  framework: nextjs            # App Router
+  language: typescript
+  styling: tailwindcss
+  component_source: shadcn/ui   # REUSE — do not hand-roll components shadcn provides
+  icons: lucide-react
+  data_grid: reui               # for kanban/data-grid/gantt heavy screens (shadcn-compatible)
+  forms: react-hook-form + zod
+  state: tanstack-query (server state) + url-state; zustand only if a screen truly needs it
+  responsive: mobile-first      # apporteur journeys are phone-first
+  charts: recharts              # consumption graphs, before/after comparator
+
+backend:
+  runtime: nodejs
+  language: typescript
+  api_style: >
+    Layered REST (domain / service / repository). NestJS OR Next.js route handlers
+    structured in the same layers. Choose NestJS if a standalone API service is wanted;
+    otherwise co-located Next route handlers. Decision recorded in decisions.md.
+  validation: zod               # server-side on every input
+  orm: drizzle                  # RLS-compatible via SET LOCAL app.* GUCs
+  database: postgresql          # >= 15
+  db_extensions: [ltree, pgcrypto, "uuid (v7 app-generated)"]
+  row_level_security: required  # on ALL business tables; blocking isolation tests
+  queue: bullmq                 # on Redis
+  cache: redis
+  object_storage: s3-compatible # EU-hosted; server-side + application envelope encryption
+  pdf: playwright               # HTML → PDF; invoices in Factur-X
+  esign: yousign-api-v3
+  company_lookup: insee-sirene-api
+
+ai:
+  enabled: true
+  provider: anthropic
+  model: claude-sonnet-5        # bill field extraction; escalate to opus for hard scans if needed
+  use_cases:
+    - structured-bill-extraction (strict JSON schema + per-field confidence)
+    - human-in-the-loop validation UI
+  guardrails: [strict-json-schema, per-field-confidence, human-validation-gate, no-PII-in-logs]
+
+infra:
+  hosting_region: EU            # France preferred
+  environments: [dev, staging, prod]   # separated
+  iac: required                 # Terraform (or Pulumi) — provider-neutral first
+  observability:
+    logs: structured-json
+    errors: sentry
+    metrics: required
+    audit_log: immutable-append-only-hash-chained
+  secrets: vault                # never in code or versioned env
+  backups: daily-encrypted
+  retention_days: 30
+  dr: { rpo_hours: 24, rto_hours: 4 }
+
+security:
+  asvs_level: 2
+  password_hash: argon2id
+  mfa: required-except-CLIENT   # TOTP + WebAuthn/passkeys + backup codes
+  encryption_at_rest: aes-256
+  envelope_encryption_kms: [iban, rib, id_documents, api_keys]  # application-level
+  session_cookies: { httpOnly: true, secure: true, sameSite: lax }
+  csrf: required
+  csp: strict
+  headers: [HSTS, X-Frame-Options, Referrer-Policy]
+  uploads: { mime_by_content: true, max_size: enforced, antivirus: clamav, signed_urls: short-ttl }
+  ids: uuid-v7                  # never sequential/guessable
+  pentest: [pre-prod, annual]
+  dependency_scan: ci
+
+# ---- Locked v1 product decisions (see specs/decisions.md for rationale) ----
+v1_decisions:
+  supplier_model: symphonics-only-behind-connector-seam   # SupplierConnector interface; multi-supplier later
+  energy_scope: electricity-only                          # nullable gas fields (PCE) retained in schema
+  symphonics_invoicing: consolidated-operator-only        # AX TECH is sole legal biller to Symphonics
+  kyc_docs: optional-per-workflow                         # RGPD data-minimization
+  symphonics_api: unavailable-use-csv-import              # replaceable connector + CSV/Excel import
+  commission:
+    supplier_to_network_rate: 0.66        # of gross margin M = (sale_price - symphonics_price)
+    first_split: { ax_tech: 0.50, master_regie: 0.50 }   # of the 66% pool
+    downstream_cascade: configurable-grids               # master → sub-régie → team → apporteur
+    accrual: monthly-per-mwh-consumed
+    margin_base: configurable            # default: electron + CEE + capacity
+    clawback: configurable-on-early-termination

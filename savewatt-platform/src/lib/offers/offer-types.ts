@@ -1,5 +1,6 @@
 import type { ComparisonResult } from "@/lib/compare";
 import type { CurrentContract, ProposedLine, Proposal } from "@/lib/types";
+import type { BudgetPrevisionnel, PricingParameterValues } from "./estimate";
 
 export interface SupplierOfferRecord {
   id: string;
@@ -26,14 +27,27 @@ export interface SaveSupplierOfferInput {
   lines: ProposedLine[];
 }
 
+export type MarginGridRoleScope = "ADMIN" | "REGIE";
+
 export interface MarginGridRecord {
   id: string;
   organizationId: string;
   version: number;
   status: "ACTIVE" | "SUPERSEDED";
+  roleScope: MarginGridRoleScope;
   minMarginEurMwh: number;
   defaultMarginEurMwh: number;
   maxMarginEurMwh: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  createdAt: number;
+}
+
+export interface PricingParameterRecord extends PricingParameterValues {
+  id: string;
+  organizationId: string;
+  version: number;
+  status: "ACTIVE" | "SUPERSEDED";
   effectiveFrom: string;
   effectiveTo: string | null;
   createdAt: number;
@@ -64,8 +78,11 @@ export interface OfferVersionRecord {
   marginOverrideReason: string | null;
   comparison: ComparisonResult;
   clientPriceLines: ClientPriceLine[];
+  budget: BudgetPrevisionnel | null;
   sha256: string;
   pdfR2Key: string | null;
   pdfSha256: string | null;
+  pdfMarketingR2Key: string | null;
+  pdfMarketingSha256: string | null;
   createdAt: number;
 }
