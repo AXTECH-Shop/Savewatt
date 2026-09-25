@@ -41,6 +41,8 @@ export interface MarginGridRecord {
   effectiveFrom: string;
   effectiveTo: string | null;
   createdAt: number;
+  /** Display name of the author (history listings only). */
+  createdBy?: string | null;
 }
 
 export interface PricingParameterRecord extends PricingParameterValues {
@@ -51,6 +53,8 @@ export interface PricingParameterRecord extends PricingParameterValues {
   effectiveFrom: string;
   effectiveTo: string | null;
   createdAt: number;
+  /** Display name of the author (history listings only). */
+  createdBy?: string | null;
 }
 
 export type OfferVersionStatus =

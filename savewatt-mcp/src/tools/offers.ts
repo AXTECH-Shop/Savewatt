@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { compare, proposedPrice } from "@/lib/compare";
 import { CrmError } from "@/lib/crm/crm-errors";
 import type { ExtractionResult } from "@/lib/extraction/schema";
+import { parseValidatedBill } from "@/lib/extraction/extraction-repository";
 import { computeBudgetPrevisionnel } from "@/lib/offers/estimate";
 import { renderOfferBudgetHtml } from "@/lib/offers/offer-pdf-budget";
 import { renderOfferMarketingHtml } from "@/lib/offers/offer-pdf-marketing";
@@ -87,7 +88,7 @@ async function latestValidatedBill(
     )
     .bind(dossierId, ...scope.bindings)
     .first<{ validated_json: string }>();
-  return row ? (JSON.parse(row.validated_json) as ExtractionResult["bill"]) : null;
+  return row ? parseValidatedBill(row.validated_json) : null;
 }
 
 async function clientMeta(

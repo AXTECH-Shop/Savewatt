@@ -15,9 +15,9 @@ import { StatusPill } from "@/components/workspace/status-pill";
 
 const ROLES: Record<OrganizationKind, AppRole[]> = {
   OPERATOR: [],
-  MASTER: ["MASTER_ADMIN", "MASTER_BACKOFFICE", "READ_ONLY"],
-  SUB_REGIE: ["SUB_REGIE_ADMIN", "MASTER_BACKOFFICE", "READ_ONLY"],
-  TEAM: ["TEAM_MANAGER", "APPORTEUR", "READ_ONLY"],
+  MASTER: ["MASTER_ADMIN", "APPORTEUR"],
+  SUB_REGIE: ["SUB_REGIE_ADMIN", "APPORTEUR"],
+  TEAM: ["APPORTEUR"],
 };
 
 export function BranchAccessManager({

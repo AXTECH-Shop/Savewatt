@@ -24,6 +24,7 @@ interface PricingParameterRow {
   effective_from: string;
   effective_to: string | null;
   created_at: number;
+  created_by_name?: string | null;
 }
 
 export type SavePricingParametersInput = Omit<
@@ -77,8 +78,9 @@ export class PricingParameterRepository {
     const scope = this.paramScope(actor);
     const result = await this.database
       .prepare(
-        `SELECT params.* FROM pricing_parameters params
+        `SELECT params.*, author.display_name AS created_by_name FROM pricing_parameters params
          JOIN organizations resource_org ON resource_org.id = params.organization_id
+         LEFT JOIN users author ON author.id = params.created_by_user_id
          WHERE params.organization_id = ? AND ${scope.sql}
          ORDER BY params.version DESC`,
       )
@@ -192,6 +194,7 @@ export class PricingParameterRepository {
       effectiveFrom: row.effective_from,
       effectiveTo: row.effective_to,
       createdAt: row.created_at,
+      ...(row.created_by_name !== undefined ? { createdBy: row.created_by_name } : {}),
     };
   }
 }

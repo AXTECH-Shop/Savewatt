@@ -80,7 +80,8 @@ describe("Clerk OAuth access tokens", () => {
         last_name: "Finance",
       });
     const resolved = await resolveOAuthActor({ DB: d1, CLERK_SECRET_KEY: "sk_test_x" }, { sub: userId }, clerkApi);
-    assert.equal(resolved.actor.role, "OPERATOR_FINANCE");
+    // Legacy OPERATOR_FINANCE whitelist entries resolve to the consolidated admin role.
+    assert.equal(resolved.actor.role, "SUPER_ADMIN");
     assert.equal(resolved.actor.email, email);
   });
 });

@@ -3,6 +3,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import {
+  normalizeRole,
   scopeForRole,
   type AppRole,
   type WorkspaceActor,
@@ -49,15 +50,16 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
   );
   if (!internalAccessAllowed) throw new WorkspaceAccessError("INTERNAL_NOT_WHITELISTED");
 
+  const role = normalizeRole(membership.role);
   return {
     userId,
     displayName,
     email,
-    role: membership.role,
+    role,
     orgId: membership.organizationId,
     orgName: membership.organizationName,
     orgPath: membership.organizationPath,
-    scope: scopeForRole(membership.role),
+    scope: scopeForRole(role),
     isPreview: false,
   };
 }

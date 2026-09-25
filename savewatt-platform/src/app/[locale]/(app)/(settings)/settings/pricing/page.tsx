@@ -10,9 +10,10 @@ export default async function PricingSettingsPage() {
   await requirePageRole(["SUPER_ADMIN"]);
   const actor = await resolveServerActor();
   const t = await getTranslations("settings");
-  const effective = actor.isPreview
-    ? null
-    : await new PricingParameterRepository().resolveEffective(actor);
+  const repository = actor.isPreview ? null : new PricingParameterRepository();
+  const [effective, history] = repository
+    ? await Promise.all([repository.resolveEffective(actor), repository.list(actor)])
+    : [null, []];
 
   return (
     <div className="rise">
@@ -22,7 +23,7 @@ export default async function PricingSettingsPage() {
         title={t("pricingSettings")}
         description={t("pricingSettingsDescription")}
       />
-      <PricingParametersForm effective={effective} preview={actor.isPreview} />
+      <PricingParametersForm effective={effective} history={history} preview={actor.isPreview} />
     </div>
   );
 }

@@ -13,6 +13,10 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/:locale/portal/offer/(.*)",
+  // Ad landing: customers upload a bill without an account.
+  "/:locale/offre(.*)",
+  "/offre(.*)",
+  "/api/public/(.*)",
   "/api/docuseal/webhook(.*)",
   "/api/gifting/webhook(.*)",
   // Cron does its own auth (Bearer CRON_SECRET).

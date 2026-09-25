@@ -6,20 +6,60 @@ import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import type { PricingParameterRecord } from "@/lib/offers/offer-types";
+import { classifyDatedVersions, VersionHistory } from "./version-history";
 
 interface PricingParametersFormProps {
   effective: PricingParameterRecord | null;
+  history: PricingParameterRecord[];
   preview: boolean;
 }
 
 const num = (value: number | undefined) => (value === undefined ? "" : String(value));
 const percent = (value: number | undefined) => (value === undefined ? "" : String(value * 100));
 
-export function PricingParametersForm({ effective, preview }: PricingParametersFormProps) {
+export function PricingParametersForm({ effective, history, preview }: PricingParametersFormProps) {
   const t = useTranslations("settings");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const states = classifyDatedVersions(history);
+  const fixed = (value: number | undefined) => (value === undefined ? "—" : value.toFixed(2));
+  const historyColumns = [
+    { key: "cee", label: "CEE" },
+    { key: "capacity", label: t("history.capacity") },
+    { key: "accise", label: t("history.accise") },
+    { key: "cta", label: "CTA %" },
+    { key: "tva", label: "TVA %" },
+    { key: "gestion", label: t("history.gestion") },
+    { key: "comptage", label: t("history.comptage") },
+    { key: "soutirage", label: t("history.soutirage") },
+    { key: "HPH", label: "HPH" },
+    { key: "HCH", label: "HCH" },
+    { key: "HPE", label: "HPE" },
+    { key: "HCE", label: "HCE" },
+  ];
+  const historyRows = history.map((record) => ({
+    id: record.id,
+    version: record.version,
+    state: states.get(record.id) ?? "previous",
+    effectiveFrom: record.effectiveFrom,
+    createdAt: record.createdAt,
+    createdBy: record.createdBy,
+    values: {
+      cee: fixed(record.ceeEurMwh),
+      capacity: fixed(record.capacityEurMwh),
+      accise: fixed(record.acciseEurMwh),
+      cta: (record.ctaRate * 100).toFixed(2),
+      tva: (record.tvaRate * 100).toFixed(2),
+      gestion: fixed(record.turpeFixed.gestionCentsPerDay),
+      comptage: fixed(record.turpeFixed.comptageCentsPerDay),
+      soutirage: fixed(record.turpeFixed.soutirageFixeCentsPerKwPerDay),
+      HPH: fixed(record.turpeVariable.HPH),
+      HCH: fixed(record.turpeVariable.HCH),
+      HPE: fixed(record.turpeVariable.HPE),
+      HCE: fixed(record.turpeVariable.HCE),
+    },
+  }));
 
   async function submit(formData: FormData) {
     setSubmitting(true);
@@ -65,7 +105,8 @@ export function PricingParametersForm({ effective, preview }: PricingParametersF
   }
 
   return (
-    <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
+    <div className="mt-6 space-y-8">
+    <section className="rounded-2xl border border-line bg-surface p-5">
       {effective && (
         <p className="text-xs text-muted">
           {t("pricingVersionActive", { version: effective.version, date: effective.effectiveFrom })}
@@ -139,5 +180,7 @@ export function PricingParametersForm({ effective, preview }: PricingParametersF
         {feedback && <p className="text-xs text-muted">{feedback}</p>}
       </form>
     </section>
+    <VersionHistory title={t("history.pricingTitle")} columns={historyColumns} rows={historyRows} />
+    </div>
   );
 }

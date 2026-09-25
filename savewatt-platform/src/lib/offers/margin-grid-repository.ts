@@ -21,6 +21,7 @@ interface MarginGridRow {
   effective_from: string;
   effective_to: string | null;
   created_at: number;
+  created_by_name?: string | null;
 }
 
 export class MarginGridRepository {
@@ -47,8 +48,9 @@ export class MarginGridRepository {
     const scope = this.gridScope(actor);
     const result = await this.database
       .prepare(
-        `SELECT grid.* FROM margin_grids grid
+        `SELECT grid.*, author.display_name AS created_by_name FROM margin_grids grid
          JOIN organizations resource_org ON resource_org.id = grid.organization_id
+         LEFT JOIN users author ON author.id = grid.created_by_user_id
          WHERE grid.organization_id = ? AND ${scope.sql}
          ORDER BY grid.version DESC`,
       )
@@ -203,6 +205,7 @@ export class MarginGridRepository {
       effectiveFrom: row.effective_from,
       effectiveTo: row.effective_to,
       createdAt: row.created_at,
+      ...(row.created_by_name !== undefined ? { createdBy: row.created_by_name } : {}),
     };
   }
 }

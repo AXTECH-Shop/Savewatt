@@ -9,8 +9,8 @@ import { StatusPill } from "@/components/workspace/status-pill";
 
 const CHILD_OPTIONS: Record<OrganizationKind, OrganizationKind[]> = {
   OPERATOR: ["MASTER"],
-  MASTER: ["SUB_REGIE", "TEAM"],
-  SUB_REGIE: ["SUB_REGIE", "TEAM"],
+  MASTER: ["SUB_REGIE"],
+  SUB_REGIE: [],
   TEAM: [],
 };
 

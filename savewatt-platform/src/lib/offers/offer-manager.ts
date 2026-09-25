@@ -8,6 +8,7 @@ import { CrmError } from "@/lib/crm/crm-errors";
 import { CrmScopePolicy } from "@/lib/crm/crm-scope-policy";
 import type { Cadran, CurrentContract, Proposal } from "@/lib/types";
 import type { ExtractionResult } from "@/lib/extraction/schema";
+import { parseValidatedBill } from "@/lib/extraction/extraction-repository";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
 import { computeBudgetPrevisionnel } from "./estimate";
 import { MarginGridRepository } from "./margin-grid-repository";
@@ -232,7 +233,7 @@ export class OfferManager {
       }>();
     if (!row) return null;
     return {
-      bill: JSON.parse(row.validated_json) as ExtractionResult["bill"],
+      bill: parseValidatedBill(row.validated_json),
       fieldConfidence: JSON.parse(row.field_confidence_json) as ExtractionResult["fieldConfidence"],
       overallConfidence: row.overall_confidence ?? 0,
       warnings: JSON.parse(row.warnings_json) as string[],
@@ -306,6 +307,8 @@ export class OfferManager {
     field: string,
     bounds: { min?: number; max?: number; integer?: boolean },
   ): number {
+    // Number(null) and Number("") are 0: a blank price must not become a free électron.
+    if (value === null || value === undefined || value === "") throw new CrmError("CRM_INVALID_INPUT", 400, field);
     const parsed = typeof value === "number" ? value : Number(value);
     if (!Number.isFinite(parsed)) throw new CrmError("CRM_INVALID_INPUT", 400, field);
     if (bounds.integer && !Number.isInteger(parsed)) {

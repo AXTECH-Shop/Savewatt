@@ -19,8 +19,9 @@ describe("AccessScopePolicy", () => {
   const policy = new AccessScopePolicy();
 
   it("allows hierarchy changes only below the actor branch", () => {
-    assert.equal(policy.canCreateChild(actor, actor.orgPath, "MASTER", "TEAM"), true);
-    assert.equal(policy.canCreateChild(actor, "operator.master_2", "MASTER", "TEAM"), false);
+    assert.equal(policy.canCreateChild(actor, actor.orgPath, "MASTER", "SUB_REGIE"), true);
+    assert.equal(policy.canCreateChild(actor, actor.orgPath, "MASTER", "TEAM"), false);
+    assert.equal(policy.canCreateChild(actor, "operator.master_2", "MASTER", "SUB_REGIE"), false);
     assert.equal(policy.canCreateChild(actor, actor.orgPath, "MASTER", "MASTER"), false);
   });
 

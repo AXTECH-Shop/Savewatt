@@ -66,14 +66,18 @@ export class OfferDeliveryManager {
   ): Promise<{ bytes: ArrayBuffer; fileName: string } | null> {
     const version = await this.offerVersions.find(actor, offerVersionId);
     if (!version) return null;
-    const r2Key = kind === "marketing" ? version.pdfMarketingR2Key : version.pdfR2Key;
-    if (!r2Key) return null;
-    const object = await DocumentStorageManager.getBucket().get(r2Key);
-    if (!object) return null;
     const fileName =
       kind === "marketing"
         ? `offre-savewatt-v${version.versionNo}.pdf`
         : `budget-previsionnel-savewatt-v${version.versionNo}.pdf`;
+    const r2Key = kind === "marketing" ? version.pdfMarketingR2Key : version.pdfR2Key;
+    if (!r2Key) {
+      // Preview before sending: render and archive the immutable PDFs now.
+      const pdfs = await this.ensurePdfs(actor, version, await this.clientMeta(actor, version.dossierId));
+      return { bytes: pdfs[kind].bytes, fileName };
+    }
+    const object = await DocumentStorageManager.getBucket().get(r2Key);
+    if (!object) return null;
     return {
       bytes: await new Response(object.body).arrayBuffer(),
       fileName,

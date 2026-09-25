@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { demoActionKeys, demoCopyKey, demoDueKeys } from "@/lib/demo-copy";
 import type { PipelineDeal } from "@/lib/crm/crm-types";
 import type { DossierStatus } from "@/lib/types";
+import type { WorkflowStage } from "@/lib/workflows/workflow-stages";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "./status-pill";
 
@@ -62,20 +63,18 @@ function DealCard({ deal }: { deal: PipelineDeal }) {
   );
 }
 
-export function PipelineBoard({ deals }: { deals: PipelineDeal[] }) {
+export function PipelineBoard({ deals, stages }: { deals: PipelineDeal[]; stages: WorkflowStage[] }) {
   const locale = useLocale();
   const t = useTranslations("pipeline");
   const workspaceT = useTranslations("workspace");
   const [view, setView] = useState<"board" | "list">("board");
   const [query, setQuery] = useState("");
-  const columns: Array<{ status: DossierStatus; label: string }> = [
-    { status: "draft", label: t("columns.draft") },
-    { status: "uploaded", label: t("columns.uploaded") },
-    { status: "analyzed", label: t("columns.analyzed") },
-    { status: "proposalReady", label: t("columns.proposalReady") },
-    { status: "sent", label: t("columns.sent") },
-    { status: "signed", label: t("columns.signed") },
-  ];
+  const labelled = stages.map((stage) => ({
+    status: stage.key,
+    label: locale === "en" ? stage.labelEn : stage.labelFr,
+    visible: stage.visible,
+  }));
+  const columns = labelled.filter((stage) => stage.visible);
   const currency = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
@@ -166,7 +165,7 @@ export function PipelineBoard({ deals }: { deals: PipelineDeal[] }) {
                 <Link href={`/dossiers/${deal.id}`} className="press grid gap-2 px-5 py-4 hover:bg-surface-2 md:grid-cols-[1.3fr_0.85fr_0.75fr_0.8fr_0.7fr] md:items-center md:gap-4">
                   <span><strong className="block text-sm text-ink">{deal.client}</strong><span className="nums text-xs text-muted">{deal.pdl}</span></span>
                   <span className="text-sm text-muted">{deal.owner}</span>
-                  <span><StatusPill tone={statusTone[deal.status]}>{columns.find((column) => column.status === deal.status)?.label ?? deal.status}</StatusPill></span>
+                  <span><StatusPill tone={statusTone[deal.status]}>{labelled.find((column) => column.status === deal.status)?.label ?? deal.status}</StatusPill></span>
                   <span className="text-sm text-muted">
                     {deal.nextAction && demoCopyKey(demoActionKeys, deal.nextAction)
                       ? workspaceT(demoCopyKey(demoActionKeys, deal.nextAction)!)

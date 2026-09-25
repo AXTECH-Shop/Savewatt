@@ -5,11 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   Bell,
   Briefcase,
-  Buildings,
-  CalendarBlank,
-  ChartLineUp,
-  Checks,
-  CirclesFour,
+  FileArrowUp,
   FilePlus,
   Files,
   Gift,
@@ -30,7 +26,7 @@ import {
 import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
-  APP_ROLES,
+  ACTIVE_ROLES,
   homeForRole,
   labelForRole,
   type AppRole,
@@ -46,42 +42,31 @@ interface NavItem {
   icon: Icon;
   roles: AppRole[];
   exact?: boolean;
+  match?: string;
 }
 
-const operatorRoles: AppRole[] = ["SUPER_ADMIN"];
-const financeRoles: AppRole[] = ["SUPER_ADMIN", "OPERATOR_FINANCE"];
-const masterRoles: AppRole[] = ["MASTER_ADMIN", "SUB_REGIE_ADMIN"];
-const internalRoles: AppRole[] = APP_ROLES.filter((role) => role !== "CLIENT");
+const adminRoles: AppRole[] = ["SUPER_ADMIN"];
+const networkRoles: AppRole[] = ["MASTER_ADMIN", "SUB_REGIE_ADMIN"];
+const managerRoles: AppRole[] = [...adminRoles, ...networkRoles];
+const sellingRoles: AppRole[] = [...managerRoles, "APPORTEUR"];
 
+// Only live, data-backed destinations; demo/static pages stay out of the navigation.
 const NAV_ITEMS: NavItem[] = [
-  { href: "/operator", labelKey: "operatorHome", icon: CirclesFour, roles: operatorRoles, exact: true },
-  { href: "/operator/masters", labelKey: "agencies", icon: Buildings, roles: operatorRoles },
-  { href: "/operator/access", labelKey: "access", icon: ShieldCheck, roles: operatorRoles },
-  { href: "/operator/rewards", labelKey: "rewards", icon: Gift, roles: operatorRoles },
-  { href: "/operator/symphonics", labelKey: "supplierRates", icon: SlidersHorizontal, roles: operatorRoles },
-  { href: "/operator/regulatory", labelKey: "regulatorySettings", icon: SlidersHorizontal, roles: operatorRoles },
-  { href: "/operator/audit", labelKey: "auditLog", icon: ShieldCheck, roles: operatorRoles },
-  { href: "/finance/close", labelKey: "monthlyClose", icon: Receipt, roles: financeRoles },
-  { href: "/finance/reconciliation", labelKey: "reconciliation", icon: Checks, roles: financeRoles },
-  { href: "/finance/invoices", labelKey: "invoices", icon: Files, roles: financeRoles },
-  { href: "/finance/consumption", labelKey: "consumptionImports", icon: FilePlus, roles: financeRoles },
-  { href: "/finance/exports", labelKey: "accountingExports", icon: Receipt, roles: financeRoles },
-  { href: "/portfolio", labelKey: "portfolio", icon: Briefcase, roles: [...masterRoles, "READ_ONLY"] },
-  { href: "/org", labelKey: "organisation", icon: TreeStructure, roles: masterRoles, exact: true },
-  { href: "/org/users", labelKey: "users", icon: UsersThree, roles: masterRoles },
-  { href: "/backoffice/queue", labelKey: "validations", icon: Checks, roles: ["MASTER_ADMIN", "MASTER_BACKOFFICE"] },
-  { href: "/team/pipeline", labelKey: "teamPipeline", icon: ChartLineUp, roles: ["TEAM_MANAGER"] },
-  { href: "/team/performance", labelKey: "performance", icon: UsersThree, roles: ["TEAM_MANAGER"] },
-  { href: "/pipeline", labelKey: "myFiles", icon: House, roles: ["APPORTEUR", "READ_ONLY"], exact: true },
-  { href: "/leads", labelKey: "leads", icon: UserList, roles: [...masterRoles, "TEAM_MANAGER", "APPORTEUR", "READ_ONLY"] },
-  { href: "/new", labelKey: "newFile", icon: FilePlus, roles: ["APPORTEUR"] },
-  { href: "/commissions", labelKey: "commissions", icon: Money, roles: [...masterRoles, "TEAM_MANAGER", "APPORTEUR"] },
+  { href: "/pipeline", labelKey: "files", icon: Briefcase, roles: managerRoles, exact: true },
+  { href: "/pipeline", labelKey: "myFiles", icon: House, roles: ["APPORTEUR"], exact: true },
+  { href: "/leads", labelKey: "leads", icon: UserList, roles: sellingRoles },
+  { href: "/intake", labelKey: "billIntake", icon: FileArrowUp, roles: adminRoles },
+  { href: "/new", labelKey: "newFile", icon: FilePlus, roles: sellingRoles },
+  { href: "/org", labelKey: "organisation", icon: TreeStructure, roles: managerRoles, exact: true },
+  { href: "/org/users", labelKey: "users", icon: UsersThree, roles: managerRoles },
+  { href: "/operator/access", labelKey: "access", icon: ShieldCheck, roles: adminRoles },
+  { href: "/commissions", labelKey: "commissions", icon: Money, roles: sellingRoles },
+  { href: "/operator/rewards", labelKey: "rewards", icon: Gift, roles: adminRoles },
   { href: "/wallet", labelKey: "benefits", icon: Gift, roles: ["APPORTEUR"] },
-  { href: "/echeancier", labelKey: "schedule", icon: CalendarBlank, roles: internalRoles },
   { href: "/customer", labelKey: "myContract", icon: Receipt, roles: ["CLIENT"], exact: true },
   { href: "/customer/documents", labelKey: "myDocuments", icon: Files, roles: ["CLIENT"] },
-  { href: "/settings/workflows", labelKey: "settings", icon: SlidersHorizontal, roles: ["SUPER_ADMIN", ...masterRoles] },
-  { href: "/settings/sessions", labelKey: "accountSecurity", icon: ShieldCheck, roles: [...APP_ROLES] },
+  { href: "/settings/pricing", labelKey: "settings", icon: SlidersHorizontal, roles: adminRoles, match: "/settings" },
+  { href: "/settings/commissions", labelKey: "settings", icon: SlidersHorizontal, roles: networkRoles, match: "/settings" },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -92,8 +77,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
-      {items.map(({ href, labelKey, icon: IconComponent, exact }) => {
-        const active = exact ? pathname === href : pathname.startsWith(href);
+      {items.map(({ href, labelKey, icon: IconComponent, exact, match }) => {
+        const active = exact ? pathname === href : pathname.startsWith(match ?? href);
         return (
           <Link
             key={href}
@@ -143,7 +128,7 @@ function WorkspaceIdentity() {
             onChange={(event) => setPreviewRole(event.target.value as AppRole)}
             className="mt-1.5 h-9 w-full rounded-lg border border-line-strong bg-surface px-2 text-xs normal-case tracking-normal text-ink"
           >
-            {APP_ROLES.map((role) => (
+            {ACTIVE_ROLES.map((role) => (
               <option key={role} value={role}>
                 {labelForRole(role, locale)}
               </option>

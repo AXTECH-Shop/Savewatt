@@ -12,6 +12,27 @@ export const APP_ROLES = [
 
 export type AppRole = (typeof APP_ROLES)[number];
 
+/** The five roles the product exposes; the others are legacy DB values folded in by normalizeRole. */
+export const ACTIVE_ROLES = ["SUPER_ADMIN", "MASTER_ADMIN", "SUB_REGIE_ADMIN", "APPORTEUR", "CLIENT"] as const;
+
+export type ActiveRole = (typeof ACTIVE_ROLES)[number];
+
+const LEGACY_ROLE_MAP: Record<AppRole, ActiveRole> = {
+  SUPER_ADMIN: "SUPER_ADMIN",
+  OPERATOR_FINANCE: "SUPER_ADMIN",
+  MASTER_ADMIN: "MASTER_ADMIN",
+  MASTER_BACKOFFICE: "MASTER_ADMIN",
+  READ_ONLY: "MASTER_ADMIN",
+  SUB_REGIE_ADMIN: "SUB_REGIE_ADMIN",
+  TEAM_MANAGER: "SUB_REGIE_ADMIN",
+  APPORTEUR: "APPORTEUR",
+  CLIENT: "CLIENT",
+};
+
+export function normalizeRole(role: AppRole): ActiveRole {
+  return LEGACY_ROLE_MAP[role];
+}
+
 export type ScopeKind =
   | "PLATFORM"
   | "SELF_DESCENDANTS"
@@ -45,26 +66,26 @@ const ROLE_SCOPE: Record<AppRole, ScopeKind> = {
 };
 
 const ROLE_HOME: Record<AppRole, string> = {
-  SUPER_ADMIN: "/operator",
-  OPERATOR_FINANCE: "/finance/close",
-  MASTER_ADMIN: "/portfolio",
-  MASTER_BACKOFFICE: "/backoffice/queue",
-  SUB_REGIE_ADMIN: "/portfolio",
-  TEAM_MANAGER: "/team/pipeline",
+  SUPER_ADMIN: "/pipeline",
+  OPERATOR_FINANCE: "/pipeline",
+  MASTER_ADMIN: "/pipeline",
+  MASTER_BACKOFFICE: "/pipeline",
+  SUB_REGIE_ADMIN: "/pipeline",
+  TEAM_MANAGER: "/pipeline",
   APPORTEUR: "/pipeline",
-  READ_ONLY: "/portfolio",
+  READ_ONLY: "/pipeline",
   CLIENT: "/customer",
 };
 
 const ROLE_LABELS: Record<AppRole, { fr: string; en: string }> = {
-  SUPER_ADMIN: { fr: "Opérateur SaveWatt", en: "SaveWatt operator" },
-  OPERATOR_FINANCE: { fr: "Finance opérateur", en: "Operator finance" },
-  MASTER_ADMIN: { fr: "Administrateur régie", en: "Agency administrator" },
-  MASTER_BACKOFFICE: { fr: "Back-office régie", en: "Agency back office" },
-  SUB_REGIE_ADMIN: { fr: "Administrateur sous-régie", en: "Sub-agency administrator" },
-  TEAM_MANAGER: { fr: "Responsable d’équipe", en: "Team manager" },
-  APPORTEUR: { fr: "Apporteur", en: "Business introducer" },
-  READ_ONLY: { fr: "Lecture seule", en: "Read only" },
+  SUPER_ADMIN: { fr: "Admin SaveWatt", en: "SaveWatt admin" },
+  OPERATOR_FINANCE: { fr: "Admin SaveWatt", en: "SaveWatt admin" },
+  MASTER_ADMIN: { fr: "Régie", en: "Agency" },
+  MASTER_BACKOFFICE: { fr: "Régie", en: "Agency" },
+  SUB_REGIE_ADMIN: { fr: "Sous-régie", en: "Sub-agency" },
+  TEAM_MANAGER: { fr: "Sous-régie", en: "Sub-agency" },
+  APPORTEUR: { fr: "Apporteur", en: "Referrer" },
+  READ_ONLY: { fr: "Régie", en: "Agency" },
   CLIENT: { fr: "Client", en: "Customer" },
 };
 

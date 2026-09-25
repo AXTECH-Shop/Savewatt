@@ -9,6 +9,12 @@ import type { ExtractionResult } from "./schema";
 
 export type ExtractionStatus = "EXTRACTED" | "VALIDATED" | "REJECTED";
 
+/** validated_json holds the bill; rows saved before the fix hold the whole result. */
+export function parseValidatedBill(json: string): ExtractionResult["bill"] {
+  const parsed = JSON.parse(json) as ExtractionResult["bill"] | ExtractionResult;
+  return "bill" in parsed && parsed.bill && typeof parsed.bill === "object" ? parsed.bill : (parsed as ExtractionResult["bill"]);
+}
+
 export interface ExtractionRecord {
   id: string;
   organizationId: string;
@@ -112,7 +118,7 @@ export class ExtractionRepository {
          SET status = 'VALIDATED', validated_json = ?, validated_by_user_id = ?, validated_at = unixepoch()
          WHERE id = ?`,
       )
-      .bind(JSON.stringify(validated), actor.userId, extractionId)
+      .bind(JSON.stringify(validated.bill), actor.userId, extractionId)
       .run();
     const updated = await this.find(actor, extractionId);
     if (!updated) throw new CrmError("CRM_NOT_FOUND", 404);
@@ -142,7 +148,7 @@ export class ExtractionRepository {
       },
       validated: row.validated_json
         ? {
-            bill: JSON.parse(row.validated_json) as ExtractionResult["bill"],
+            bill: parseValidatedBill(row.validated_json),
             fieldConfidence: JSON.parse(row.field_confidence_json) as ExtractionResult["fieldConfidence"],
             overallConfidence: row.overall_confidence ?? 0,
             warnings: JSON.parse(row.warnings_json) as string[],

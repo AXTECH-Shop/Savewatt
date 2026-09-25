@@ -12,14 +12,7 @@ import type {
 } from "@/lib/access-management/access-types";
 import { StatusPill } from "@/components/workspace/status-pill";
 
-const PARTNER_ROLES: AppRole[] = [
-  "MASTER_ADMIN",
-  "MASTER_BACKOFFICE",
-  "SUB_REGIE_ADMIN",
-  "TEAM_MANAGER",
-  "APPORTEUR",
-  "READ_ONLY",
-];
+const PARTNER_ROLES: AppRole[] = ["MASTER_ADMIN", "SUB_REGIE_ADMIN", "APPORTEUR"];
 
 export function AdminAccessConsole({
   registrations,
@@ -36,7 +29,7 @@ export function AdminAccessConsole({
   const router = useRouter();
   const operatorOrganizations = organizations.filter((item) => item.kind === "OPERATOR");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"SUPER_ADMIN" | "OPERATOR_FINANCE">("OPERATOR_FINANCE");
+  const [role, setRole] = useState<"SUPER_ADMIN" | "OPERATOR_FINANCE">("SUPER_ADMIN");
   const [organizationId, setOrganizationId] = useState(operatorOrganizations[0]?.id ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -105,7 +98,7 @@ export function AdminAccessConsole({
           <ShieldCheck size={24} className="text-accent" />
           <h2 className="mt-4 font-semibold text-ink">{t("addInternalTitle")}</h2>
           <label className="mt-4 block text-xs font-medium text-muted">{t("email")}<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="mt-1.5 h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink" /></label>
-          <label className="mt-4 block text-xs font-medium text-muted">{t("role")}<select value={role} onChange={(event) => setRole(event.target.value as typeof role)} className="mt-1.5 h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink"><option value="SUPER_ADMIN">{t("roles.SUPER_ADMIN")}</option><option value="OPERATOR_FINANCE">{t("roles.OPERATOR_FINANCE")}</option></select></label>
+          <label className="mt-4 block text-xs font-medium text-muted">{t("role")}<select value={role} onChange={(event) => setRole(event.target.value as typeof role)} className="mt-1.5 h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink"><option value="SUPER_ADMIN">{t("roles.SUPER_ADMIN")}</option></select></label>
           <label className="mt-4 block text-xs font-medium text-muted">{t("organization")}<select value={organizationId} onChange={(event) => setOrganizationId(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink">{operatorOrganizations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <button disabled={busy || preview || !organizationId} className="press mt-5 h-10 rounded-lg bg-accent px-4 text-sm font-medium text-white disabled:opacity-50">{busy ? t("saving") : t("add")}</button>
           {message && <p role="status" className="mt-3 text-sm text-muted">{message}</p>}

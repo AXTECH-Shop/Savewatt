@@ -1,4 +1,4 @@
-import { scopeForRole, type WorkspaceActor } from "@/lib/access-control";
+import { normalizeRole, scopeForRole, type WorkspaceActor } from "@/lib/access-control";
 import { AccountAccessRepository } from "@/lib/access/account-access-repository";
 import { McpAuthError, MCP_V1_TOKEN_ROLES, type ResolvedToken } from "./auth.ts";
 
@@ -165,6 +165,7 @@ export async function resolveOAuthActor(
 export async function loadActor(database: D1Database, userId: string): Promise<WorkspaceActor | null> {
   const membership = await new AccountAccessRepository(database).findActiveMembership(userId);
   if (!membership) return null;
+  const role = normalizeRole(membership.role);
   const user = await database
     .prepare(`SELECT email, display_name FROM users WHERE id = ? LIMIT 1`)
     .bind(userId)
@@ -173,11 +174,11 @@ export async function loadActor(database: D1Database, userId: string): Promise<W
     userId,
     displayName: user?.display_name ?? user?.email ?? "SaveWatt",
     email: user?.email ?? "",
-    role: membership.role,
+    role,
     orgId: membership.organizationId,
     orgName: membership.organizationName,
     orgPath: membership.organizationPath,
-    scope: scopeForRole(membership.role),
+    scope: scopeForRole(role),
     isPreview: false,
   };
 }

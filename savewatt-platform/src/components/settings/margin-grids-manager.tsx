@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { MarginGridRecord, MarginGridRoleScope } from "@/lib/offers/offer-types";
+import { classifyDatedVersions, VersionHistory } from "./version-history";
 
 interface MarginGridsManagerProps {
   organizationId: string;
@@ -21,8 +22,33 @@ export function MarginGridsManager({ organizationId, grids, preview }: MarginGri
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const states = classifyDatedVersions(grids.filter((grid) => grid.roleScope === "ADMIN"));
+  for (const [id, state] of classifyDatedVersions(grids.filter((grid) => grid.roleScope === "REGIE"))) {
+    states.set(id, state);
+  }
   const activeFor = (scope: MarginGridRoleScope) =>
-    grids.find((grid) => grid.roleScope === scope && grid.status === "ACTIVE") ?? null;
+    grids.find((grid) => grid.roleScope === scope && states.get(grid.id) === "current") ?? null;
+  const historyColumns = [
+    { key: "min", label: t("minimumPerMwh") },
+    { key: "default", label: t("defaultPerMwh") },
+    { key: "max", label: t("maximumPerMwh") },
+  ];
+  const historyRows = (scope: MarginGridRoleScope) =>
+    grids
+      .filter((grid) => grid.roleScope === scope)
+      .map((grid) => ({
+        id: grid.id,
+        version: grid.version,
+        state: states.get(grid.id) ?? "previous",
+        effectiveFrom: grid.effectiveFrom,
+        createdAt: grid.createdAt,
+        createdBy: grid.createdBy,
+        values: {
+          min: grid.minMarginEurMwh.toFixed(2),
+          default: grid.defaultMarginEurMwh.toFixed(2),
+          max: grid.maxMarginEurMwh.toFixed(2),
+        },
+      }));
 
   async function submit(formData: FormData) {
     setSubmitting(true);
@@ -116,6 +142,15 @@ export function MarginGridsManager({ organizationId, grids, preview }: MarginGri
         </form>
         {feedback && <p className="mt-3 text-xs text-muted">{feedback}</p>}
       </section>
+
+      {SCOPES.map((scope) => (
+        <VersionHistory
+          key={`history-${scope}`}
+          title={t("history.gridTitle", { grid: t(scope === "ADMIN" ? "adminGrid" : "regieGrid") })}
+          columns={historyColumns}
+          rows={historyRows(scope)}
+        />
+      ))}
     </div>
   );
 }
