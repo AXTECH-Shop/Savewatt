@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "savewatt-mcp",
+  "main": "dist/index.js",
+  "compatibility_date": "2026-09-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "mcp.savewatt.fr",
+      "custom_domain": true
+    }
+  ],
+  "build": {
+    "command": "npm run build:worker"
+  },
+  "vars": {
+    "GEMINI_MODEL": "gemini-3.6-flash",
+    "VERTEX_PROJECT_ID": "project-f5aa049c-0f7c-40c8-bf5",
+    "VERTEX_LOCATION": "eu",
+    "CLERK_ISSUER": "https://clerk.savewatt.fr"
+  },
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "remote": true
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "savewatt",
+      "database_id": "f9966fb7-be92-497b-9e4a-b3444fc841d0"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DOCUMENTS",
+      "bucket_name": "savewatt-documents",
+      "jurisdiction": "eu"
+    }
+  ],
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

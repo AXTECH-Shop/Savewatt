@@ -1,0 +1,213 @@
+# SaveWatt MCP parity matrix — UI action → service → REST → MCP tool
+# Last updated: 2026-09-25 (supersedes the 2026-09-18 plan snapshot:
+# most Phase-1 APIs are now durable and policy-enforced).
+#
+# status: live | planned
+# test:   mcp-contract (savewatt-mcp/test), unit (platform), smoke (production), none
+
+version: 1
+tools:
+  - ui_action: Dossiers list / pipeline views
+    service: CrmManager.listDossiers (DossierRepository)
+    rest: GET /api/crm/dossiers
+    mcp_tool: dossiers.list
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Dossier detail
+    service: CrmManager.getDossier
+    rest: GET /api/crm/dossiers/[id]
+    mcp_tool: dossiers.get
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: New dossier form (lead + convert)
+    service: CrmManager.createDossier (LeadRepository.create + convert)
+    rest: POST /api/crm/dossiers
+    mcp_tool: dossiers.create
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Dossier status transitions
+    service: DossierRepository.updateStatus (DossierStatusManager transitions)
+    rest: PATCH /api/crm/dossiers/[id]
+    mcp_tool: dossiers.transition_stage
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Document upload on dossier
+    service: DocumentRepository.createPending/markAvailable + DocumentValidationManager + R2
+    rest: POST /api/crm/dossiers/[id]/documents
+    mcp_tool: dossiers.attach_document
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Run extraction on a document
+    service: ExtractionManager.run (Gemini/Vertex) — MCP worker reimplements
+             the R2 fetch via its own DOCUMENTS binding (same SQL/shape)
+    rest: POST /api/crm/documents/[id]/extract
+    mcp_tool: bills.extract
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract (error path; provider quota not covered)
+
+  - ui_action: Extraction list/status
+    service: ExtractionRepository.listForDocument/find
+    rest: GET (via dossier documents panel)
+    mcp_tool: bills.extraction_status
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Extraction validation screen save
+    service: ExtractionManager.saveValidated
+    rest: PUT /api/crm/extractions/[id]
+    mcp_tool: bills.validate
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Supplier offer intake form
+    service: OfferManager.saveSupplierOffer (SupplierOfferRepository.upsert)
+    rest: POST /api/crm/dossiers/[id]/supplier-offer
+    mcp_tool: supplier_offers.create_manual
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Comparator view (pre-version preview)
+    service: compare() + computeBudgetPrevisionnel() (pure)
+    rest: n/a (computed inside offer version creation)
+    mcp_tool: comparisons.run
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Create offer version
+    service: OfferManager.createOfferVersion (budget_json snapshot)
+    rest: POST /api/crm/dossiers/[id]/offer-versions
+    mcp_tool: client_offers.create
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Download offer PDFs
+    service: OfferDeliveryManager.ensurePdfs — MCP worker reimplements via
+             its own BROWSER/DOCUMENTS bindings (same artifacts/keys)
+    rest: GET /api/crm/offer-versions/[id]/pdf[?kind=marketing]
+    mcp_tool: client_offers.generate_pdf
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract (fake browser)
+
+  - ui_action: Send offer by email
+    service: OfferDeliveryManager.send — MCP worker reimplements thinly
+             (idempotent offer_deliveries, SENT transition, Resend path;
+             no-ops without RESEND_API_KEY)
+    rest: POST /api/crm/offer-versions/[id]/send
+    mcp_tool: client_offers.send
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Organization tree — create régie
+    service: OrganizationManager.create (AccessScopePolicy)
+    rest: POST /api/organizations
+    mcp_tool: organizations.create_master
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Settings → margin grids
+    service: MarginGridRepository.create (role_scope, REGIE ≤ ADMIN cap)
+    rest: POST /api/organizations/[id]/margin-grids
+    mcp_tool: margin_grids.create_version
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Settings → pricing parameters
+    service: PricingParameterRepository.create
+    rest: POST /api/crm/pricing-parameters
+    mcp_tool: pricing_parameters.create_version
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Operator audit views
+    service: audit_events query
+    rest: n/a (no UI endpoint today)
+    mcp_tool: audit.search
+    role: SUPER_ADMIN, OPERATOR_FINANCE
+    status: live
+    test: mcp-contract
+
+  - ui_action: Leads list
+    service: CrmManager.listLeads (LeadRepository)
+    rest: GET /api/crm/leads
+    mcp_tool: leads.list
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  - ui_action: Lead creation form
+    service: CrmManager.createLead
+    rest: POST /api/crm/leads
+    mcp_tool: leads.create
+    role: SUPER_ADMIN
+    status: live
+    test: mcp-contract
+
+  # --- planned (listed in tools/list, never callable) ---
+  - ui_action: Commission grid settings
+    service: commission persistence (not yet durable)
+    rest: none
+    mcp_tool: commission_grids.create_version / publish_version / get_effective
+    role: SUPER_ADMIN
+    status: planned
+    test: none
+
+  - ui_action: Operator impersonation
+    service: none
+    rest: none
+    mcp_tool: impersonation.start / impersonation.stop
+    role: SUPER_ADMIN
+    status: planned
+    test: none
+
+  - ui_action: Operator reports
+    service: none
+    rest: none
+    mcp_tool: reports.pipeline_summary / reports.integration_health
+    role: SUPER_ADMIN, OPERATOR_FINANCE
+    status: planned
+    test: none
+
+  - ui_action: Signature flow (DocuSeal dormant)
+    service: signature_submissions (provider dormant)
+    rest: POST /api/docuseal (dormant)
+    mcp_tool: signatures.status / client_offers.send_for_signature
+    role: SUPER_ADMIN
+    status: planned
+    test: none
+
+  - ui_action: Wallet redemption
+    service: gift_redemptions + wallet (Tremendous; issuance disabled)
+    rest: POST /api/gifting/redemptions
+    mcp_tool: wallet.redeem / wallet.balance
+    role: SUPER_ADMIN
+    status: planned
+    test: none
+
+  - ui_action: Registration approvals / memberships / branch nodes / direct client+site creation
+    service: access-management repositories (durable, but not in v1 bundle)
+    rest: /api/admin/access*, /api/organizations/*
+    mcp_tool: registration_requests.* / memberships.* / organizations.create_branch_node / clients.create / sites.create
+    role: SUPER_ADMIN
+    status: planned
+    test: none

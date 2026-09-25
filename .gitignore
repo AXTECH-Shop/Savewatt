@@ -8,6 +8,8 @@ build/
 .env
 .env.*
 !.env.example
+client_secret_*.json
+*.pem
 
 # local agent tooling and client documents (personal data — never commit)
 .claude/

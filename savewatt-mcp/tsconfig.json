@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["es2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["@cloudflare/workers-types"],
+    "paths": {
+      "@/*": ["../savewatt-platform/src/*"],
+      "server-only": ["./vendor/server-only/index.js"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "cloudflare-env.d.ts"],
+  "exclude": ["node_modules"]
+}

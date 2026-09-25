@@ -1,40 +1,15 @@
 import ExcelJS from "exceljs";
-import type { CreateLeadInput } from "./crm-types";
+import { cellText, type LeadImportField, type RawImportRow } from "./lead-import-rows.ts";
 
-export const LEAD_IMPORT_MAX_ROWS = 500;
-
-export interface RawImportRow {
-  line: number;
-  values: Record<string, unknown>;
-}
-
-export type LeadImportField =
-  | "legalName"
-  | "siren"
-  | "contactEmail"
-  | "contactPhone"
-  | "pdl"
-  | "segment"
-  | "annualSpend"
-  | "notes";
-
-export interface ValidLeadRow {
-  line: number;
-  input: CreateLeadInput;
-  keys: { siren: string | null; email: string | null; phone: string | null };
-}
-
-export interface InvalidLeadRow {
-  line: number;
-  fields: LeadImportField[];
-}
-
-export type ParsedLeadRow = { ok: true; row: ValidLeadRow } | { ok: false; row: InvalidLeadRow };
-
-const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-const SIREN_PATTERN = /^\d{9}$/;
-const PDL_PATTERN = /^\d{14}$/;
-const SEGMENTS = new Set(["C2", "C3", "C4", "C5"]);
+export {
+  LEAD_IMPORT_MAX_ROWS,
+  validateLeadRow,
+  type InvalidLeadRow,
+  type LeadImportField,
+  type ParsedLeadRow,
+  type RawImportRow,
+  type ValidLeadRow,
+} from "./lead-import-rows.ts";
 
 const HEADER_ALIASES: Record<string, LeadImportField> = {
   société: "legalName",
@@ -58,44 +33,11 @@ const HEADER_ALIASES: Record<string, LeadImportField> = {
   notes: "notes",
 };
 
-function cellText(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") {
-    const rich = (value as { richText?: Array<{ text?: string }> }).richText;
-    if (Array.isArray(rich)) return rich.map((part) => part.text ?? "").join("");
-    const text = (value as { text?: unknown }).text;
-    if (typeof text === "string") return text;
-    if (value instanceof Date) return value.toISOString();
-    return String((value as { result?: unknown }).result ?? "");
-  }
-  return String(value);
-}
-
 function normalizeHeader(value: unknown): string {
   return cellText(value)
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
-}
-
-function cleanText(value: unknown, max: number): string | undefined {
-  if (value === undefined || value === null) return undefined;
-  const text = cellText(value).trim();
-  if (!text) return undefined;
-  return text.slice(0, max);
-}
-
-function digits(value: unknown): string | undefined {
-  const text = cleanText(value, 40);
-  if (!text) return undefined;
-  return text.replace(/[\s.-]/g, "");
-}
-
-function asAnnualSpend(value: unknown): number | undefined {
-  if (value === undefined || value === null || value === "") return undefined;
-  const amount = typeof value === "number" ? value : Number(String(value).replace(/[\s€]/g, "").replace(",", "."));
-  if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000_000) return undefined;
-  return Math.round(amount);
 }
 
 export async function parseLeadWorkbook(buffer: ArrayBuffer): Promise<RawImportRow[]> {
@@ -124,61 +66,4 @@ export async function parseLeadWorkbook(buffer: ArrayBuffer): Promise<RawImportR
     rows.push({ line: rowNumber, values });
   });
   return rows;
-}
-
-export function validateLeadRow(raw: RawImportRow): ParsedLeadRow {
-  const fields: LeadImportField[] = [];
-  const values = raw.values;
-
-  const legalName = cleanText(values.legalName, 180);
-  if (!legalName) fields.push("legalName");
-
-  const siren = digits(values.siren);
-  if (siren && !SIREN_PATTERN.test(siren)) fields.push("siren");
-
-  const email = cleanText(values.contactEmail, 254)?.toLowerCase();
-  if (email && !EMAIL_PATTERN.test(email)) fields.push("contactEmail");
-
-  const phone = cleanText(values.contactPhone, 40);
-  if (phone && phone.replace(/[\s+().-]/g, "").length < 6) fields.push("contactPhone");
-
-  const pdl = digits(values.pdl);
-  if (pdl && !PDL_PATTERN.test(pdl)) fields.push("pdl");
-
-  const segment = cleanText(values.segment, 4)?.toUpperCase();
-  if (segment && !SEGMENTS.has(segment)) fields.push("segment");
-
-  const annualSpend = asAnnualSpend(values.annualSpend);
-  if (annualSpend === undefined && values.annualSpend !== undefined && values.annualSpend !== null && String(values.annualSpend).trim() !== "") {
-    fields.push("annualSpend");
-  }
-
-  if (fields.length > 0) {
-    return { ok: false, row: { line: raw.line, fields } };
-  }
-
-  const baseNotes = cleanText(values.notes, 4_000);
-  const spendNote = annualSpend !== undefined
-    ? `Dépense énergie annuelle estimée : ${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(annualSpend)} €.`
-    : undefined;
-  const notes = [baseNotes, spendNote].filter(Boolean).join("\n") || undefined;
-
-  return {
-    ok: true,
-    row: {
-      line: raw.line,
-      input: {
-        legalName: legalName!,
-        siren,
-        contactName: cleanText(values.contactName, 180),
-        contactEmail: email,
-        contactPhone: phone,
-        pdl,
-        segment: (segment || undefined) as CreateLeadInput["segment"],
-        source: cleanText(values.source, 120),
-        notes,
-      },
-      keys: { siren: siren ?? null, email: email ?? null, phone: phone ?? null },
-    },
-  };
 }
