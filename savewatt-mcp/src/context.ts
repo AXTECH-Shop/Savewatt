@@ -26,7 +26,12 @@ import type { ApiTokenRow } from "./auth.ts";
 export interface McpEnv {
   DB: D1Database;
   DOCUMENTS: R2Bucket;
-  BROWSER: { fetch(input: string, init?: RequestInit): Promise<Response> };
+  BROWSER: {
+    quickAction(
+      action: "pdf",
+      options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean } },
+    ): Promise<Response>;
+  };
   EMAIL?: EmailBinding;
   GEMINI_MODEL?: string;
   VERTEX_PROJECT_ID?: string;

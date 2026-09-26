@@ -219,7 +219,12 @@ export class OfferDeliveryManager {
   }
 
   private async ensureArtifact(
-    browser: { fetch(input: string, init?: RequestInit): Promise<Response> },
+    browser: {
+      quickAction(
+        action: "pdf",
+        options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean } },
+      ): Promise<Response>;
+    },
     version: OfferVersionRecord,
     kind: OfferPdfKind,
     render: () => string,
@@ -235,12 +240,12 @@ export class OfferDeliveryManager {
         };
       }
     }
-    const response = await browser.fetch("https://example.com/pdf", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ html: render(), options: { format: "A4", printBackground: true } }),
+    const response = await browser.quickAction("pdf", {
+      html: render(),
+      pdfOptions: { format: "a4", printBackground: true },
     });
     if (!response.ok) {
+      console.error("OFFER_PDF_RENDER_FAILED", kind, response.status, (await response.text()).slice(0, 500));
       throw new CrmError("CRM_UNAVAILABLE", 502, "pdf");
     }
     const bytes = await response.arrayBuffer();

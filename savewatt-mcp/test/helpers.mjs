@@ -60,9 +60,8 @@ export function fakeR2() {
 /** Minimal Browser Rendering fake: returns a valid PDF header payload. */
 export function fakeBrowser(captured = []) {
   return {
-    async fetch(_url, init) {
-      const body = JSON.parse(init?.body ?? "{}");
-      captured.push(body);
+    async quickAction(action, options) {
+      captured.push({ action, ...options });
       return new Response(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]), {
         status: 200,
         headers: { "content-type": "application/pdf" },

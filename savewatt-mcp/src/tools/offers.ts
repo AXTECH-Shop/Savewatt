@@ -154,12 +154,14 @@ async function renderAndArchivePdfs(
         continue;
       }
     }
-    const response = await ctx.env.BROWSER.fetch("https://example.com/pdf", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ html: artifact.html, options: { format: "A4", printBackground: true } }),
+    const response = await ctx.env.BROWSER.quickAction("pdf", {
+      html: artifact.html,
+      pdfOptions: { format: "a4", printBackground: true },
     });
-    if (!response.ok) throw new CrmError("CRM_UNAVAILABLE", 502, "pdf");
+    if (!response.ok) {
+      console.error("OFFER_PDF_RENDER_FAILED", artifact.kind, response.status, (await response.text()).slice(0, 500));
+      throw new CrmError("CRM_UNAVAILABLE", 502, "pdf");
+    }
     const bytes = await response.arrayBuffer();
     const sha256 = createHash("sha256").update(new Uint8Array(bytes)).digest("hex");
     const suffix = artifact.kind === "marketing" ? "-marketing" : "";
