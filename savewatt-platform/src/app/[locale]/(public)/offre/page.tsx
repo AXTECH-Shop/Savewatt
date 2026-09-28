@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChartLineDown, FileArrowUp, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
@@ -52,9 +53,22 @@ export default async function PublicOfferPage({ params }: { params: Promise<{ lo
             </li>
           ))}
         </ol>
-        <p className="mt-10 max-w-lg rounded-xl border border-line bg-surface-2 p-4 text-sm leading-6 text-muted">
-          {t("notSupplier")}
-        </p>
+        <div className="mt-10 max-w-lg rounded-xl border border-line bg-surface p-5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint">{t("partnerLabel")}</p>
+          <span className="mt-3 inline-flex rounded-lg bg-white p-2">
+            <Image src="/partners/symphonics-logo.png" alt="Symphonics" width={768} height={263} className="h-10 w-auto" />
+          </span>
+          <p className="mt-4 font-semibold text-ink">{t("partnerTitle")}</p>
+          <p className="mt-1 text-sm leading-6 text-muted">{t("partnerBody")}</p>
+          <a
+            href="https://symphonics.fr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-sm font-medium text-accent underline underline-offset-4"
+          >
+            {t("partnerLink")}
+          </a>
+        </div>
       </section>
     </div>
   );
