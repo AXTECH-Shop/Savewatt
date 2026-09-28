@@ -413,7 +413,7 @@ export async function loadPortalDocument(
 
   const fileName =
     kind === "marketing"
-      ? `offre-savewatt-v${row.version_no}.pdf`
-      : `budget-previsionnel-savewatt-v${row.version_no}.pdf`;
+      ? `offre-zack-ai-v${row.version_no}.pdf`
+      : `budget-previsionnel-zack-ai-v${row.version_no}.pdf`;
   return { bytes: await new Response(object.body).arrayBuffer(), fileName };
 }

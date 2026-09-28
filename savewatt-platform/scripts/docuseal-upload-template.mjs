@@ -16,8 +16,8 @@ class DocuSealTemplateUploader {
         "X-Auth-Token": this.apiToken,
       },
       body: JSON.stringify({
-        name: "Contrat de fourniture Symphonics — SaveWatt",
-        folder_name: "SaveWatt",
+        name: "Contrat de fourniture Symphonics — Zack AI",
+        folder_name: "Zack AI",
         external_id: "savewatt-symphonics-contract-v1",
         shared_link: false,
         flatten: true,

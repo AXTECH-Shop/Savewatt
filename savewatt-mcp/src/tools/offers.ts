@@ -9,6 +9,8 @@ import { renderOfferMarketingHtml } from "@/lib/offers/offer-pdf-marketing";
 import type { OfferVersionRecord } from "@/lib/offers/offer-types";
 import { serializeOfferVersionForActor } from "@/lib/offers/offer-visibility";
 import { sendEmail } from "@/lib/email/email-sender";
+import { renderBrandedEmail } from "@/lib/email/email-layout";
+import { BRAND_COLORS } from "@/lib/brand";
 import type { Proposal } from "@/lib/types";
 import { nowPlus, signLink } from "../links.ts";
 import type { ToolDef } from "./registry.ts";
@@ -36,8 +38,8 @@ async function downloadLinks(
   const expires = nowPlus(DOWNLOAD_LINK_HOURS);
   const secret = ctx.env.LINK_SECRET ?? "";
   const [marketing, budget] = await Promise.all([
-    signLink(secret, { t: "f", r: pdfs.marketingR2Key, f: `offre-savewatt-v${version.versionNo}.pdf`, e: expires }),
-    signLink(secret, { t: "f", r: pdfs.budgetR2Key, f: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`, e: expires }),
+    signLink(secret, { t: "f", r: pdfs.marketingR2Key, f: `offre-zack-ai-v${version.versionNo}.pdf`, e: expires }),
+    signLink(secret, { t: "f", r: pdfs.budgetR2Key, f: `budget-previsionnel-zack-ai-v${version.versionNo}.pdf`, e: expires }),
   ]);
   return {
     marketingPdfUrl: `${ctx.origin}/f/${marketing}`,
@@ -458,27 +460,23 @@ export const offerTools: ToolDef[] = [
       const outcome = await sendEmail(
         {
           to: [recipient],
-          subject: `Votre offre d'énergie SaveWatt — ${meta.clientName}`,
-          html: `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
-            <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
-            <p>Bonjour${meta.contactName ? ` ${escapeHtml(meta.contactName)}` : ""},</p>
-            <p>Votre offre d'énergie personnalisée pour <strong>${clientName}</strong> est prête :
-            une économie estimée à <strong>${money.format(version.comparison.annualSaving)} par an</strong>
+          subject: `Votre offre d'énergie Symphonics avec Zack AI — ${meta.clientName}`,
+          html: renderBrandedEmail(`<p style="margin:0 0 12px;">Bonjour${meta.contactName ? ` ${escapeHtml(meta.contactName)}` : ""},</p>
+            <p style="margin:0 0 12px;">Votre offre d'énergie Symphonics pour <strong>${clientName}</strong>, préparée par Zack AI, est prête :
+            une économie estimée à <strong style="color:${BRAND_COLORS.pink};">${money.format(version.comparison.annualSaving)} par an</strong>
             sur ${version.comparison.termYears} an(s), à périmètre identique.</p>
-            <p>Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
+            <p style="margin:0 0 12px;">Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
             prévisionnel détaillé (consommation, prix par cadran, décomposition complète HT/TTC).</p>
-            <p style="color:#5b665f;font-size:12px;">Cette offre est valable jusqu'au ${escapeHtml(version.supplierOffer.validUntil ?? "—")}.
-            SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p>
-            <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
-          </div>`,
+            <p style="margin:0;color:${BRAND_COLORS.muted};font-size:12px;">Cette offre est valable jusqu'au ${escapeHtml(version.supplierOffer.validUntil ?? "—")}.
+            Une question ? Répondez simplement à cet email.</p>`),
           attachments: [
             {
-              filename: `offre-savewatt-v${version.versionNo}.pdf`,
+              filename: `offre-zack-ai-v${version.versionNo}.pdf`,
               content: new Uint8Array(await marketing.arrayBuffer()),
               type: "application/pdf",
             },
             {
-              filename: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`,
+              filename: `budget-previsionnel-zack-ai-v${version.versionNo}.pdf`,
               content: new Uint8Array(await budget.arrayBuffer()),
               type: "application/pdf",
             },

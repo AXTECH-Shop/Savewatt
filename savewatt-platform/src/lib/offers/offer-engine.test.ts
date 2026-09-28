@@ -404,10 +404,11 @@ describe("dual offer PDFs", () => {
     assert.match(html, /Votre économie estimée/);
     assert.match(html, /Prix fixe 36 mois/);
     assert.match(html, /100 % renouvelable/);
-    assert.match(html, /Accompagnement SaveWatt/);
+    assert.match(html, /Suivi Zack AI/);
     assert.match(html, /Zéro démarche/);
     assert.match(html, /TTC \/ an/);
-    assert.match(html, /contact@savewatt\.fr/);
+    assert.match(html, /contact@heyzack\.ai/);
+    assert.match(html, /Symphonics est votre fournisseur d'énergie/);
     assert.doesNotMatch(html, /97,53|84,21|12,34|9,66|5,71/);
     assert.doesNotMatch(html, /marge/i);
   });

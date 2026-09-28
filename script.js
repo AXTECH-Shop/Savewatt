@@ -358,8 +358,8 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => {
     const isPartner = form.dataset.leadType === 'partenaire';
     const organisation = form.querySelector('[name="organisation"]')?.value?.trim() || 'organisation à préciser';
     const subject = isPartner
-      ? `Demande de démo partenaire SaveWatt — ${organisation}`
-      : `Demande de comparatif SaveWatt — ${organisation}`;
+      ? `Demande de démo partenaire Zack AI — ${organisation}`
+      : `Demande de comparatif Zack AI — ${organisation}`;
     const heading = isPartner ? 'Demande partenaire' : 'Demande entreprise';
     const rows = formValues(form).map(([label, value]) => `${label} : ${value}`);
     const body = [
@@ -369,7 +369,7 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => {
       '',
       'Aucun document sensible n’est joint à ce message.',
     ].join('\n');
-    const mailto = `mailto:contact@savewatt.fr?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:contact@heyzack.ai?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     if (status) {
       status.textContent = 'Votre messagerie va s’ouvrir avec un brouillon. La demande ne sera transmise que lorsque vous enverrez ce message.';

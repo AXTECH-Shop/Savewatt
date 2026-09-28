@@ -78,7 +78,7 @@ export default async function PublicOfferPage({
           <p className="mt-2 text-xs leading-5 text-white/65">{t("continueBody")}</p>
           <Link
             href={`/portal/offer/${token}/docs`}
-            className="press mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 text-sm font-semibold text-deep"
+            className="press mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-pink px-4 text-sm font-semibold text-white"
           >
             {t("continueCta")} <ArrowRight size={16} />
           </Link>

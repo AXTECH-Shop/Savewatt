@@ -27,9 +27,9 @@ import { handleFileDownload, handleUploadPage } from "./public-pages.ts";
 import { LIVE_TOOLS, findTool, wireName } from "./tools/index.ts";
 
 const SUPPORTED_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
-const SERVER_INFO = { name: "savewatt-mcp", title: "SaveWatt", version: "0.2.0" };
+const SERVER_INFO = { name: "savewatt-mcp", title: "Zack AI", version: "0.2.0" };
 
-const INSTRUCTIONS = `SaveWatt operator tools (French B2B electricity brokerage; SaveWatt never sells energy).
+const INSTRUCTIONS = `Zack AI operator tools (French B2B electricity: Zack AI helps clients track and optimise their energy; Symphonics is the energy supplier — Zack AI never sells energy).
 Typical flows:
 1. Leads from a spreadsheet: read the Excel/CSV the user shares, map columns, call leads_import (one idempotencyKey per file). Then leads_list / pipeline_summary.
 2. Ask a lead for their bill: documents_request_from_client (leadId or dossierId) emails a secure upload link; uploads appear in dossiers_activity.

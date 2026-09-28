@@ -80,7 +80,7 @@ export class TremendousClient {
           delivery: {
             method: "EMAIL",
             meta: {
-              sender_name: "SaveWatt",
+              sender_name: "Zack AI",
               subject_line: input.subject,
               message: input.message,
             },

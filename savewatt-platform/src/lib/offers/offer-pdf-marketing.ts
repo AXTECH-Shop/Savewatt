@@ -1,5 +1,6 @@
 import type { OfferVersionRecord } from "./offer-types";
-import { escapeHtml, renderBrandHeader, renderLegalFooter, type OfferPdfMeta } from "./offer-pdf.ts";
+import { BRAND, BRAND_COLORS as C } from "../brand.ts";
+import { escapeHtml, renderBrandHeader, renderLegalFooter, renderRoleNotice, type OfferPdfMeta } from "./offer-pdf.ts";
 
 /**
  * Marketing one-pager: hero savings, benefits, simplified current-vs-proposed
@@ -21,15 +22,15 @@ export function renderOfferMarketingHtml(
   const benefits: [string, string][] = [
     [`Prix fixe ${termMonths} mois`, "Votre prix de l'énergie est verrouillé pour toute la durée du contrat."],
     ["100 % renouvelable", "Électricité certifiée par des Garanties d'Origine européennes."],
-    ["Accompagnement SaveWatt", "Un bureau d'études indépendant suit votre contrat de bout en bout."],
+    ["Suivi Zack AI", "Zack AI suit votre consommation et vous aide à optimiser votre énergie pendant tout le contrat."],
     ["Zéro démarche", "Nous gérons la résiliation et la bascule — aucune coupure, aucune paperasse."],
   ];
 
   const benefitBlocks = benefits
     .map(
-      ([title, text]) => `<div style="flex:1 1 40%;background:#f5f1e8;border-radius:10px;padding:14px 16px;">
-        <p style="margin:0;font-weight:700;color:#118a34;">${title}</p>
-        <p style="margin:4px 0 0;color:#5b665f;font-size:12px;">${text}</p>
+      ([title, text]) => `<div style="flex:1 1 40%;background:#f4f5fa;border-radius:10px;padding:14px 16px;">
+        <p style="margin:0;font-weight:700;color:#243984;">${title}</p>
+        <p style="margin:4px 0 0;color:#5d6275;font-size:12px;">${text}</p>
       </div>`,
     )
     .join("");
@@ -42,53 +43,53 @@ export function renderOfferMarketingHtml(
 <html lang="${locale}">
 <head>
 <meta charset="utf-8" />
-<title>Votre offre SaveWatt — ${escapeHtml(meta.clientName)}</title>
+<title>Votre offre Zack AI — ${escapeHtml(meta.clientName)}</title>
 <style>
   @page { size: A4; margin: 18mm 16mm; }
-  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1d2b25; margin: 0; font-size: 13px; line-height: 1.5; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1d1d1b; margin: 0; font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
   ${renderBrandHeader("Votre offre d'énergie", version, locale)}
 
-  <section style="margin-top:24px;background:#f5f1e8;border-radius:14px;padding:24px 28px;">
-    <p style="margin:0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#0d6a2b;">Votre économie estimée</p>
-    <p style="margin:10px 0 0;font-family:${serif};font-size:40px;font-weight:700;color:#118a34;line-height:1.1;">
-      ${money.format(comparison.annualSaving)} <span style="font-size:18px;font-weight:500;color:#0d6a2b;">/ an</span>
+  <section style="margin-top:24px;background:#f4f5fa;border-radius:14px;padding:24px 28px;">
+    <p style="margin:0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#1a2a66;">Votre économie estimée</p>
+    <p style="margin:10px 0 0;font-family:${serif};font-size:40px;font-weight:700;color:${C.pink};line-height:1.1;">
+      ${money.format(comparison.annualSaving)} <span style="font-size:18px;font-weight:500;color:#1a2a66;">/ an</span>
     </p>
-    <p style="margin:8px 0 0;font-size:15px;color:#1d2b25;">
+    <p style="margin:8px 0 0;font-size:15px;color:#1d1d1b;">
       soit <strong>${money.format(comparison.termSaving)}</strong> sur ${comparison.termYears} an(s), à périmètre identique.
     </p>
-    <p style="margin:6px 0 0;font-size:12px;color:#5b665f;">
+    <p style="margin:6px 0 0;font-size:12px;color:#5d6275;">
       ${escapeHtml(meta.clientName)}${meta.pdl ? ` · PDL ${escapeHtml(meta.pdl)}` : ""}
     </p>
   </section>
 
   <section style="margin-top:22px;">
-    <p style="margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Ce que vous y gagnez</p>
+    <p style="margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Ce que vous y gagnez</p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">${benefitBlocks}</div>
   </section>
 
   <section style="margin-top:22px;">
-    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Votre situation, en résumé</p>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e6e2d8;">
+    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Votre situation, en résumé</p>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #e3e5ee;">
       <tbody>
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #e6e2d8;color:#5b665f;">Aujourd'hui</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #e6e2d8;text-align:right;">
+          <td style="padding:10px 12px;border-bottom:1px solid #e3e5ee;color:#5d6275;">Aujourd'hui</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e3e5ee;text-align:right;">
             <strong>${escapeHtml(version.currentContract.supplier || "—")}</strong>${version.currentContract.offerName ? ` · ${escapeHtml(version.currentContract.offerName)}` : ""}
           </td>
         </tr>
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #e6e2d8;color:#5b665f;">Avec SaveWatt</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #e6e2d8;text-align:right;color:#118a34;">
+          <td style="padding:10px 12px;border-bottom:1px solid #e3e5ee;color:#5d6275;">Avec Zack AI</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e3e5ee;text-align:right;color:#243984;">
             <strong>${escapeHtml(version.supplierOffer.supplier)}</strong> · prix fixe ${termMonths} mois · 100 % renouvelable
           </td>
         </tr>
         ${
           bestGain
             ? `<tr>
-          <td style="padding:10px 12px;color:#5b665f;">Meilleur gain par cadran</td>
+          <td style="padding:10px 12px;color:#5d6275;">Meilleur gain par cadran</td>
           <td style="padding:10px 12px;text-align:right;font-family:monospace;">${escapeHtml(bestGain.cadran)} : <strong>${money.format(bestGain.gainPerYear ?? 0)} / an</strong></td>
         </tr>`
             : ""
@@ -99,21 +100,21 @@ export function renderOfferMarketingHtml(
 
   ${
     budget
-      ? `<section style="margin-top:22px;border:1px solid #bfe6cc;background:#eaf7ee;border-radius:10px;padding:16px 20px;">
-    <p style="margin:0;font-size:12px;font-weight:600;color:#0d6a2b;">Votre budget énergie prévisionnel</p>
+      ? `<section style="margin-top:22px;border:1px solid #cfd5ec;background:#eef0f8;border-radius:10px;padding:16px 20px;">
+    <p style="margin:0;font-size:12px;font-weight:600;color:#1a2a66;">Votre budget énergie prévisionnel</p>
     <p style="margin:6px 0 0;font-size:15px;">
       <strong>${money.format(budget.totalTtcEur)} TTC / an</strong>
-      <span style="color:#5b665f;"> · toutes taxes et acheminement inclus</span>
+      <span style="color:#5d6275;"> · toutes taxes et acheminement inclus</span>
     </p>
-    <p style="margin:4px 0 0;font-size:12px;color:#5b665f;">Le détail ligne par ligne figure dans le budget prévisionnel joint.</p>
+    <p style="margin:4px 0 0;font-size:12px;color:#5d6275;">Le détail ligne par ligne figure dans le budget prévisionnel joint.</p>
   </section>`
       : ""
   }
 
   <section style="margin-top:26px;text-align:center;">
     <p style="margin:0;font-family:${serif};font-size:20px;font-weight:700;">Prêt à réduire votre facture ?</p>
-    <p style="margin:8px 0 0;color:#5b665f;">
-      Répondez à l'email reçu ou écrivez à <strong style="color:#118a34;">contact@savewatt.fr</strong> —
+    <p style="margin:8px 0 0;color:#5d6275;">
+      Répondez à l'email reçu ou écrivez à <strong style="color:${C.navy};">${BRAND.contactEmail}</strong> —
       offre valable jusqu'au <strong>${
         version.supplierOffer.validUntil
           ? new Date(version.supplierOffer.validUntil).toLocaleDateString(locale)
@@ -122,11 +123,12 @@ export function renderOfferMarketingHtml(
     </p>
   </section>
 
-  <p style="margin-top:20px;font-size:10px;color:#8a938c;line-height:1.6;">
+  <p style="margin-top:20px;font-size:10px;color:#8b90a0;line-height:1.6;">
     Estimation établie à périmètre identique à partir de votre consommation déclarée. Les économies présentées
-    sont indicatives et ne constituent pas un engagement contractuel de résultat. Nous ne vendons pas d'énergie :
-    SaveWatt vous accompagne dans le choix de votre contrat.
+    sont indicatives et ne constituent pas un engagement contractuel de résultat.
   </p>
+
+  ${renderRoleNotice()}
 
   ${renderLegalFooter(version, locale)}
 </body>

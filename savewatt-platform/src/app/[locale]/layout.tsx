@@ -28,7 +28,7 @@ export async function generateMetadata({
   return {
     title: {
       default: t("title"),
-      template: "%s | SaveWatt",
+      template: "%s | Zack AI",
     },
     description: t("description"),
   };

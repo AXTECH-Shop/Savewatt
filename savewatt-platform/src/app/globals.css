@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
- * Savewatt design tokens — trustworthy B2B energy SaaS.
- * Neutral Zinc base, one deep-emerald accent. No purple, no neon.
+ * Zack AI design tokens — palette #243984 navy, #e82f89 pink,
+ * #333232 charcoal, black and white. Navy carries actions, pink highlights.
  * ------------------------------------------------------------------ */
 @theme {
-  --color-bg: #f5f7f5;
+  --color-bg: #f5f6fa;
   --color-surface: #ffffff;
-  --color-surface-2: #f9faf9;
-  --color-ink: #101317;      /* off-black, never #000 */
-  --color-muted: #667085;
-  --color-faint: #98a2b3;
-  --color-line: #e6e8ec;
-  --color-line-strong: #d6d9df;
+  --color-surface-2: #f9f9fc;
+  --color-ink: #1d1d1b;
+  --color-muted: #5d6275;
+  --color-faint: #8b90a0;
+  --color-line: #e3e5ee;
+  --color-line-strong: #d3d7e3;
 
-  --color-deep: #052c24;
-  --color-accent: #118a34;
-  --color-accent-bright: #24a247;
-  --color-accent-hover: #0d742b;
-  --color-accent-soft: #e8f5eb;
-  --color-accent-ink: #075523;
-  --color-lime: #b7f52a;
+  --color-deep: #141f4f;
+  --color-accent: #243984;
+  --color-accent-bright: #e82f89;
+  --color-accent-hover: #1a2a66;
+  --color-accent-soft: #eceff8;
+  --color-accent-ink: #1a2a66;
+  --color-pink: #e82f89;
+  --color-pink-light: #f58cbd;
+  --color-charcoal: #333232;
 
   --color-positive: #0e7a4f;
   --color-warning: #b25e09;
@@ -31,8 +33,8 @@
   --radius-card: 1rem;
   --radius-xl2: 1.25rem;
 
-  --shadow-diffuse: 0 20px 40px -24px rgba(16, 19, 23, 0.14);
-  --shadow-soft: 0 1px 2px rgba(16, 19, 23, 0.04), 0 1px 1px rgba(16, 19, 23, 0.03);
+  --shadow-diffuse: 0 20px 40px -24px rgba(20, 31, 79, 0.16);
+  --shadow-soft: 0 1px 2px rgba(20, 31, 79, 0.05), 0 1px 1px rgba(20, 31, 79, 0.03);
 
   --font-sans: var(--font-outfit);
   --font-mono: var(--font-plex-mono);
@@ -56,7 +58,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-lime) 65%, white);
+  background: color-mix(in srgb, var(--color-pink) 28%, white);
   color: var(--color-deep);
 }
 
@@ -69,7 +71,7 @@ body {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    radial-gradient(circle at 78% 16%, rgba(183, 245, 42, 0.16), transparent 36%);
+    radial-gradient(circle at 78% 16%, rgba(232, 47, 137, 0.34), transparent 38%);
   background-size: 56px 56px, 56px 56px, 100% 100%;
 }
 
@@ -106,7 +108,7 @@ body {
   animation: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Internal accounts are provisioned by SaveWatt; Clerk signup stays unavailable here. */
+/* Internal accounts are provisioned by Zack AI; Clerk signup stays unavailable here. */
 .admin-clerk .cl-footerAction {
   display: none !important;
 }

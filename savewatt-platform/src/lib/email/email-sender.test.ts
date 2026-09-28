@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { DEFAULT_FROM, sendEmail, type EmailBinding } from "./email-sender.ts";
+import { DEFAULT_FROM, DEFAULT_REPLY_TO, sendEmail, type EmailBinding } from "./email-sender.ts";
 
 const input = {
   to: ["client@example.test"],
-  subject: "Votre offre SaveWatt",
+  subject: "Votre offre Zack AI",
   html: "<p>Bonjour</p>",
 };
 
@@ -30,6 +30,8 @@ describe("sendEmail", () => {
     );
     assert.deepEqual(outcome, { kind: "sent", providerMessageId: "msg-123" });
     assert.deepEqual(captured!.from, DEFAULT_FROM);
+    assert.equal(captured!.from.name, "Zack AI");
+    assert.equal(captured!.replyTo, DEFAULT_REPLY_TO);
     assert.deepEqual(captured!.to, input.to);
     assert.equal(captured!.attachments?.[0].disposition, "attachment");
   });

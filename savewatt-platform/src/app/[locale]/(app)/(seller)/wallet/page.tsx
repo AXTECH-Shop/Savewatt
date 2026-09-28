@@ -41,7 +41,7 @@ export default async function WalletPage() {
         { label: t("availableCommissions"), value: currency.format(summary.availableBalanceCents / 100), tone: "positive" },
         { label: t("receivedRewards"), value: currency.format(summary.issuedRewardCents / 100) },
         { label: t("awards"), value: String(summary.rewardCount) },
-        { label: t("issuer"), value: "SaveWatt" },
+        { label: t("issuer"), value: "Zack AI" },
       ]} />
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
         <section>
@@ -82,7 +82,7 @@ export default async function WalletPage() {
         </section>
         <aside className="space-y-5">
           <section className="rounded-2xl bg-deep p-5 text-white">
-            <Wallet size={24} className="text-lime" />
+            <Wallet size={24} className="text-pink-light" />
             <h2 className="mt-4 text-xl font-semibold">{t("registerTitle")}</h2>
             <p className="mt-3 text-sm leading-6 text-white/68">
               {t("registerDescription")}

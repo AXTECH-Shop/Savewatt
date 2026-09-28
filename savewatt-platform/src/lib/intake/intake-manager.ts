@@ -12,6 +12,7 @@ import { LeadRepository } from "@/lib/crm/lead-repository";
 import type { CreateLeadInput } from "@/lib/crm/crm-types";
 import { DocumentRepository } from "@/lib/documents/document-repository";
 import { DocumentValidationManager } from "@/lib/documents/document-validation-manager";
+import { renderBrandedEmail, renderBrandedEmailText } from "@/lib/email/email-layout";
 import { sendEmail, type EmailBinding } from "@/lib/email/email-sender";
 import { ExtractionRepository } from "@/lib/extraction/extraction-repository";
 import { extractBill, GEMINI_MODEL } from "@/lib/extraction/gemini";
@@ -38,11 +39,11 @@ export const WEB_INTAKE_USER_ID = "system_web_intake";
 /** Owner of everything the public ad form creates; never signs in. */
 export const WEB_INTAKE_ACTOR: WorkspaceActor = {
   userId: WEB_INTAKE_USER_ID,
-  displayName: "Formulaire web SaveWatt",
+  displayName: "Formulaire web Zack AI",
   email: "web-intake@system.savewatt.fr",
   role: "SUPER_ADMIN",
   orgId: "org_savewatt",
-  orgName: "SaveWatt — AX TECH",
+  orgName: "Zack AI — AX TECH",
   orgPath: "org_savewatt",
   scope: "PLATFORM",
   isPreview: false,
@@ -496,16 +497,15 @@ export class IntakeManager {
     await sendEmail(
       {
         to: [email],
-        subject: "SaveWatt — Nous avons bien reçu votre facture",
-        html: `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
-          <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
-          <p>Bonjour${name},</p>
-          <p>Merci, nous avons bien reçu votre facture d'électricité. Un conseiller SaveWatt finalise votre
-          offre personnalisée et vous l'envoie par email sous 24 h ouvrées.</p>
-          <p style="color:#5b665f;font-size:12px;">SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p>
-          <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
-        </div>`,
-        text: "Bonjour,\n\nMerci, nous avons bien reçu votre facture d'électricité. Un conseiller SaveWatt finalise votre offre personnalisée et vous l'envoie par email sous 24 h ouvrées.\n\nSaveWatt",
+        subject: "Zack AI — Nous avons bien reçu votre facture",
+        html: renderBrandedEmail(`<p style="margin:0 0 12px;">Bonjour${name},</p>
+          <p style="margin:0;">Merci, nous avons bien reçu votre facture d'électricité. Un conseiller Zack AI finalise
+          votre offre Symphonics personnalisée et vous l'envoie par email sous 24 h ouvrées.</p>`),
+        text: renderBrandedEmailText([
+          "Bonjour,",
+          "Merci, nous avons bien reçu votre facture d'électricité. Un conseiller Zack AI finalise votre offre Symphonics personnalisée et vous l'envoie par email sous 24 h ouvrées.",
+          "Zack AI",
+        ]),
       },
       getCloudflareContext().env.EMAIL as EmailBinding | undefined,
     );
@@ -765,7 +765,7 @@ export class IntakeManager {
     return value as Record<string, unknown>;
   }
 
-  /** Quoting from a bill exposes Symphonics buy prices: SaveWatt operators only. */
+  /** Quoting from a bill exposes Symphonics buy prices: Zack AI operators only. */
   private assertOperator(actor: WorkspaceActor): void {
     if (actor.role !== "SUPER_ADMIN") throw new CrmError("CRM_FORBIDDEN", 403);
   }

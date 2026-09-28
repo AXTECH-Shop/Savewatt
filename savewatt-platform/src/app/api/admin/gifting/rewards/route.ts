@@ -119,8 +119,8 @@ export async function POST(request: Request) {
       recipientEmail: recipient.email,
       recipientName: recipient.displayName,
       denomination: amountCents / 100,
-      subject: "Votre récompense SaveWatt",
-      message: "Une récompense vous a été attribuée par l’administration SaveWatt.",
+      subject: "Votre récompense Zack AI",
+      message: "Une récompense vous a été attribuée par l’administration Zack AI.",
     });
     await repository.markIssued(externalId, order.id, order.raw);
     if (recipient.benefitSelectionId) {

@@ -127,7 +127,7 @@ export default async function ClientDetailPage({
           </div>
         </section>
         <aside className="rounded-2xl bg-deep p-5 text-white">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-pink-light">
             {t("nextAction")}
           </p>
           <h2 className="mt-3 text-xl font-semibold">{nextAction}</h2>
@@ -136,7 +136,7 @@ export default async function ClientDetailPage({
           </p>
           <Link
             href={`/dossiers/${deal.id}`}
-            className="press mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-lime px-4 text-sm font-semibold text-deep"
+            className="press mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-pink px-4 text-sm font-semibold text-white"
           >
             {t("openFile")} <ArrowRight size={16} />
           </Link>

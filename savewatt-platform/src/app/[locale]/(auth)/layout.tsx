@@ -16,11 +16,11 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           <BrandLockup inverse />
         </div>
         <div className="relative mt-auto max-w-xl pb-10">
-          <p className="font-mono text-xs uppercase tracking-[0.18em] text-lime">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-pink-light">
             {isAdmin ? "Administration interne" : t("eyebrow")}
           </p>
           <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.05em]">
-            {isAdmin ? "Pilotez SaveWatt depuis un espace strictement réservé." : t("title")}
+            {isAdmin ? "Pilotez Zack AI depuis un espace strictement réservé." : t("title")}
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-white/68">
             {isAdmin

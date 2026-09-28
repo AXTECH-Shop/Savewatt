@@ -7,9 +7,12 @@ import { DocumentStorageManager } from "@/lib/cloudflare/document-storage-manage
 import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
+import { BRAND_COLORS } from "@/lib/brand";
+import { renderBrandedEmail } from "@/lib/email/email-layout";
 import { sendEmail, type EmailBinding } from "@/lib/email/email-sender";
 import { type BudgetPrevisionnel } from "./estimate";
 import { budgetForOffer } from "./pricing-mechanism";
+import { escapeHtml } from "./offer-pdf";
 import { renderOfferBudgetHtml } from "./offer-pdf-budget";
 import { renderOfferMarketingHtml } from "./offer-pdf-marketing";
 import { OfferVersionRepository } from "./offer-version-repository";
@@ -69,8 +72,8 @@ export class OfferDeliveryManager {
     if (!version) return null;
     const fileName =
       kind === "marketing"
-        ? `offre-savewatt-v${version.versionNo}.pdf`
-        : `budget-previsionnel-savewatt-v${version.versionNo}.pdf`;
+        ? `offre-zack-ai-v${version.versionNo}.pdf`
+        : `budget-previsionnel-zack-ai-v${version.versionNo}.pdf`;
     const r2Key = kind === "marketing" ? version.pdfMarketingR2Key : version.pdfR2Key;
     if (!r2Key) {
       // Preview before sending: render and archive the immutable PDFs now.
@@ -120,7 +123,7 @@ export class OfferDeliveryManager {
     }
 
     const locale = "fr";
-    const subject = `Votre offre d'énergie SaveWatt — ${meta.clientName}`;
+    const subject = `Votre offre d'énergie Symphonics avec Zack AI — ${meta.clientName}`;
     const html = this.emailHtml(version, meta, locale);
 
     let providerMessageId: string | null = null;
@@ -131,12 +134,12 @@ export class OfferDeliveryManager {
         html,
         attachments: [
           {
-            filename: `offre-savewatt-v${version.versionNo}.pdf`,
+            filename: `offre-zack-ai-v${version.versionNo}.pdf`,
             content: new Uint8Array(pdfs.marketing.bytes),
             type: "application/pdf",
           },
           {
-            filename: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`,
+            filename: `budget-previsionnel-zack-ai-v${version.versionNo}.pdf`,
             content: new Uint8Array(pdfs.budget.bytes),
             type: "application/pdf",
           },
@@ -309,22 +312,18 @@ export class OfferDeliveryManager {
 
   private emailHtml(version: OfferVersionRecord, meta: ClientMeta, locale: string): string {
     const money = new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-    return `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
-      <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
-      <p>Bonjour${meta.contactName ? ` ${meta.contactName}` : ""},</p>
-      <p>Votre offre d'énergie personnalisée pour <strong>${meta.clientName}</strong> est prête${
+    return renderBrandedEmail(`<p style="margin:0 0 12px;">Bonjour${meta.contactName ? ` ${escapeHtml(meta.contactName)}` : ""},</p>
+      <p style="margin:0 0 12px;">Votre offre d'énergie Symphonics pour <strong>${escapeHtml(meta.clientName)}</strong>, préparée par Zack AI, est prête${
         version.comparison.annualSaving > 0
           ? ` :
-      une économie estimée à <strong>${money.format(version.comparison.annualSaving)} par an</strong>
+      une économie estimée à <strong style="color:${BRAND_COLORS.pink};">${money.format(version.comparison.annualSaving)} par an</strong>
       sur ${version.comparison.termYears} an(s), à périmètre identique.`
           : `, pour une durée de ${version.comparison.termYears} an(s).`
       }</p>
-      <p>Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
+      <p style="margin:0 0 12px;">Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
       prévisionnel détaillé (consommation, prix par cadran, décomposition complète HT/TTC).</p>
-      <p style="color:#5b665f;font-size:12px;">Cette offre est valable jusqu'au ${version.supplierOffer.validUntil ?? "—"}.
-      SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p>
-      <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
-    </div>`;
+      <p style="margin:0;color:${BRAND_COLORS.muted};font-size:12px;">Cette offre est valable jusqu'au ${version.supplierOffer.validUntil ?? "—"}.
+      Une question ? Répondez simplement à cet email.</p>`);
   }
 
   private async findDelivery(idempotencyKey: string): Promise<DeliveryRow | null> {

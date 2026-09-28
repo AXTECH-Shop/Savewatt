@@ -1,6 +1,6 @@
-# SaveWatt
+# Zack AI
 
-> SaveWatt est une marque commerciale d’AX TECH — ECOLED WAVE CONCEPT. AX TECH édite le site, opère la plateforme, contracte avec ses clients et traite les données personnelles liées à l’activité SaveWatt. SaveWatt ne constitue pas une personne morale distincte.
+> Zack AI vous aide à suivre et optimiser votre énergie. Symphonics est votre fournisseur d’énergie. Zack AI (heyzack.ai) est une marque commerciale d’AX TECH — ECOLED WAVE CONCEPT. AX TECH édite le site, opère la plateforme, contracte avec ses clients et traite les données personnelles liées à l’activité Zack AI. Zack AI ne constitue pas une personne morale distincte.
 
 ## Identité
 
@@ -9,7 +9,8 @@
 - SIRET : 751 982 760 00041
 - TVA intracommunautaire : FR86 751 982 760
 - Adresse : 8 rue Marbeau, 75016 Paris, France
-- Contact : contact@savewatt.fr
+- Contact : contact@heyzack.ai
+- Site de la marque : https://heyzack.ai
 - Site officiel : https://www.savewatt.fr/
 - Zone d’intervention : France
 
@@ -29,8 +30,8 @@
 
 ## Partenariat et rémunération
 
-- Symphonics porte l’offre de fourniture d’électricité présentée dans le comparatif.
-- AX TECH agit comme partenaire commercial de Symphonics sous la marque SaveWatt.
+- Symphonics est le fournisseur d’énergie : il porte l’offre de fourniture d’électricité présentée dans le comparatif.
+- Zack AI aide le client à suivre et optimiser son énergie ; AX TECH agit comme partenaire commercial de Symphonics sous la marque Zack AI.
 - Lorsqu’un client souscrit l’offre Symphonics, AX TECH est rémunérée par le fournisseur.
 - Cette rémunération ne fait pas l’objet d’une facture supplémentaire au client.
 

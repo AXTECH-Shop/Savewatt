@@ -2,6 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { LEAD_IMPORT_MAX_ROWS, type RawImportRow } from "@/lib/crm/lead-import-rows";
 import { sendEmail } from "@/lib/email/email-sender";
+import { renderBrandedEmail, renderBrandedEmailText } from "@/lib/email/email-layout";
+import { BRAND_COLORS } from "@/lib/brand";
 import { ExtractionRepository } from "@/lib/extraction/extraction-repository";
 import { normalizeBill } from "@/lib/extraction/normalize";
 import type { ConsumptionLine, ExtractedBill, ExtractionResult } from "@/lib/extraction/schema";
@@ -333,19 +335,18 @@ export const workflowTools: ToolDef[] = [
       const outcome = await sendEmail(
         {
           to: [recipient],
-          subject: `SaveWatt — ${label.charAt(0).toUpperCase()}${label.slice(1)} pour votre étude`,
-          html: `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
-            <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
-            <p>Bonjour${contact?.contact_name ? ` ${escapeHtml(contact.contact_name)}` : ""},</p>
-            <p>Pour préparer l'étude de <strong>${escapeHtml(contact?.legal_name ?? "votre site")}</strong> et vous proposer
-            une offre d'énergie personnalisée, merci de nous transmettre ${label}.</p>
-            ${note ? `<p>${escapeHtml(note).replace(/\n/g, "<br>")}</p>` : ""}
-            <p><a href="${link.uploadUrl}" style="display:inline-block;background:#118a34;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Déposer mon document</a></p>
-            <p style="color:#5b665f;font-size:12px;">Lien sécurisé valable ${days} jours. PDF ou photo, 10 Mo maximum.
-            SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p>
-            <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
-          </div>`,
-          text: `Bonjour,\n\nPour préparer votre offre d'énergie personnalisée, merci de nous transmettre ${label} via ce lien sécurisé (valable ${days} jours) :\n${link.uploadUrl}\n\nSaveWatt`,
+          subject: `Zack AI — ${label.charAt(0).toUpperCase()}${label.slice(1)} pour votre étude`,
+          html: renderBrandedEmail(`<p style="margin:0 0 12px;">Bonjour${contact?.contact_name ? ` ${escapeHtml(contact.contact_name)}` : ""},</p>
+            <p style="margin:0 0 12px;">Pour préparer l'étude de <strong>${escapeHtml(contact?.legal_name ?? "votre site")}</strong> et vous proposer
+            une offre d'énergie Symphonics personnalisée, merci de nous transmettre ${label}.</p>
+            ${note ? `<p style="margin:0 0 12px;">${escapeHtml(note).replace(/\n/g, "<br>")}</p>` : ""}
+            <p style="margin:0 0 12px;"><a href="${link.uploadUrl}" style="display:inline-block;background:${BRAND_COLORS.navy};color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Déposer mon document</a></p>
+            <p style="margin:0;color:${BRAND_COLORS.muted};font-size:12px;">Lien sécurisé valable ${days} jours. PDF ou photo, 10 Mo maximum.</p>`),
+          text: renderBrandedEmailText([
+            "Bonjour,",
+            `Pour préparer votre offre d'énergie personnalisée, merci de nous transmettre ${label} via ce lien sécurisé (valable ${days} jours) :\n${link.uploadUrl}`,
+            "Zack AI",
+          ]),
         },
         ctx.env.EMAIL,
       );

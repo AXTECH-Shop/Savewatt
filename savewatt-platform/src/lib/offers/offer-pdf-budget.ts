@@ -1,5 +1,5 @@
 import type { OfferVersionRecord } from "./offer-types";
-import { escapeHtml, renderBrandHeader, renderLegalFooter, type OfferPdfMeta } from "./offer-pdf.ts";
+import { escapeHtml, renderBrandHeader, renderLegalFooter, renderRoleNotice, type OfferPdfMeta } from "./offer-pdf.ts";
 
 const CADRAN_LABELS: Record<string, string> = {
   HPH: "HP hiver",
@@ -32,8 +32,8 @@ export function renderOfferBudgetHtml(
 
   const th = "padding:8px 12px;text-align:right;font-weight:600;";
   const thFirst = "padding:8px 12px;text-align:left;font-weight:600;";
-  const td = "padding:9px 12px;border-bottom:1px solid #e6e2d8;text-align:right;";
-  const tdFirst = "padding:9px 12px;border-bottom:1px solid #e6e2d8;";
+  const td = "padding:9px 12px;border-bottom:1px solid #e3e5ee;text-align:right;";
+  const tdFirst = "padding:9px 12px;border-bottom:1px solid #e3e5ee;";
 
   const consumptionRows = budget.energy.lines
     .map(
@@ -55,7 +55,7 @@ export function renderOfferBudgetHtml(
 
   const budgetRow = (label: string, amount: number, opts: { indent?: boolean; bold?: boolean } = {}) =>
     `<tr>
-      <td style="${tdFirst}${opts.indent ? "padding-left:28px;color:#5b665f;" : ""}${opts.bold ? "font-weight:700;" : ""}">${label}</td>
+      <td style="${tdFirst}${opts.indent ? "padding-left:28px;color:#5d6275;" : ""}${opts.bold ? "font-weight:700;" : ""}">${label}</td>
       <td style="${td}font-family:monospace;${opts.bold ? "font-weight:700;" : ""}">${money.format(amount)}</td>
     </tr>`;
 
@@ -66,7 +66,7 @@ export function renderOfferBudgetHtml(
 <title>Budget prévisionnel — ${escapeHtml(meta.clientName)}</title>
 <style>
   @page { size: A4; margin: 18mm 16mm; }
-  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1d2b25; margin: 0; font-size: 13px; line-height: 1.5; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1d1d1b; margin: 0; font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -74,27 +74,27 @@ export function renderOfferBudgetHtml(
 
   <section style="margin-top:20px;display:flex;justify-content:space-between;">
     <div>
-      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Client</p>
+      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Client</p>
       <p style="margin:4px 0 0;font-weight:600;">${escapeHtml(meta.clientName)}</p>
-      ${meta.pdl ? `<p style="margin:2px 0 0;color:#5b665f;">PDL ${escapeHtml(meta.pdl)}</p>` : ""}
+      ${meta.pdl ? `<p style="margin:2px 0 0;color:#5d6275;">PDL ${escapeHtml(meta.pdl)}</p>` : ""}
     </div>
     <div style="text-align:right;">
-      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Durée du contrat</p>
+      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Durée du contrat</p>
       <p style="margin:4px 0 0;font-weight:600;">${version.supplierOffer.termYears} an(s)</p>
     </div>
   </section>
 
   <section style="margin-top:24px;">
-    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Consommation annuelle prévisionnelle</p>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e6e2d8;">
+    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Consommation annuelle prévisionnelle</p>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #e3e5ee;">
       <thead>
-        <tr style="background:#f5f1e8;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#8a938c;">
+        <tr style="background:#f4f5fa;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#8b90a0;">
           <th style="${thFirst}">Cadran</th>
           <th style="${th}">Volume prévisionnel</th>
         </tr>
       </thead>
       <tbody>${consumptionRows}
-        <tr style="background:#f5f1e8;">
+        <tr style="background:#f4f5fa;">
           <td style="padding:9px 12px;font-weight:700;">Total</td>
           <td style="padding:9px 12px;text-align:right;font-family:monospace;font-weight:700;">${num.format(budget.cee.volumeMwh)} MWh</td>
         </tr>
@@ -103,10 +103,10 @@ export function renderOfferBudgetHtml(
   </section>
 
   <section style="margin-top:20px;">
-    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Prix de l'énergie — prix finals hors taxes</p>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e6e2d8;">
+    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Prix de l'énergie — prix finals hors taxes</p>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #e3e5ee;">
       <thead>
-        <tr style="background:#f5f1e8;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#8a938c;">
+        <tr style="background:#f4f5fa;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#8b90a0;">
           <th style="${thFirst}">Cadran</th>
           <th style="${th}">Prix offert</th>
         </tr>
@@ -116,7 +116,7 @@ export function renderOfferBudgetHtml(
   </section>
 
   <section style="margin-top:20px;">
-    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Obligations et compléments</p>
+    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Obligations et compléments</p>
     <p style="margin:0;">
       Abonnement : <strong>${num.format(version.supplierOffer.subscriptionEurMonth)} €/mois</strong>
       ${version.currentContract.subscribedPowerKva !== null ? ` · Puissance souscrite : <strong>${num.format(version.currentContract.subscribedPowerKva)} kVA</strong>` : ""}
@@ -124,8 +124,8 @@ export function renderOfferBudgetHtml(
   </section>
 
   <section style="margin-top:24px;">
-    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8a938c;">Budget prévisionnel annuel</p>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e6e2d8;">
+    <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b90a0;">Budget prévisionnel annuel</p>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #e3e5ee;">
       <tbody>
         ${budgetRow("Énergie", budget.energy.totalEur)}
         ${budgetRow("Abonnement", budget.subscription.totalEur)}
@@ -136,28 +136,29 @@ export function renderOfferBudgetHtml(
         ${budgetRow("dont part variable (soutirage par cadran)", budget.acheminement.variable.totalEur, { indent: true })}
         ${budgetRow("Accise sur l'électricité", budget.accise.totalEur)}
         ${budgetRow("Contribution tarifaire d'acheminement (CTA)", budget.cta.totalEur)}
-        <tr style="background:#f5f1e8;">
+        <tr style="background:#f4f5fa;">
           <td style="padding:9px 12px;font-weight:700;">Total hors taxes</td>
           <td style="padding:9px 12px;text-align:right;font-family:monospace;font-weight:700;">${money.format(budget.totalHtEur)}</td>
         </tr>
         ${budgetRow(`TVA (${num.format(budget.tva.rate * 100)} %)`, budget.tva.totalEur)}
-        <tr style="background:#118a34;">
+        <tr style="background:#243984;">
           <td style="padding:10px 12px;font-weight:700;color:#ffffff;">Total TTC annuel</td>
           <td style="padding:10px 12px;text-align:right;font-family:monospace;font-weight:700;color:#ffffff;">${money.format(budget.totalTtcEur)}</td>
         </tr>
       </tbody>
     </table>
-    <p style="margin:8px 0 0;color:#5b665f;font-size:11px;">
+    <p style="margin:8px 0 0;color:#5d6275;font-size:11px;">
       Soit ${money.format(budget.termTotalTtcEur)} TTC sur la durée totale du contrat (${budget.termYears} an(s)), à consommation constante.
     </p>
   </section>
 
-  <p style="margin-top:20px;font-size:10px;color:#8a938c;line-height:1.6;">
+  <p style="margin-top:20px;font-size:10px;color:#8b90a0;line-height:1.6;">
     Budget prévisionnel établi sur la base de la consommation annuelle prévisionnelle ci-dessus et des tarifs
     réglementés en vigueur (TURPE, accise, CTA, TVA). Toute évolution des tarifs réglementés est répercutée
     à l'euro l'euro. Les montants sont indicatifs et ne constituent pas un engagement contractuel de résultat.
-    Nous ne vendons pas d'énergie : SaveWatt vous accompagne dans le choix de votre contrat.
   </p>
+
+  ${renderRoleNotice()}
 
   ${renderLegalFooter(version, locale)}
 </body>

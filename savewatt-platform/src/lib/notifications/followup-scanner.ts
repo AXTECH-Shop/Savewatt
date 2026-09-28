@@ -1,3 +1,4 @@
+import { renderBrandedEmail } from "../email/email-layout.ts";
 import type { NotificationType } from "./notification-config.ts";
 
 export const SECONDS_PER_HOUR = 3600;
@@ -113,12 +114,8 @@ export function planDossierStatusNotifications(
     if (options.sendEmail && event.ownerEmail) {
       plan.email = {
         to: event.ownerEmail,
-        subject: "SaveWatt — statut de dossier modifié",
-        html: `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
-          <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
-          <p>${escapeHtml(event.summary)}</p>
-          <p style="color:#8a938c;font-size:11px;">AX TECH — ECOLED WAVE CONCEPT · 8 rue Marbeau, 75016 Paris</p>
-        </div>`,
+        subject: "Zack AI — statut de dossier modifié",
+        html: renderBrandedEmail(`<p style="margin:0;">${escapeHtml(event.summary)}</p>`),
       };
     }
     return plan;

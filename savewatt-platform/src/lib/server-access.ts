@@ -34,7 +34,7 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
   const email = user?.primaryEmailAddress?.emailAddress?.trim() ?? "";
   if (!email) throw new WorkspaceAccessError("EMAIL_REQUIRED");
 
-  const displayName = user?.fullName ?? user?.firstName ?? "Utilisateur SaveWatt";
+  const displayName = user?.fullName ?? user?.firstName ?? "Utilisateur Zack AI";
 
   const accessRepository = new AccountAccessRepository();
   const membership = await accessRepository.findOrProvisionWhitelistedMembership({

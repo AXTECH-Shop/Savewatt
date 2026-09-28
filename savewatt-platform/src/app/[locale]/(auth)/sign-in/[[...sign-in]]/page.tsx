@@ -26,7 +26,7 @@ export default async function SignInPage({
     return (
       <div>
         <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
-          Connexion SaveWatt
+          Connexion Zack AI
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">
           Quel espace souhaitez-vous ouvrir ?
@@ -61,7 +61,7 @@ export default async function SignInPage({
           </Link>
         </div>
         <p className="mt-6 text-center text-xs leading-5 text-faint">
-          Équipe SaveWatt ?{" "}
+          Équipe Zack AI ?{" "}
           <Link className="font-semibold text-muted hover:text-ink" href={`${ADMIN_ORIGIN}/${locale}/sign-in`}>
             Accéder à l’administration
           </Link>
@@ -88,11 +88,11 @@ export default async function SignInPage({
         Connexion {accountLabel}
       </p>
       <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">
-        {isAdmin ? "Administration SaveWatt" : "Retrouvez votre activité"}
+        {isAdmin ? "Administration Zack AI" : "Retrouvez votre activité"}
       </h1>
       <p className="mt-2 text-sm leading-6 text-muted">
         {isAdmin
-          ? "Accès réservé aux comptes internes autorisés par SaveWatt."
+          ? "Accès réservé aux comptes internes autorisés par Zack AI."
           : "Accédez uniquement aux dossiers rattachés à votre organisation."}
       </p>
       <div

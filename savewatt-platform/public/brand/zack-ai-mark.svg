@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Zack AI">
+<defs><radialGradient id="zg" cx="50%" cy="50%" r="72%"><stop offset="0" stop-color="#E82F89"/><stop offset="0.62" stop-color="#243984"/><stop offset="1" stop-color="#1A2A66"/></radialGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#zg)"/>
+<path transform="translate(-58.16 130.60) scale(1.1)" d="M370.924 204.495C373.019 204.495 374.418 205.774 374.418 207.693V221.758C374.418 223.677 373.019 224.956 370.924 224.956H202.001C197.803 224.956 196.754 223.037 198.853 219.842L330.002 23.5017H205.145C203.05 23.5017 201.651 22.2223 201.651 20.6232V6.23104C201.651 4.31575 203.05 3.03638 205.145 3.03638H366.027C370.224 3.03638 371.274 5.27159 369.175 8.46986L238.018 204.491H370.924V204.495Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round"/>
+</svg>

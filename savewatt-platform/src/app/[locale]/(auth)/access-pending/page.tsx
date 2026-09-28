@@ -75,7 +75,7 @@ export default async function AccessPendingPage({
       </h1>
       <p className="mt-3 text-sm leading-6 text-muted">
         {isAdmin
-          ? "Un administrateur SaveWatt doit ajouter cette adresse à la liste interne et lui attribuer un rôle avant toute connexion."
+          ? "Un administrateur Zack AI doit ajouter cette adresse à la liste interne et lui attribuer un rôle avant toute connexion."
           : t("description")}
       </p>
       <div className="mt-7 rounded-2xl border border-line bg-surface p-5 shadow-diffuse">

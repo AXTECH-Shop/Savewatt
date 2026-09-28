@@ -1,4 +1,6 @@
 import { CrmError } from "@/lib/crm/crm-errors";
+import { BRAND_COLORS as C, ROLE_STATEMENT_FR } from "@/lib/brand";
+import { zackAiLogoSvg } from "@/lib/brand-logo";
 import { CrmScopePolicy } from "@/lib/crm/crm-scope-policy";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
 import { DocumentManager } from "@/lib/documents/document-manager";
@@ -36,17 +38,17 @@ function page(title: string, body: string, status = 200): Response {
   return new Response(
     `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(title)} — SaveWatt</title>
+<title>${escapeHtml(title)} — Zack AI</title>
 <style>
-body{margin:0;background:#F5F1E8;color:#1d2b25;font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:${C.surface};color:${C.ink};font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:560px;margin:48px auto;padding:32px;background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.brand{font-weight:700;font-size:20px;margin:0 0 24px}.brand span{color:#118a34}
-h1{font-size:22px;margin:0 0 12px}p{margin:0 0 16px}.muted{color:#5b665f;font-size:14px}
-input[type=file]{display:block;width:100%;padding:16px;border:2px dashed #b7c4bb;border-radius:12px;margin:8px 0 20px;background:#fafaf7}
-button{background:#118a34;color:#fff;border:0;border-radius:10px;padding:14px 22px;font-size:16px;font-weight:600;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid #1d2b25;outline-offset:2px}
-</style></head><body><main><p class="brand">Save<span>Watt</span></p>${body}
-<p class="muted">SaveWatt ne vend pas d'énergie : nous vous accompagnons dans le choix de votre contrat.</p></main></body></html>`,
+.brand{margin:0 0 24px;color:${C.ink}}.brand svg{display:block}
+h1{font-size:22px;margin:0 0 12px}p{margin:0 0 16px}.muted{color:${C.muted};font-size:14px}
+input[type=file]{display:block;width:100%;padding:16px;border:2px dashed ${C.navyLine};border-radius:12px;margin:8px 0 20px;background:#fafbfd}
+button{background:${C.navy};color:#fff;border:0;border-radius:10px;padding:14px 22px;font-size:16px;font-weight:600;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid ${C.pink};outline-offset:2px}
+</style></head><body><main><p class="brand">${zackAiLogoSvg(22, "currentColor")}</p>${body}
+<p class="muted">${ROLE_STATEMENT_FR}</p></main></body></html>`,
     { status, headers: PAGE_HEADERS },
   );
 }
@@ -54,7 +56,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #1d2b25;outline-offse
 function invalidLink(): Response {
   return page(
     "Lien invalide",
-    `<h1>Lien invalide ou expiré</h1><p>Ce lien de dépôt n'est plus valable. Contactez votre conseiller SaveWatt pour en recevoir un nouveau.</p>`,
+    `<h1>Lien invalide ou expiré</h1><p>Ce lien de dépôt n'est plus valable. Contactez votre conseiller Zack AI pour en recevoir un nouveau.</p>`,
     410,
   );
 }
@@ -117,7 +119,7 @@ export async function handleUploadPage(request: Request, env: McpEnv, token: str
   }
   return page(
     "Document reçu",
-    `<h1>Merci, document bien reçu</h1><p>Votre conseiller SaveWatt l'analyse et revient vers vous avec une offre personnalisée.</p>`,
+    `<h1>Merci, document bien reçu</h1><p>Votre conseiller Zack AI l'analyse et revient vers vous avec une offre personnalisée.</p>`,
   );
 }
 

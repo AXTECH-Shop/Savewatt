@@ -78,8 +78,8 @@ const ROLE_HOME: Record<AppRole, string> = {
 };
 
 const ROLE_LABELS: Record<AppRole, { fr: string; en: string }> = {
-  SUPER_ADMIN: { fr: "Admin SaveWatt", en: "SaveWatt admin" },
-  OPERATOR_FINANCE: { fr: "Admin SaveWatt", en: "SaveWatt admin" },
+  SUPER_ADMIN: { fr: "Admin Zack AI", en: "Zack AI admin" },
+  OPERATOR_FINANCE: { fr: "Admin Zack AI", en: "Zack AI admin" },
   MASTER_ADMIN: { fr: "Régie", en: "Agency" },
   MASTER_BACKOFFICE: { fr: "Régie", en: "Agency" },
   SUB_REGIE_ADMIN: { fr: "Sous-régie", en: "Sub-agency" },

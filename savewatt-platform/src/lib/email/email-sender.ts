@@ -1,5 +1,13 @@
-/** Transactional email through the Cloudflare Email Service `send_email` binding (EMAIL). */
-export const DEFAULT_FROM = { email: "offres@savewatt.fr", name: "SaveWatt" };
+import { BRAND } from "../brand.ts";
+
+/**
+ * Transactional email through the Cloudflare Email Service `send_email` binding (EMAIL).
+ * The sender address stays on savewatt.fr: it is the domain onboarded to
+ * Cloudflare Email Service (heyzack.ai DNS is not on Cloudflare). Customers
+ * see the Zack AI name and their replies reach the Zack AI inbox.
+ */
+export const DEFAULT_FROM = { email: "offres@savewatt.fr", name: BRAND.name };
+export const DEFAULT_REPLY_TO = BRAND.contactEmail;
 
 export interface EmailAttachment {
   filename: string;
@@ -14,6 +22,7 @@ export interface EmailInput {
   html: string;
   text?: string;
   from?: { email: string; name?: string };
+  replyTo?: string;
   attachments?: EmailAttachment[];
 }
 
@@ -22,6 +31,7 @@ export interface EmailBinding {
   send(message: {
     to: string[];
     from: { email: string; name?: string };
+    replyTo?: string;
     subject: string;
     html: string;
     text?: string;
@@ -49,6 +59,7 @@ export async function sendEmail(
     const result = await binding.send({
       to: input.to,
       from: input.from ?? DEFAULT_FROM,
+      replyTo: input.replyTo ?? DEFAULT_REPLY_TO,
       subject: input.subject,
       html: input.html,
       ...(input.text ? { text: input.text } : {}),

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const PLATFORM_SRC = "/Users/mohankumarv/Desktop/Projects/Clients/AXTECH/Savewatt/savewatt-platform/src/";
+const PLATFORM_SRC = fileURLToPath(new URL("../../savewatt-platform/src/", import.meta.url));
 
 // Resolve the platform's "@/..." aliases and extensionless relative imports
 // between .ts files when running under bare node.

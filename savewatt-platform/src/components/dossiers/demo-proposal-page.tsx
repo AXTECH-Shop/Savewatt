@@ -112,7 +112,7 @@ export function DemoProposalPage() {
           </div>
           <div className="text-right">
             <p className="font-medium uppercase tracking-wide text-faint">{t("preparedBy")}</p>
-            <p className="mt-1 font-medium text-ink">SaveWatt</p>
+            <p className="mt-1 font-medium text-ink">Zack AI</p>
           </div>
         </div>
 
@@ -142,7 +142,7 @@ export function DemoProposalPage() {
             />
           </Panel>
           <Panel title={t("ourOffer")} accent>
-            <Row label={tcur("supplier")} value="Savewatt" />
+            <Row label={tcur("supplier")} value="Symphonics" />
             <Row
               label={tcur("subscription")}
               value={`${num(d.proposal.subscriptionEurMonth, locale)} ${tu("eurPerMonth")}`}

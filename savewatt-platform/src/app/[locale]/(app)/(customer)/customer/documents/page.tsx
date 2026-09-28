@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/workspace/status-pill";
 
 const documents = [
   { name: "Facture EDF — août 2026.pdf", type: "bill", state: "received" },
-  { name: "Proposition SaveWatt.pdf", type: "offer", state: "available" },
+  { name: "Offre Symphonics — Zack AI.pdf", type: "offer", state: "available" },
   { name: "Contrat signé.pdf", type: "contract", state: "pending" },
 ] as const;
 

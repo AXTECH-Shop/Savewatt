@@ -108,7 +108,7 @@ function WorkspaceIdentity() {
   return (
     <div className="rounded-xl border border-line bg-surface-2 p-3">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-deep text-sm font-semibold text-lime">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-deep text-sm font-semibold text-pink-light">
           {actor.orgName
             .split(" ")
             .slice(0, 2)
@@ -216,7 +216,7 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {actor.isPreview && (
-          <div className="border-b border-lime/35 bg-lime/15 px-4 py-2 text-center text-xs font-medium text-deep">
+          <div className="border-b border-pink/35 bg-pink/10 px-4 py-2 text-center text-xs font-medium text-deep">
             {t("demoPreview")}
           </div>
         )}

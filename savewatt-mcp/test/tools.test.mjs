@@ -240,7 +240,7 @@ describe("live tools against local D1", () => {
     assert.equal(sentEmails.length, before + 1);
     assert.deepEqual(sentEmails.at(-1).to, ["client@mcp.test"]);
     assert.equal(sentEmails.at(-1).attachments.length, 2);
-    assert.match(sentEmails.at(-1).attachments[0].filename, /^offre-savewatt/);
+    assert.match(sentEmails.at(-1).attachments[0].filename, /^offre-zack-ai/);
 
     const again = await callTool("client_offers_send", {
       offerVersionId: versionId,

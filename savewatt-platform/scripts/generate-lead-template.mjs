@@ -35,7 +35,7 @@ const EXAMPLE_ROW = {
 };
 
 const NOTES = [
-  ["Mode d'emploi — import de prospects SaveWatt"],
+  ["Mode d'emploi — import de prospects Zack AI"],
   [""],
   ["1. Ne modifiez pas la ligne d'en-tête (ligne 1)."],
   ["2. Un seul prospect par ligne. La colonne Société est obligatoire."],
@@ -48,7 +48,7 @@ const NOTES = [
 ];
 
 const workbook = new ExcelJS.Workbook();
-workbook.creator = "SaveWatt";
+workbook.creator = "Zack AI";
 workbook.created = new Date();
 
 const sheet = workbook.addWorksheet("Prospects");

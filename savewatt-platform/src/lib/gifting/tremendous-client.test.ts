@@ -54,8 +54,8 @@ describe("TremendousClient", () => {
           delivery: {
             method: "EMAIL",
             meta: {
-              sender_name: "SaveWatt",
-              subject_line: "Votre avantage SaveWatt",
+              sender_name: "Zack AI",
+              subject_line: "Votre avantage Zack AI",
               message: "Votre avantage est disponible.",
             },
           },
@@ -76,7 +76,7 @@ describe("TremendousClient", () => {
       recipientEmail: "camille@example.fr",
       recipientName: "Camille Martin",
       denomination: 25,
-      subject: "Votre avantage SaveWatt",
+      subject: "Votre avantage Zack AI",
       message: "Votre avantage est disponible.",
     });
 

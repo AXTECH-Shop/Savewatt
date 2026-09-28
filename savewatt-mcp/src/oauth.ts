@@ -172,7 +172,7 @@ export async function loadActor(database: D1Database, userId: string): Promise<W
     .first<{ email: string; display_name: string }>();
   return {
     userId,
-    displayName: user?.display_name ?? user?.email ?? "SaveWatt",
+    displayName: user?.display_name ?? user?.email ?? "Zack AI",
     email: user?.email ?? "",
     role,
     orgId: membership.organizationId,
@@ -190,8 +190,8 @@ export function protectedResourceMetadata(origin: string, issuer: string) {
     authorization_servers: [issuer],
     bearer_methods_supported: ["header"],
     scopes_supported: ["openid", "email", "profile"],
-    resource_name: "SaveWatt",
-    resource_documentation: "https://savewatt.fr",
+    resource_name: "Zack AI",
+    resource_documentation: "https://heyzack.ai",
   };
 }
 
