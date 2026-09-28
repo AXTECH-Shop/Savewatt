@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { FileArrowUp, Plus, Download, X } from "@phosphor-icons/react";
 import { Link } from "@/i18n/navigation";
+import { DeleteRecordButton } from "@/components/crm/delete-record-button";
 import { StatusPill } from "@/components/workspace/status-pill";
 import { cn } from "@/lib/cn";
 import type { LeadRecord, LeadStatus } from "@/lib/crm/crm-types";
@@ -39,7 +40,7 @@ const inputClass = cn(
   "placeholder:text-faint focus:border-accent",
 );
 
-export function LeadsWorkspace({ initialLeads }: { initialLeads: LeadRecord[] }) {
+export function LeadsWorkspace({ initialLeads, canDelete }: { initialLeads: LeadRecord[]; canDelete: boolean }) {
   const t = useTranslations("leads");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "ALL">("ALL");
   const [showCreate, setShowCreate] = useState(false);
@@ -134,17 +135,26 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: LeadRecord[] })
                   {new Date(lead.updatedAt * 1000).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3">
-                  {(lead.status === "NEW" || lead.status === "QUALIFIED") && (
-                    <ConvertButton leadId={lead.id} label={t("table.convert")} onDone={refresh} />
-                  )}
-                  {lead.convertedDossierId && (
-                    <Link
-                      href={`/dossiers/${lead.convertedDossierId}`}
-                      className="text-sm font-medium text-accent hover:underline"
-                    >
-                      {t("table.openDossier")}
-                    </Link>
-                  )}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {(lead.status === "NEW" || lead.status === "QUALIFIED") && (
+                      <ConvertButton leadId={lead.id} label={t("table.convert")} onDone={refresh} />
+                    )}
+                    {lead.convertedDossierId && (
+                      <Link
+                        href={`/dossiers/${lead.convertedDossierId}`}
+                        className="text-sm font-medium text-accent hover:underline"
+                      >
+                        {t("table.openDossier")}
+                      </Link>
+                    )}
+                    {canDelete && lead.status !== "CONVERTING" && (
+                      <DeleteRecordButton
+                        endpoint={`/api/crm/leads/${lead.id}`}
+                        name={lead.legalName}
+                        converted={Boolean(lead.convertedDossierId)}
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

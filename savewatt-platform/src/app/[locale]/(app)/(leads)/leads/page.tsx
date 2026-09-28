@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/workspace/page-header";
 import { LeadsWorkspace } from "@/components/leads/leads-workspace";
 import { CrmManager } from "@/lib/crm/crm-manager";
+import { canManageNetwork } from "@/lib/access-control";
 import { resolveServerActor } from "@/lib/server-access";
 
 export default async function LeadsPage() {
@@ -23,7 +24,7 @@ export default async function LeadsPage() {
   return (
     <div className="rise">
       <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
-      <LeadsWorkspace initialLeads={leads} />
+      <LeadsWorkspace initialLeads={leads} canDelete={canManageNetwork(actor.role)} />
     </div>
   );
 }

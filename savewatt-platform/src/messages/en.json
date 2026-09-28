@@ -1755,5 +1755,22 @@
       "prefilled": "Prefilled with the latest Symphonics quote entered on a file — check, then save.",
       "error": "Could not save ({field})."
     }
+  },
+  "crmDelete": {
+    "action": "Delete",
+    "actionFor": "Delete {name}",
+    "title": "Delete {name}?",
+    "body": "The lead and its contact details will be permanently erased.",
+    "bodyConverted": "The lead will be erased with everything created from it: dossier, uploaded bill, extraction, offers and sent PDFs, history and stored files. The client and site are kept if another dossier still uses them.",
+    "irreversible": "This cannot be undone.",
+    "confirm": "Delete permanently",
+    "cancel": "Cancel",
+    "forbidden": "Only administrators can delete a lead.",
+    "failed": "Deletion failed ({code}).",
+    "blocked": {
+      "SIGNED": "Cannot delete: the contract is signed. Archive the dossier instead.",
+      "COMMISSIONS": "Cannot delete: commissions are attached to this dossier.",
+      "CONVERTING": "Conversion in progress: try again in a few seconds."
+    }
   }
 }

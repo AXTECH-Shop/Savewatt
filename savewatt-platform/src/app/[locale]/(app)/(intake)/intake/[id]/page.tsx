@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { DeleteRecordButton } from "@/components/crm/delete-record-button";
 import { IntakeReview } from "@/components/intake/intake-review";
 import { PageHeader } from "@/components/workspace/page-header";
 import { Link } from "@/i18n/navigation";
@@ -30,7 +31,7 @@ export default async function IntakeReviewPage({ params }: { params: Promise<{ i
           .filter(Boolean)
           .join(" · ") || t(`admin.status.${draft.submission.status}`)}
         action={
-          <div className="flex gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
             {draft.submission.documentId ? (
               <a href={`/api/crm/documents/${draft.submission.documentId}`} className="font-medium text-accent hover:underline">
                 {t("review.sourceBill")}
@@ -41,6 +42,12 @@ export default async function IntakeReviewPage({ params }: { params: Promise<{ i
                 {t("review.openDossier")}
               </Link>
             ) : null}
+            <DeleteRecordButton
+              endpoint={`/api/crm/intake/${draft.submission.id}`}
+              name={title}
+              converted={Boolean(draft.submission.dossierId)}
+              redirectTo="/intake"
+            />
           </div>
         }
       />

@@ -1755,5 +1755,22 @@
       "prefilled": "Pré-rempli avec le dernier devis Symphonics saisi sur un dossier — vérifiez puis enregistrez.",
       "error": "Enregistrement impossible ({field})."
     }
+  },
+  "crmDelete": {
+    "action": "Supprimer",
+    "actionFor": "Supprimer {name}",
+    "title": "Supprimer {name} ?",
+    "body": "Le prospect et ses informations de contact seront définitivement effacés.",
+    "bodyConverted": "Le prospect sera effacé avec tout ce qui en découle : dossier, facture importée, extraction, offres et PDF envoyés, historique et fichiers stockés. Le client et le site sont conservés s'ils sont liés à un autre dossier.",
+    "irreversible": "Cette action est irréversible.",
+    "confirm": "Supprimer définitivement",
+    "cancel": "Annuler",
+    "forbidden": "Seuls les administrateurs peuvent supprimer un prospect.",
+    "failed": "La suppression a échoué ({code}).",
+    "blocked": {
+      "SIGNED": "Suppression impossible : le contrat est signé. Archivez le dossier plutôt que de le supprimer.",
+      "COMMISSIONS": "Suppression impossible : des commissions sont rattachées à ce dossier.",
+      "CONVERTING": "Conversion en cours : réessayez dans quelques secondes."
+    }
   }
 }

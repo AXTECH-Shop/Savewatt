@@ -312,9 +312,13 @@ export class OfferDeliveryManager {
     return `<div style="font-family:Arial,sans-serif;color:#1d2b25;line-height:1.6;max-width:560px;">
       <p style="font-size:18px;font-weight:700;">Save<span style="color:#118a34;">Watt</span></p>
       <p>Bonjour${meta.contactName ? ` ${meta.contactName}` : ""},</p>
-      <p>Votre offre d'énergie personnalisée pour <strong>${meta.clientName}</strong> est prête :
+      <p>Votre offre d'énergie personnalisée pour <strong>${meta.clientName}</strong> est prête${
+        version.comparison.annualSaving > 0
+          ? ` :
       une économie estimée à <strong>${money.format(version.comparison.annualSaving)} par an</strong>
-      sur ${version.comparison.termYears} an(s), à périmètre identique.</p>
+      sur ${version.comparison.termYears} an(s), à périmètre identique.`
+          : `, pour une durée de ${version.comparison.termYears} an(s).`
+      }</p>
       <p>Retrouvez en pièces jointes votre offre en un coup d'œil et le budget
       prévisionnel détaillé (consommation, prix par cadran, décomposition complète HT/TTC).</p>
       <p style="color:#5b665f;font-size:12px;">Cette offre est valable jusqu'au ${version.supplierOffer.validUntil ?? "—"}.
