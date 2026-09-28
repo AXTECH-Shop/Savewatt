@@ -25,6 +25,17 @@ export interface ComparisonResult {
 
 const WINTER: Cadran[] = ["HPH", "HCH"];
 
+/** Which current bill price applies to a proposed cadran: exact band, then HP/HC, then Base. */
+const CURRENT_PRICE_SOURCES: Record<Cadran, Cadran[]> = {
+  HPH: ["HPH", "HP", "BASE"],
+  HCH: ["HCH", "HC", "BASE"],
+  HPE: ["HPE", "HP", "BASE"],
+  HCE: ["HCE", "HC", "BASE"],
+  HP: ["HP", "BASE"],
+  HC: ["HC", "BASE"],
+  BASE: ["BASE"],
+};
+
 /** Comparable all-in price for a proposed cadran (hidden margin included). */
 export function proposedPrice(p: Proposal, electronEurMwh: number): number {
   return electronEurMwh + p.ceeEurMwh + p.capacityEurMwh + p.marginEurMwh;
@@ -32,10 +43,12 @@ export function proposedPrice(p: Proposal, electronEurMwh: number): number {
 
 export function compare(current: CurrentContract, proposal: Proposal): ComparisonResult {
   const currentByCadran = new Map(current.lines.map((l) => [l.cadran, l]));
+  const currentFor = (cadran: Cadran) =>
+    (CURRENT_PRICE_SOURCES[cadran] ?? [cadran]).map((source) => currentByCadran.get(source)).find(Boolean);
 
   const rows: CadranComparison[] = proposal.lines.map((line) => {
     const proposed = proposedPrice(proposal, line.electronEurMwh);
-    const cur = currentByCadran.get(line.cadran);
+    const cur = currentFor(line.cadran);
     const currentEurMwh = cur ? cur.unitPriceEurMwh : null;
     const deltaEurMwh = currentEurMwh === null ? null : currentEurMwh - proposed;
     const gainPerYear = deltaEurMwh === null ? null : deltaEurMwh * line.annualVolumeMwh;
@@ -57,7 +70,7 @@ export function compare(current: CurrentContract, proposal: Proposal): Compariso
 
   // Alerts (mirrors brief §7.3).
   const winterMissing = proposal.lines.some(
-    (l) => WINTER.includes(l.cadran) && !currentByCadran.has(l.cadran),
+    (l) => WINTER.includes(l.cadran) && !currentFor(l.cadran),
   );
   const peak = rows.find((r) => r.cadran === "HPE") ?? rows.find((r) => r.cadran === "HP");
   const offpeak = rows.find((r) => r.cadran === "HCE") ?? rows.find((r) => r.cadran === "HC");

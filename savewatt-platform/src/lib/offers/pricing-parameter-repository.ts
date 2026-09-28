@@ -6,7 +6,7 @@ import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { CrmError } from "@/lib/crm/crm-errors";
 import type { ScopePredicate } from "@/lib/crm/crm-scope-policy";
 import { CrmScopePolicy } from "@/lib/crm/crm-scope-policy";
-import type { TurpeFixedRates, TurpeVariableRates } from "./estimate";
+import type { ConsumptionProfile, SiteRates, TurpeFixedRates, TurpeVariableRates } from "./estimate";
 import type { PricingParameterRecord } from "./offer-types";
 
 interface PricingParameterRow {
@@ -21,6 +21,8 @@ interface PricingParameterRow {
   tva_rate: number;
   turpe_fixed_json: string;
   turpe_variable_json: string;
+  small_site_rates_json: string | null;
+  consumption_profile_json: string | null;
   effective_from: string;
   effective_to: string | null;
   created_at: number;
@@ -109,9 +111,9 @@ export class PricingParameterRepository {
           `INSERT INTO pricing_parameters (
              id, organization_id, version, status,
              cee_eur_mwh, capacity_eur_mwh, accise_eur_mwh, cta_rate, tva_rate,
-             turpe_fixed_json, turpe_variable_json,
+             turpe_fixed_json, turpe_variable_json, small_site_rates_json, consumption_profile_json,
              effective_from, effective_to, created_by_user_id
-           ) VALUES (?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           ) VALUES (?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -124,6 +126,8 @@ export class PricingParameterRepository {
           input.tvaRate,
           JSON.stringify(input.turpeFixed),
           JSON.stringify(input.turpeVariable),
+          input.smallSiteRates ? JSON.stringify(input.smallSiteRates) : null,
+          input.consumptionProfile ? JSON.stringify(input.consumptionProfile) : null,
           input.effectiveFrom,
           input.effectiveTo ?? null,
           actor.userId,
@@ -191,6 +195,10 @@ export class PricingParameterRepository {
       tvaRate: row.tva_rate,
       turpeFixed: JSON.parse(row.turpe_fixed_json) as TurpeFixedRates,
       turpeVariable: JSON.parse(row.turpe_variable_json) as TurpeVariableRates,
+      smallSiteRates: row.small_site_rates_json ? (JSON.parse(row.small_site_rates_json) as SiteRates) : null,
+      consumptionProfile: row.consumption_profile_json
+        ? (JSON.parse(row.consumption_profile_json) as ConsumptionProfile)
+        : null,
       effectiveFrom: row.effective_from,
       effectiveTo: row.effective_to,
       createdAt: row.created_at,

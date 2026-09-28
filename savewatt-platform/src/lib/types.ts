@@ -28,6 +28,7 @@ export interface CurrentContract {
   endDate: string | null; // ISO
   subscriptionEurMonth: number;
   subscribedPowerKva: number | null;
+  segment?: string | null;
   lines: CurrentLine[];
 }
 

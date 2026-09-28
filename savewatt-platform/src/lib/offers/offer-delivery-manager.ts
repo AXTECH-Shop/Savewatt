@@ -8,7 +8,8 @@ import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
 import { sendEmail, type EmailBinding } from "@/lib/email/email-sender";
-import { computeBudgetPrevisionnel, type BudgetPrevisionnel } from "./estimate";
+import { type BudgetPrevisionnel } from "./estimate";
+import { budgetForOffer } from "./pricing-mechanism";
 import { renderOfferBudgetHtml } from "./offer-pdf-budget";
 import { renderOfferMarketingHtml } from "./offer-pdf-marketing";
 import { OfferVersionRepository } from "./offer-version-repository";
@@ -271,16 +272,15 @@ export class OfferDeliveryManager {
     if (version.budget) return version.budget;
     const params = await this.pricingParameters.resolveEffective(actor);
     if (!params) throw new CrmError("OFFER_PRICING_PARAMETERS_MISSING", 400, "pricingParameters");
-    return computeBudgetPrevisionnel({
-      lines: version.supplierOffer.lines.map((line) => ({
-        cadran: line.cadran,
-        annualVolumeMwh: line.annualVolumeMwh,
-        finalPriceEurMwh: line.electronEurMwh + version.marginEurMwh,
-      })),
+    return budgetForOffer({
+      lines: version.supplierOffer.lines,
+      marginEurMwh: version.marginEurMwh,
       subscriptionEurMonth: version.supplierOffer.subscriptionEurMonth,
-      params,
-      powerKw: version.currentContract.subscribedPowerKva ?? 0,
+      ceeEurMwh: version.supplierOffer.ceeEurMwh,
+      capacityEurMwh: version.supplierOffer.capacityEurMwh,
       termYears: version.supplierOffer.termYears,
+      params,
+      site: { segment: version.currentContract.segment, powerKva: version.currentContract.subscribedPowerKva },
     });
   }
 

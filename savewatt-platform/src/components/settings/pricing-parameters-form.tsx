@@ -23,6 +23,7 @@ export function PricingParametersForm({ effective, history, preview }: PricingPa
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const states = classifyDatedVersions(history);
+  const small = effective?.smallSiteRates ?? null;
   const fixed = (value: number | undefined) => (value === undefined ? "—" : value.toFixed(2));
   const historyColumns = [
     { key: "cee", label: "CEE" },
@@ -84,6 +85,26 @@ export function PricingParametersForm({ effective, history, preview }: PricingPa
             HCH: Number(formData.get("turpeHch")),
             HPE: Number(formData.get("turpeHpe")),
             HCE: Number(formData.get("turpeHce")),
+          },
+          smallSiteRates: {
+            acciseEurMwh: Number(formData.get("smallAcciseEurMwh")),
+            turpeFixed: {
+              gestionCentsPerDay: Number(formData.get("smallGestionCentsPerDay")),
+              comptageCentsPerDay: Number(formData.get("smallComptageCentsPerDay")),
+              soutirageFixeCentsPerKwPerDay: Number(formData.get("smallSoutirageFixeCentsPerKwPerDay")),
+            },
+            turpeVariable: {
+              HPH: Number(formData.get("smallTurpeHph")),
+              HCH: Number(formData.get("smallTurpeHch")),
+              HPE: Number(formData.get("smallTurpeHpe")),
+              HCE: Number(formData.get("smallTurpeHce")),
+            },
+          },
+          consumptionProfile: {
+            HPH: Number(formData.get("profileHph")),
+            HCH: Number(formData.get("profileHch")),
+            HPE: Number(formData.get("profileHpe")),
+            HCE: Number(formData.get("profileHce")),
           },
           effectiveFrom: formData.get("effectiveFrom") || undefined,
         }),
@@ -164,6 +185,43 @@ export function PricingParametersForm({ effective, history, preview }: PricingPa
             <Field label="HCE (c€/kWh)" required>
               <Input name="turpeHce" type="number" step="0.01" min="0" required disabled={preview || submitting} defaultValue={num(effective?.turpeVariable.HCE)} />
             </Field>
+          </div>
+          <p className="mt-2 text-xs text-muted">{t("largeSiteHint")}</p>
+        </div>
+
+        <div className="rounded-xl border border-line bg-surface-2 p-4">
+          <p className="text-sm font-semibold text-ink">{t("smallSiteRates")}</p>
+          <p className="mt-1 text-xs text-muted">{t("smallSiteHint")}</p>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label={t("acciseRate")} required>
+              <Input name="smallAcciseEurMwh" type="number" step="0.01" min="0" required disabled={preview || submitting} defaultValue={num(small?.acciseEurMwh)} />
+            </Field>
+            <Field label={t("gestionPerDay")} required>
+              <Input name="smallGestionCentsPerDay" type="number" step="0.001" min="0" required disabled={preview || submitting} defaultValue={num(small?.turpeFixed.gestionCentsPerDay)} />
+            </Field>
+            <Field label={t("comptagePerDay")} required>
+              <Input name="smallComptageCentsPerDay" type="number" step="0.001" min="0" required disabled={preview || submitting} defaultValue={num(small?.turpeFixed.comptageCentsPerDay)} />
+            </Field>
+            <Field label={t("soutirageFixePerKw")} required>
+              <Input name="smallSoutirageFixeCentsPerKwPerDay" type="number" step="0.001" min="0" required disabled={preview || submitting} defaultValue={num(small?.turpeFixed.soutirageFixeCentsPerKwPerDay)} />
+            </Field>
+            {(["HPH", "HCH", "HPE", "HCE"] as const).map((cadran) => (
+              <Field key={cadran} label={`TURPE ${cadran} (c€/kWh)`} required>
+                <Input name={`smallTurpe${cadran[0]}${cadran.slice(1).toLowerCase()}`} type="number" step="0.01" min="0" required disabled={preview || submitting} defaultValue={num(small?.turpeVariable[cadran])} />
+              </Field>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-ink">{t("consumptionProfile")}</p>
+          <p className="mt-1 text-xs text-muted">{t("consumptionProfileHint")}</p>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {(["HPH", "HCH", "HPE", "HCE"] as const).map((cadran) => (
+              <Field key={cadran} label={`${cadran} (%)`} required>
+                <Input name={`profile${cadran[0]}${cadran.slice(1).toLowerCase()}`} type="number" step="0.1" min="0" max="100" required disabled={preview || submitting} defaultValue={num(effective?.consumptionProfile?.[cadran])} />
+              </Field>
+            ))}
           </div>
         </div>
 

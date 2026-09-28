@@ -1,4 +1,4 @@
-import type { ExtractedBill, ExtractionResult, PriceUnit, SubscriptionUnit } from "./schema";
+import type { Cadran, ExtractedBill, ExtractionResult, PriceUnit, SubscriptionUnit } from "./schema";
 
 /** Convert a printed per-kWh price to €/MWh. */
 export function priceToEurMwh(value: number | null, unit: PriceUnit | null): number | null {
@@ -26,13 +26,21 @@ export function subscriptionToMonthly(
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+const OPTION_CADRANS: Record<string, Cadran[]> = { BASE: ["BASE"], "HP/HC": ["HP", "HC"] };
+
 /**
  * Deterministic safety net over the model's own unit normalization: recompute
  * €/MWh and €/month from the raw printed value + unit whenever they're missing,
  * so the comparator never sees a supplier-specific unit.
  */
 export function normalizeBill(bill: ExtractedBill): ExtractedBill {
-  const consumption = bill.consumption.map((line) => {
+  // A Base or HP/HC supply never bills seasonal energy bands: seasonal lines there are network (TURPE) lines.
+  const allowed = OPTION_CADRANS[bill.optionTarifaire ?? ""];
+  const energyLines =
+    allowed && bill.consumption.some((line) => allowed.includes(line.cadran))
+      ? bill.consumption.filter((line) => allowed.includes(line.cadran))
+      : bill.consumption;
+  const consumption = energyLines.map((line) => {
     const derived = priceToEurMwh(line.unitPricePrinted, line.unitPricePrintedUnit);
     return {
       ...line,
@@ -46,9 +54,16 @@ export function normalizeBill(bill: ExtractedBill): ExtractedBill {
     bill.subscriptionPrintedUnit,
   );
 
+  const supplyCharges = (bill.supplyCharges ?? []).map((charge) => {
+    const derived = priceToEurMwh(charge.unitPricePrinted, charge.unitPricePrintedUnit);
+    return { ...charge, unitPriceEurMwh: charge.unitPriceEurMwh ?? (derived != null ? round2(derived) : null) };
+  });
+
   return {
     ...bill,
     consumption,
+    supplyCharges,
+    consumptionDiscountPct: bill.consumptionDiscountPct ?? null,
     subscriptionEurPerMonth:
       bill.subscriptionEurPerMonth ??
       (derivedMonthly != null ? round2(derivedMonthly) : null),

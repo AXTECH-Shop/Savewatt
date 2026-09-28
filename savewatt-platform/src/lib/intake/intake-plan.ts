@@ -1,4 +1,5 @@
-import { deriveAnnualCadranVolumes, type SeasonalCadran } from "../offers/estimate.ts";
+import { deriveAnnualCadranVolumes, type ConsumptionProfile, type SeasonalCadran } from "../offers/estimate.ts";
+import { profileCoverage, splitFlatVolumes } from "../offers/pricing-mechanism.ts";
 import type { ExtractionResult } from "../extraction/schema";
 import type { Cadran } from "../types";
 
@@ -8,6 +9,7 @@ import type { Cadran } from "../types";
  */
 
 export const SEASONAL_CADRANS: SeasonalCadran[] = ["HPH", "HCH", "HPE", "HCE"];
+const FLAT_CADRANS: Cadran[] = ["BASE", "HP", "HC"];
 
 export interface ReferenceTerms {
   termYears: number;
@@ -80,6 +82,14 @@ export function monthsCovered(result: ExtractionResult): number | null {
   return Math.min(12, Math.round((days / 30.4375) * 100) / 100);
 }
 
+/** Earliest start and latest end of the bill's consumption periods. */
+function billedPeriod(result: ExtractionResult): { start: string; end: string } | null {
+  const starts = result.bill.consumption.map((line) => line.periodStart).filter((value): value is string => !!value && Number.isFinite(Date.parse(value)));
+  const ends = result.bill.consumption.map((line) => line.periodEnd).filter((value): value is string => !!value && Number.isFinite(Date.parse(value)));
+  if (!starts.length || !ends.length) return null;
+  return { start: starts.sort()[0], end: ends.sort()[ends.length - 1] };
+}
+
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
 
 /**
@@ -91,6 +101,7 @@ export function planIntakeOffer(input: {
   result: ExtractionResult;
   reference: ReferenceTerms | null;
   passThrough: { ceeEurMwh: number; capacityEurMwh: number };
+  profile?: ConsumptionProfile | null;
 }): { plan: IntakePlan; issues: IntakeIssue[] } {
   const { result, reference } = input;
   const issues: IntakeIssue[] = [];
@@ -101,7 +112,9 @@ export function planIntakeOffer(input: {
     issues.push("NO_PRICED_CONSUMPTION");
   }
   const seasonalOnly = observed.every((line) => SEASONAL_CADRANS.includes(line.cadran as SeasonalCadran));
-  if (!seasonalOnly) issues.push("UNSUPPORTED_TARIFF");
+  const flatOnly = observed.length > 0 && observed.every((line) => FLAT_CADRANS.includes(line.cadran));
+  const profile = flatOnly ? input.profile ?? null : null;
+  if (!seasonalOnly && !profile) issues.push("UNSUPPORTED_TARIFF");
 
   const months = monthsCovered(result);
   const referenceMwh = (result.bill.annualReferenceKwh ?? 0) / 1000;
@@ -116,6 +129,15 @@ export function planIntakeOffer(input: {
     const eteOnly = !cadrans.has("HPH") && !cadrans.has("HCH");
     const seasonMonths = eteOnly ? ETE_MONTHS : winterOnly ? WINTER_MONTHS : 12;
     lines = deriveAnnualCadranVolumes(observed, months ? Math.min(12, (months * 12) / seasonMonths) : 12);
+  } else if (profile) {
+    // Base / HP-HC: annualize the billed period by its seasonal weight, then split into the four cadrans.
+    const period = billedPeriod(result);
+    const coverage = period ? profileCoverage(period.start, period.end, profile) : null;
+    const merged = new Map<Cadran, number>();
+    for (const line of observed) merged.set(line.cadran, (merged.get(line.cadran) ?? 0) + line.volumeMwh);
+    const scale = coverage && coverage > 0 ? 1 / coverage : months ? 12 / months : 1;
+    const annual = [...merged].map(([cadran, volume]) => ({ cadran, annualVolumeMwh: volume * scale }));
+    lines = splitFlatVolumes(annual, profile) ?? annual;
   } else {
     const merged = new Map<Cadran, number>();
     for (const line of observed) merged.set(line.cadran, (merged.get(line.cadran) ?? 0) + line.volumeMwh);

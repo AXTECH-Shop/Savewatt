@@ -3,13 +3,13 @@ import { compare, proposedPrice } from "@/lib/compare";
 import { CrmError } from "@/lib/crm/crm-errors";
 import type { ExtractionResult } from "@/lib/extraction/schema";
 import { parseValidatedBill } from "@/lib/extraction/extraction-repository";
-import { computeBudgetPrevisionnel } from "@/lib/offers/estimate";
+import { budgetForOffer, currentContractFromBill } from "@/lib/offers/pricing-mechanism";
 import { renderOfferBudgetHtml } from "@/lib/offers/offer-pdf-budget";
 import { renderOfferMarketingHtml } from "@/lib/offers/offer-pdf-marketing";
 import type { OfferVersionRecord } from "@/lib/offers/offer-types";
 import { serializeOfferVersionForActor } from "@/lib/offers/offer-visibility";
 import { sendEmail } from "@/lib/email/email-sender";
-import type { Cadran, CurrentContract, Proposal } from "@/lib/types";
+import type { Proposal } from "@/lib/types";
 import { nowPlus, signLink } from "../links.ts";
 import type { ToolDef } from "./registry.ts";
 import { ADMIN } from "./registry.ts";
@@ -51,22 +51,6 @@ async function downloadLinks(
     marketingPdfUrl: `${ctx.origin}/f/${marketing}`,
     budgetPdfUrl: `${ctx.origin}/f/${budget}`,
     linksExpireAt: new Date(expires * 1000).toISOString(),
-  };
-}
-
-function toCurrentContract(bill: ExtractionResult["bill"]): CurrentContract {
-  // Same mapping as OfferManager.toCurrentContract (private there — mirrored here).
-  return {
-    supplier: bill.supplier ?? "",
-    offerName: bill.offerName ?? "",
-    endDate: bill.contractEndDate,
-    subscriptionEurMonth: bill.subscriptionEurPerMonth ?? 0,
-    subscribedPowerKva: bill.subscribedPowerKva,
-    lines: bill.consumption.map((line) => ({
-      cadran: line.cadran as Cadran,
-      unitPriceEurMwh: line.unitPriceEurMwh ?? 0,
-      volumeMwh: line.volumeKwh !== null ? line.volumeKwh / 1000 : 0,
-    })),
   };
 }
 
@@ -123,16 +107,15 @@ async function renderAndArchivePdfs(
     if (!params) throw new CrmError("OFFER_PRICING_PARAMETERS_MISSING", 400, "pricingParameters");
     budgetVersion = {
       ...version,
-      budget: computeBudgetPrevisionnel({
-        lines: version.supplierOffer.lines.map((line) => ({
-          cadran: line.cadran,
-          annualVolumeMwh: line.annualVolumeMwh,
-          finalPriceEurMwh: line.electronEurMwh + version.marginEurMwh,
-        })),
+      budget: budgetForOffer({
+        lines: version.supplierOffer.lines,
+        marginEurMwh: version.marginEurMwh,
         subscriptionEurMonth: version.supplierOffer.subscriptionEurMonth,
-        params,
-        powerKw: version.currentContract.subscribedPowerKva ?? 0,
+        ceeEurMwh: version.supplierOffer.ceeEurMwh,
+        capacityEurMwh: version.supplierOffer.capacityEurMwh,
         termYears: version.supplierOffer.termYears,
+        params,
+        site: { segment: version.currentContract.segment, powerKva: version.currentContract.subscribedPowerKva },
       }),
     };
   }
@@ -286,18 +269,17 @@ export const offerTools: ToolDef[] = [
         termYears: supplierOffer.termYears,
         lines: supplierOffer.lines,
       };
-      const currentContract = toCurrentContract(bill);
+      const currentContract = currentContractFromBill(bill);
       const comparison = compare(currentContract, proposal);
-      const budgetPreview = computeBudgetPrevisionnel({
-        lines: supplierOffer.lines.map((line) => ({
-          cadran: line.cadran,
-          annualVolumeMwh: line.annualVolumeMwh,
-          finalPriceEurMwh: line.electronEurMwh + margin,
-        })),
+      const budgetPreview = budgetForOffer({
+        lines: supplierOffer.lines,
+        marginEurMwh: margin,
         subscriptionEurMonth: supplierOffer.subscriptionEurMonth,
-        params: pricingParams,
-        powerKw: bill.subscribedPowerKva ?? 0,
+        ceeEurMwh: supplierOffer.ceeEurMwh,
+        capacityEurMwh: supplierOffer.capacityEurMwh,
         termYears: supplierOffer.termYears,
+        params: pricingParams,
+        site: { segment: bill.segment, powerKva: bill.subscribedPowerKva },
       });
       return {
         comparison,

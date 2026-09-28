@@ -116,6 +116,7 @@ export const adminTools: ToolDef[] = [
       for (const cadran of ["HPH", "HCH", "HPE", "HCE"] as SeasonalCadran[]) {
         turpeVariable[cadran] = num(turpeVariableInput[cadran], `turpeVariable.${cadran}`, { min: 0, required: true })!;
       }
+      const current = await ctx.pricingParams.resolveEffective(ctx.actor);
       const params = await ctx.pricingParams.create(ctx.actor, {
         organizationId: ctx.actor.orgId,
         ceeEurMwh: num(value.ceeEurMwh, "ceeEurMwh", { min: 0, required: true })!,
@@ -129,6 +130,9 @@ export const adminTools: ToolDef[] = [
           soutirageFixeCentsPerKwPerDay: num(turpeFixed.soutirageFixeCentsPerKwPerDay, "turpeFixed.soutirageFixeCentsPerKwPerDay", { min: 0, required: true })!,
         },
         turpeVariable,
+        // Not editable here: carried over from the current version (Settings → Tarification).
+        smallSiteRates: current?.smallSiteRates ?? null,
+        consumptionProfile: current?.consumptionProfile ?? null,
         effectiveFrom: isoDate(value.effectiveFrom, "effectiveFrom") ?? new Date().toISOString().slice(0, 10),
         effectiveTo: isoDate(value.effectiveTo, "effectiveTo"),
       });

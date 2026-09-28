@@ -6,15 +6,15 @@ import { DatabaseManager } from "@/lib/cloudflare/database-manager";
 import { compare, proposedPrice } from "@/lib/compare";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { CrmScopePolicy } from "@/lib/crm/crm-scope-policy";
-import type { Cadran, CurrentContract, Proposal } from "@/lib/types";
+import type { Cadran, Proposal } from "@/lib/types";
 import type { ExtractionResult } from "@/lib/extraction/schema";
 import { parseValidatedBill } from "@/lib/extraction/extraction-repository";
 import { DossierRepository } from "@/lib/crm/dossier-repository";
-import { computeBudgetPrevisionnel } from "./estimate";
 import { MarginGridRepository } from "./margin-grid-repository";
 import { OfferVersionRepository } from "./offer-version-repository";
 import type { ClientPriceLine, OfferVersionRecord, OfferVersionStatus, SaveSupplierOfferInput, SupplierOfferRecord } from "./offer-types";
 import { PricingParameterRepository } from "./pricing-parameter-repository";
+import { budgetForOffer, currentContractFromBill } from "./pricing-mechanism";
 import { SupplierOfferRepository } from "./supplier-offer-repository";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -85,7 +85,7 @@ export class OfferManager {
     }
     const reason = request.marginOverrideReason?.trim() || null;
 
-    const currentContract = this.toCurrentContract(extraction);
+    const currentContract = currentContractFromBill(extraction.bill);
     const proposal: Proposal = {
       supplier: "Symphonics",
       ceeEurMwh: supplierOffer.ceeEurMwh,
@@ -103,16 +103,15 @@ export class OfferManager {
     }));
     // Customer-safe budget prévisionnel: énergie uses final (margin-inclusive)
     // prices only — électron/margin never appear in budget_json.
-    const budget = computeBudgetPrevisionnel({
-      lines: supplierOffer.lines.map((line) => ({
-        cadran: line.cadran,
-        annualVolumeMwh: line.annualVolumeMwh,
-        finalPriceEurMwh: line.electronEurMwh + margin,
-      })),
+    const budget = budgetForOffer({
+      lines: supplierOffer.lines,
+      marginEurMwh: margin,
       subscriptionEurMonth: supplierOffer.subscriptionEurMonth,
-      params: pricingParams,
-      powerKw: extraction.bill.subscribedPowerKva ?? 0,
+      ceeEurMwh: supplierOffer.ceeEurMwh,
+      capacityEurMwh: supplierOffer.capacityEurMwh,
       termYears: supplierOffer.termYears,
+      params: pricingParams,
+      site: { segment: extraction.bill.segment, powerKva: extraction.bill.subscribedPowerKva },
     });
 
     const created = await this.offerVersions.create(
@@ -237,22 +236,6 @@ export class OfferManager {
       fieldConfidence: JSON.parse(row.field_confidence_json) as ExtractionResult["fieldConfidence"],
       overallConfidence: row.overall_confidence ?? 0,
       warnings: JSON.parse(row.warnings_json) as string[],
-    };
-  }
-
-  private toCurrentContract(extraction: ExtractionResult): CurrentContract {
-    const bill = extraction.bill;
-    return {
-      supplier: bill.supplier ?? "",
-      offerName: bill.offerName ?? "",
-      endDate: bill.contractEndDate,
-      subscriptionEurMonth: bill.subscriptionEurPerMonth ?? 0,
-      subscribedPowerKva: bill.subscribedPowerKva,
-      lines: bill.consumption.map((line) => ({
-        cadran: line.cadran as Cadran,
-        unitPriceEurMwh: line.unitPriceEurMwh ?? 0,
-        volumeMwh: line.volumeKwh !== null ? line.volumeKwh / 1000 : 0,
-      })),
     };
   }
 

@@ -98,6 +98,22 @@ describe("intake plan", () => {
     assert.ok(Math.abs(total - 62.38) < 0.01);
   });
 
+  it("splits a Base bill into four cadrans with the configured profile (Gibel)", () => {
+    const profile = { HPH: 41.1, HCH: 18, HPE: 30.1, HCE: 10.8 };
+    const result = bill([line("BASE", 457, 97.07, "2026-07-02", "2026-08-01")], {
+      optionTarifaire: "BASE",
+      segment: "C5",
+      subscribedPowerKva: 12,
+      annualReferenceKwh: 14_767,
+    });
+    const { plan, issues } = planIntakeOffer({ result, reference, passThrough, profile });
+    assert.deepEqual(issues, []);
+    assert.equal(plan.volumeBasis, "ANNUAL_REFERENCE");
+    assert.deepEqual(plan.lines.map((entry) => entry.cadran), ["HPH", "HCH", "HPE", "HCE"]);
+    assert.ok(Math.abs(plan.lines.reduce((sum, entry) => sum + entry.annualVolumeMwh, 0) - 14.767) < 0.01);
+    assert.ok(plan.lines.every((entry) => entry.electronEurMwh !== null));
+  });
+
   it("flags HP/HC bills and missing references for review", () => {
     const result = bill([line("HP", 1000, 200, "2026-06-01", "2026-06-30"), line("HC", 500, 150, "2026-06-01", "2026-06-30")]);
     const { plan, issues } = planIntakeOffer({ result, reference: null, passThrough });

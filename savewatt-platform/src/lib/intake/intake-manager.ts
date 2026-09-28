@@ -332,6 +332,7 @@ export class IntakeManager {
           result,
           reference,
           passThrough: { ceeEurMwh: params?.ceeEurMwh ?? 0, capacityEurMwh: params?.capacityEurMwh ?? 0 },
+          profile: params?.consumptionProfile ?? null,
         })
       : null;
     const offerVersion = submission.offerVersionId

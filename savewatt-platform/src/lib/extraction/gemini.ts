@@ -43,6 +43,12 @@ Synonymes à mapper vers un modèle canonique:
 - Taxes (neutralisées dans la comparaison, mais à extraire): Acheminement/Transport, Accise/TICFE/CSPE, CTA, TVA.
 - CAR "Consommation Annuelle de Référence" → annualReferenceKwh.
 
+FOURNITURE vs RÉSEAU — règle critique pour "consumption":
+- consumption = UNIQUEMENT les lignes de prix de l'énergie facturées par le fournisseur (rubrique "Fourniture", "Électricité", "Energie active", "Consommation").
+- N'y mets JAMAIS les lignes d'acheminement/réseau (rubrique "Acheminement", "Transport et acheminement", "Composante de soutirage", "Heures pleines/creuses saison basse/haute" facturées sous l'acheminement — ex 0,0166 €/kWh), ni les taxes (accise, CSPE, CTA, TVA). Ces lignes réseau utilisent souvent des cadrans saisonniers même quand l'énergie est en Base: l'option de fourniture (optionTarifaire) est celle des lignes d'énergie.
+- supplyCharges = autres montants PAR kWh facturés par le fournisseur en plus du prix de l'énergie: "Obligations"/CEE, "Mécanisme de capacité", "Garanties d'origine". Pour chacun: label, prix imprimé + unité, et prix normalisé en €/MWh. Ne mets pas l'abonnement ni les taxes.
+- consumptionDiscountPct = pourcentage d'une remise/promotion appliquée sur la consommation d'énergie (ex "Promotion de 15,00 % sur la consommation" → 15), sinon null.
+
 UNITÉS — capture la valeur BRUTE + son unité imprimée, ET la valeur NORMALISÉE:
 - Prix d'énergie: unitPricePrinted = valeur exacte imprimée; unitPricePrintedUnit = "c€/kWh" (ex EDF 19,095) ou "€/kWh" (ex TotalEnergies 0,09707) ou "€/MWh"; unitPriceEurMwh = normalisé en €/MWh (c€/kWh×10, €/kWh×1000).
 - Abonnement: subscriptionPrinted + subscriptionPrintedUnit ("€/mois" ex EDF 32,50, ou "€/an" ex Total 120,00); subscriptionEurPerMonth = normalisé en €/mois (€/an ÷ 12).
@@ -52,7 +58,7 @@ Autres règles:
 - fieldConfidence: confiance 0..1 par champ renseigné; overallConfidence global.
 - warnings: signale l'absence de cadrans d'hiver quand seuls des cadrans d'été sont facturés ("facture d'hiver requise"), une unité de prix supposée, ou toute incohérence (ex: HC > HP).`;
 
-const PROMPT = `Analyse cette facture d'électricité (n'importe quel fournisseur français) et renvoie STRICTEMENT le JSON conforme au schéma. Trouve, où qu'elles soient: fournisseur, offre et option tarifaire, numéro et date de facture, comptes, SIREN, titulaire, adresse du site, PDL/PRM (14 chiffres), identifiant de comptage, type de compteur, segment/raccordement, puissance souscrite, CAR, abonnement (valeur + unité + normalisé €/mois), dates de contrat, consommation par cadran (volume kWh, prix imprimé + unité + normalisé €/MWh, période, index), services, et totaux HT/TVA/TTC.`;
+const PROMPT = `Analyse cette facture d'électricité (n'importe quel fournisseur français) et renvoie STRICTEMENT le JSON conforme au schéma. Trouve, où qu'elles soient: fournisseur, offre et option tarifaire, numéro et date de facture, comptes, SIREN, titulaire, adresse du site, PDL/PRM (14 chiffres), identifiant de comptage, type de compteur, segment/raccordement, puissance souscrite, CAR, abonnement (valeur + unité + normalisé €/mois), dates de contrat, consommation d'énergie par cadran (volume kWh, prix imprimé + unité + normalisé €/MWh, période, index — jamais les lignes d'acheminement), charges fournisseur par kWh (obligations/CEE, capacité, garanties d'origine), remise en % sur la consommation, services, et totaux HT/TVA/TTC.`;
 
 const consumptionItem = {
   type: Type.OBJECT,
@@ -82,6 +88,17 @@ const serviceItem = {
   properties: {
     label: { type: Type.STRING },
     amountEurHt: { type: Type.NUMBER, nullable: true },
+  },
+  required: ["label"],
+};
+
+const supplyChargeItem = {
+  type: Type.OBJECT,
+  properties: {
+    label: { type: Type.STRING },
+    unitPricePrinted: { type: Type.NUMBER, nullable: true },
+    unitPricePrintedUnit: { type: Type.STRING, enum: ["c€/kWh", "€/kWh", "€/MWh"], nullable: true },
+    unitPriceEurMwh: { type: Type.NUMBER, nullable: true },
   },
   required: ["label"],
 };
@@ -122,6 +139,8 @@ const billSchema = {
     contractEndDate: { type: Type.STRING, nullable: true },
     tacitRenewalSuspected: { type: Type.BOOLEAN, nullable: true },
     consumption: { type: Type.ARRAY, items: consumptionItem },
+    supplyCharges: { type: Type.ARRAY, items: supplyChargeItem },
+    consumptionDiscountPct: { type: Type.NUMBER, nullable: true },
     services: { type: Type.ARRAY, items: serviceItem },
     totals: {
       type: Type.OBJECT,

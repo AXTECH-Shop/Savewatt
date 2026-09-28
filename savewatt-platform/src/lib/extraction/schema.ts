@@ -46,6 +46,14 @@ export interface ServiceLine {
   amountEurHt: number | null;
 }
 
+/** Supplier per-kWh charge billed next to the energy price (CEE/obligations, capacity, guarantees of origin). */
+export interface SupplyCharge {
+  label: string;
+  unitPricePrinted: number | null;
+  unitPricePrintedUnit: PriceUnit | null;
+  unitPriceEurMwh: number | null;
+}
+
 export interface ExtractedBill {
   /** Normalized supplier name: "EDF" | "TotalEnergies" | "Engie" | … */
   supplier: string | null;
@@ -84,6 +92,10 @@ export interface ExtractedBill {
   tacitRenewalSuspected: boolean | null;
 
   consumption: ConsumptionLine[];
+  /** Absent on extractions made before these fields existed. */
+  supplyCharges?: SupplyCharge[];
+  /** Promotion on the energy price, in % (e.g. 15 for "-15 % sur la consommation"). */
+  consumptionDiscountPct?: number | null;
   services: ServiceLine[];
 
   totals: {

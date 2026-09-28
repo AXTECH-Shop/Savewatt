@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { CrmApiManager } from "@/lib/crm/crm-api-manager";
 import { CrmError } from "@/lib/crm/crm-errors";
-import type { SeasonalCadran, TurpeVariableRates } from "@/lib/offers/estimate";
+import type { ConsumptionProfile, SeasonalCadran, SiteRates, TurpeFixedRates, TurpeVariableRates } from "@/lib/offers/estimate";
 import { canSeeInternalPricing } from "@/lib/offers/offer-visibility";
 import { PricingParameterRepository } from "@/lib/offers/pricing-parameter-repository";
 
@@ -25,6 +25,46 @@ function rate(value: unknown, field: string, { max }: { max?: number } = {}): nu
   return parsed;
 }
 
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function turpeFixed(value: unknown, prefix: string): TurpeFixedRates {
+  const input = record(value);
+  return {
+    gestionCentsPerDay: rate(input.gestionCentsPerDay, `${prefix}.gestionCentsPerDay`),
+    comptageCentsPerDay: rate(input.comptageCentsPerDay, `${prefix}.comptageCentsPerDay`),
+    soutirageFixeCentsPerKwPerDay: rate(input.soutirageFixeCentsPerKwPerDay, `${prefix}.soutirageFixeCentsPerKwPerDay`),
+  };
+}
+
+function turpeVariable(value: unknown, prefix: string): TurpeVariableRates {
+  const input = record(value);
+  const rates: TurpeVariableRates = {};
+  for (const cadran of SEASONAL_CADRANS) rates[cadran] = rate(input[cadran], `${prefix}.${cadran}`);
+  return rates;
+}
+
+function smallSiteRates(value: unknown): SiteRates | null {
+  if (value === undefined || value === null) return null;
+  const input = record(value);
+  return {
+    acciseEurMwh: rate(input.acciseEurMwh, "smallSiteRates.acciseEurMwh"),
+    turpeFixed: turpeFixed(input.turpeFixed, "smallSiteRates.turpeFixed"),
+    turpeVariable: turpeVariable(input.turpeVariable, "smallSiteRates.turpeVariable"),
+  };
+}
+
+function consumptionProfile(value: unknown): ConsumptionProfile | null {
+  if (value === undefined || value === null) return null;
+  const input = record(value);
+  const profile = {} as ConsumptionProfile;
+  for (const cadran of SEASONAL_CADRANS) profile[cadran] = rate(input[cadran], `consumptionProfile.${cadran}`, { max: 100 });
+  const total = SEASONAL_CADRANS.reduce((sum, cadran) => sum + profile[cadran], 0);
+  if (Math.abs(total - 100) > 0.5) throw new CrmError("CRM_INVALID_INPUT", 400, "consumptionProfile");
+  return profile;
+}
+
 export async function GET() {
   try {
     const actor = await api.actor();
@@ -45,12 +85,6 @@ export async function POST(request: Request) {
     const actor = await api.actor();
     assertInternal(actor);
     const body = (await api.json(request)) as Record<string, unknown>;
-    const turpeFixed = (body.turpeFixed ?? {}) as Record<string, unknown>;
-    const turpeVariableInput = (body.turpeVariable ?? {}) as Record<string, unknown>;
-    const turpeVariable: TurpeVariableRates = {};
-    for (const cadran of SEASONAL_CADRANS) {
-      turpeVariable[cadran] = rate(turpeVariableInput[cadran], `turpeVariable.${cadran}`);
-    }
     const params = await new PricingParameterRepository().create(actor, {
       organizationId: actor.orgId,
       ceeEurMwh: rate(body.ceeEurMwh, "ceeEurMwh"),
@@ -58,15 +92,10 @@ export async function POST(request: Request) {
       acciseEurMwh: rate(body.acciseEurMwh, "acciseEurMwh"),
       ctaRate: rate(body.ctaRate, "ctaRate", { max: 1 }),
       tvaRate: rate(body.tvaRate, "tvaRate", { max: 1 }),
-      turpeFixed: {
-        gestionCentsPerDay: rate(turpeFixed.gestionCentsPerDay, "turpeFixed.gestionCentsPerDay"),
-        comptageCentsPerDay: rate(turpeFixed.comptageCentsPerDay, "turpeFixed.comptageCentsPerDay"),
-        soutirageFixeCentsPerKwPerDay: rate(
-          turpeFixed.soutirageFixeCentsPerKwPerDay,
-          "turpeFixed.soutirageFixeCentsPerKwPerDay",
-        ),
-      },
-      turpeVariable,
+      turpeFixed: turpeFixed(body.turpeFixed, "turpeFixed"),
+      turpeVariable: turpeVariable(body.turpeVariable, "turpeVariable"),
+      smallSiteRates: smallSiteRates(body.smallSiteRates),
+      consumptionProfile: consumptionProfile(body.consumptionProfile),
       effectiveFrom:
         typeof body.effectiveFrom === "string" && DATE_PATTERN.test(body.effectiveFrom)
           ? body.effectiveFrom

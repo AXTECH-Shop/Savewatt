@@ -18,6 +18,16 @@ export interface TurpeFixedRates {
 /** Per-cadran TURPE variable rates in c€/kWh. */
 export type TurpeVariableRates = Partial<Record<SeasonalCadran, number>>;
 
+/** Network rates and excise that depend on the connection size. */
+export interface SiteRates {
+  acciseEurMwh: number;
+  turpeFixed: TurpeFixedRates;
+  turpeVariable: TurpeVariableRates;
+}
+
+/** Share (%) of a year's consumption falling in each seasonal cadran. */
+export type ConsumptionProfile = Record<SeasonalCadran, number>;
+
 export interface PricingParameterValues {
   ceeEurMwh: number;
   capacityEurMwh: number;
@@ -26,6 +36,10 @@ export interface PricingParameterValues {
   tvaRate: number;
   turpeFixed: TurpeFixedRates;
   turpeVariable: TurpeVariableRates;
+  /** Overrides for sites ≤ 36 kVA (C5); the base rates apply above. */
+  smallSiteRates?: SiteRates | null;
+  /** Splits Base / HP-HC bills into the four seasonal cadrans. */
+  consumptionProfile?: ConsumptionProfile | null;
 }
 
 export interface BudgetInputLine {
