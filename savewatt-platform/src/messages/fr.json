@@ -1581,6 +1581,9 @@
       "phone": "Téléphone",
       "file": "Votre dernière facture d'électricité",
       "fileHint": "PDF ou photo (PNG, JPEG, WebP), 10 Mo maximum.",
+      "highPower": "Ma puissance souscrite est supérieure à 36 kVA",
+      "contractFile": "Votre contrat d'électricité actuel",
+      "contractHint": "Obligatoire au-delà de 36 kVA : conditions particulières de votre contrat en cours (PDF ou photo, 10 Mo maximum).",
       "consent": "J'accepte que SaveWatt analyse ma facture pour me proposer une offre Symphonics et me recontacte à ce sujet.",
       "submit": "Recevoir mon offre",
       "progressReading": "Lecture de votre facture…",
@@ -1605,6 +1608,7 @@
         "FILE_TOO_LARGE": "Le fichier dépasse 10 Mo.",
         "RATE_LIMITED": "Trop de dépôts récents. Réessayez un peu plus tard.",
         "CHALLENGE_FAILED": "La vérification anti-robot a échoué. Rechargez la page.",
+        "CONTRACT_REQUIRED": "Au-delà de 36 kVA, ajoutez votre contrat d'électricité actuel.",
         "generic": "Le dépôt a échoué. Réessayez dans quelques instants."
       }
     },
@@ -1649,6 +1653,7 @@
         "LOW_CONFIDENCE": "Lecture de la facture peu fiable : vérifiez les valeurs.",
         "PDL_MISSING": "PDL/PRM introuvable sur la facture.",
         "POWER_MISSING": "Puissance souscrite introuvable.",
+        "CONTRACT_MISSING": "Plus de 36 kVA : contrat d'électricité actuel à demander au client.",
         "UNSUPPORTED_TARIFF": "Option Base ou HP/HC : saisissez les tarifs Symphonics par cadran.",
         "NO_PRICED_CONSUMPTION": "Aucune ligne de consommation avec un prix.",
         "PERIOD_UNKNOWN": "Période de facturation inconnue : volumes annuels à vérifier.",

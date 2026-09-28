@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { CheckCircle, EnvelopeSimple, SpinnerGap } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const ERROR_CODES = [
   "FILE_TOO_LARGE",
   "RATE_LIMITED",
   "CHALLENGE_FAILED",
+  "CONTRACT_REQUIRED",
 ] as const;
 type ErrorCode = (typeof ERROR_CODES)[number] | "generic";
 const PROGRESS = ["progressReading", "progressComparing", "progressSending"] as const;
@@ -30,6 +32,8 @@ const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 export function PublicIntakeForm() {
   const t = useTranslations("intake.public");
   const [file, setFile] = useState<File | undefined>();
+  const [highPower, setHighPower] = useState(false);
+  const [contract, setContract] = useState<File | undefined>();
   const [state, setState] = useState<State>({ kind: "idle" });
 
   useEffect(() => {
@@ -53,8 +57,10 @@ export function PublicIntakeForm() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!file) return setState({ kind: "idle", error: "FILE_REQUIRED" });
+    if (highPower && !contract) return setState({ kind: "idle", error: "CONTRACT_REQUIRED" });
     const form = new FormData(event.currentTarget);
     form.set("file", file);
+    if (highPower && contract) form.set("contract", contract);
     const params = new URLSearchParams(window.location.search);
     for (const key of ATTRIBUTION_KEYS) {
       const value = params.get(key);
@@ -92,6 +98,8 @@ export function PublicIntakeForm() {
           className="mt-6"
           onClick={() => {
             setFile(undefined);
+            setContract(undefined);
+            setHighPower(false);
             setState({ kind: "idle" });
           }}
         >
@@ -104,10 +112,31 @@ export function PublicIntakeForm() {
   const submitting = state.kind === "submitting";
   return (
     <form onSubmit={submit} className="rounded-2xl border border-line bg-surface p-6 sm:p-8" noValidate>
-      <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink">{t("formTitle")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink">{t("formTitle")}</h2>
+        <span className="inline-flex rounded-lg bg-white px-2 py-1">
+          <Image src="/partners/symphonics-logo.png" alt="Symphonics" width={768} height={263} className="h-7 w-auto" />
+        </span>
+      </div>
       <fieldset disabled={submitting} className="mt-5 grid gap-4">
         <UploadDropzone label={t("file")} file={file} onChange={setFile} />
         <p className="-mt-2 text-[12px] text-faint">{t("fileHint")}</p>
+        <label className="flex items-start gap-3 text-[13px] leading-5 text-ink">
+          <input
+            name="highPower"
+            type="checkbox"
+            checked={highPower}
+            onChange={(event) => setHighPower(event.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-accent"
+          />
+          {t("highPower")}
+        </label>
+        {highPower ? (
+          <>
+            <UploadDropzone label={t("contractFile")} file={contract} onChange={setContract} />
+            <p className="-mt-2 text-[12px] text-faint">{t("contractHint")}</p>
+          </>
+        ) : null}
         <Field label={t("email")} hint={t("emailHint")} required>
           <Input name="email" type="email" autoComplete="email" required />
         </Field>

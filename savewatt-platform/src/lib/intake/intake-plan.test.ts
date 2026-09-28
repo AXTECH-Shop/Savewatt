@@ -126,4 +126,13 @@ describe("intake plan", () => {
       ["LOW_CONFIDENCE", "PDL_MISSING", "POWER_MISSING", "REFERENCE_EXPIRED", "AUTO_SEND_DISABLED", "CONTACT_EMAIL_MISSING"],
     );
   });
+
+  it("requires the supply contract above 36 kVA", () => {
+    const base = bill([line("HPE", 2000, 180, "2026-06-01", "2026-06-30")]);
+    const result = { ...base, bill: { ...base.bill, subscribedPowerKva: 120 } };
+    const { issues } = planIntakeOffer({ result, reference, passThrough });
+    const input = { result, reference, planIssues: issues, contactEmail: "client@example.fr", today: "2026-09-25" };
+    assert.deepEqual(autoSendIssues(input), ["CONTRACT_MISSING"]);
+    assert.deepEqual(autoSendIssues({ ...input, hasContract: true }), []);
+  });
 });

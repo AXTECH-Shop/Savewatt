@@ -6,7 +6,7 @@ import { IntakeManager, WEB_INTAKE_ACTOR } from "@/lib/intake/intake-manager";
 
 export const runtime = "nodejs";
 
-const MAX_BODY_BYTES = 11 * 1024 * 1024;
+const MAX_BODY_BYTES = 21 * 1024 * 1024;
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
 
@@ -49,6 +49,11 @@ export async function POST(request: Request) {
   if (form.get("consent") !== "on") return NextResponse.json({ error: "CONSENT_REQUIRED" }, { status: 400 });
   const file = form.get("file");
   if (!file || typeof file === "string") return NextResponse.json({ error: "FILE_REQUIRED" }, { status: 400 });
+  const contractField = form.get("contract");
+  const contract = contractField && typeof contractField !== "string" && contractField.size > 0 ? contractField : null;
+  if (form.get("highPower") === "on" && !contract) {
+    return NextResponse.json({ error: "CONTRACT_REQUIRED" }, { status: 400 });
+  }
 
   const ip = request.headers.get("cf-connecting-ip");
   if (!(await turnstileOk(text(form, "cf-turnstile-response", 2048), ip))) {
@@ -83,6 +88,7 @@ export async function POST(request: Request) {
       },
       ipHash,
       attribution,
+      contract,
     });
   } catch (error) {
     if (error instanceof CrmError && error.status === 415) {

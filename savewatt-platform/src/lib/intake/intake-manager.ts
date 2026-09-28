@@ -66,6 +66,7 @@ export interface IntakeSubmission {
   clientName: string | null;
   fileName: string;
   mimeType: string;
+  contractFileName: string | null;
   attribution: Record<string, string>;
   leadId: string | null;
   dossierId: string | null;
@@ -102,6 +103,11 @@ interface SubmissionRow {
   mime_type: string;
   byte_size: number;
   sha256: string;
+  contract_r2_key: string | null;
+  contract_file_name: string | null;
+  contract_mime_type: string | null;
+  contract_byte_size: number | null;
+  contract_sha256: string | null;
   attribution_json: string;
   lead_id: string | null;
   dossier_id: string | null;
@@ -127,16 +133,34 @@ export class IntakeManager {
     private readonly validation = new DocumentValidationManager(),
   ) {}
 
-  /** Store the bill and open a submission (fast; safe to retry the rest). */
+  /** Store the bill (and optional supply contract) and open a submission (fast; safe to retry the rest). */
   async receive(
     actor: WorkspaceActor,
     file: File,
-    input: { channel: IntakeChannel; contact: IntakeContact; ipHash?: string | null; attribution?: Record<string, string> },
+    input: {
+      channel: IntakeChannel;
+      contact: IntakeContact;
+      ipHash?: string | null;
+      attribution?: Record<string, string>;
+      contract?: File | null;
+    },
   ): Promise<string> {
     this.assertOperator(actor);
     this.validation.file(file);
     const bytes = new Uint8Array(await file.arrayBuffer());
     this.validation.magicBytes(bytes, file.type);
+    let contract: { file: File; bytes: Uint8Array; name: string; sha256: string } | null = null;
+    if (input.contract) {
+      this.validation.file(input.contract);
+      const contractBytes = new Uint8Array(await input.contract.arrayBuffer());
+      this.validation.magicBytes(contractBytes, input.contract.type);
+      contract = {
+        file: input.contract,
+        bytes: contractBytes,
+        name: this.validation.safeFileName(input.contract.name),
+        sha256: createHash("sha256").update(contractBytes).digest("hex"),
+      };
+    }
     const id = randomUUID();
     const fileName = this.validation.safeFileName(file.name);
     const r2Key = `intake/${actor.orgId}/${id}/${fileName}`;
@@ -145,13 +169,21 @@ export class IntakeManager {
       httpMetadata: { contentType: file.type },
       customMetadata: { intakeSubmissionId: id, sha256 },
     });
+    const contractKey = contract ? `intake/${actor.orgId}/${id}/contract/${contract.name}` : null;
+    if (contract && contractKey) {
+      await this.bucket.put(contractKey, contract.bytes, {
+        httpMetadata: { contentType: contract.file.type },
+        customMetadata: { intakeSubmissionId: id, sha256: contract.sha256 },
+      });
+    }
     await this.database
       .prepare(
         `INSERT INTO intake_submissions (
            id, organization_id, channel, created_by_user_id, contact_name, contact_email,
            contact_phone, company_name, file_r2_key, file_name, mime_type, byte_size, sha256,
-           ip_hash, attribution_json
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           ip_hash, attribution_json, contract_r2_key, contract_file_name, contract_mime_type,
+           contract_byte_size, contract_sha256
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         id,
@@ -169,6 +201,11 @@ export class IntakeManager {
         sha256,
         input.ipHash ?? null,
         JSON.stringify(input.attribution ?? {}),
+        contractKey,
+        contract?.name ?? null,
+        contract?.file.type ?? null,
+        contract?.file.size ?? null,
+        contract?.sha256 ?? null,
       )
       .run();
     return id;
@@ -227,6 +264,18 @@ export class IntakeManager {
       sha256: row.sha256,
     });
     await documents.markAvailable(actor, document);
+    if (row.contract_r2_key && row.contract_file_name && row.contract_mime_type && row.contract_sha256) {
+      const contract = await documents.createPending(actor, {
+        dossierId,
+        kind: "CURRENT_CONTRACT",
+        r2Key: row.contract_r2_key,
+        fileName: row.contract_file_name,
+        mimeType: row.contract_mime_type,
+        byteSize: row.contract_byte_size ?? 0,
+        sha256: row.contract_sha256,
+      });
+      await documents.markAvailable(actor, contract);
+    }
     await this.advanceDossier(actor, dossierId, "uploaded");
 
     let extractionId: string | null = null;
@@ -367,6 +416,7 @@ export class IntakeManager {
             planIssues: draft.planIssues,
             contactEmail: analyzed.contact.email,
             today: new Date().toISOString().slice(0, 10),
+            hasContract: analyzed.contractFileName !== null,
           }),
         ]);
       }
@@ -686,6 +736,7 @@ export class IntakeManager {
       clientName: row.client_name,
       fileName: row.file_name,
       mimeType: row.mime_type,
+      contractFileName: row.contract_file_name,
       attribution: JSON.parse(row.attribution_json) as Record<string, string>,
       leadId: row.lead_id,
       dossierId: row.dossier_id,

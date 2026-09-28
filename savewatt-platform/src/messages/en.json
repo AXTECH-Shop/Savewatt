@@ -1581,6 +1581,9 @@
       "phone": "Phone",
       "file": "Your latest electricity bill",
       "fileHint": "PDF or photo (PNG, JPEG, WebP), 10 MB max.",
+      "highPower": "My subscribed power is above 36 kVA",
+      "contractFile": "Your current electricity contract",
+      "contractHint": "Required above 36 kVA: the specific terms of your current contract (PDF or photo, 10 MB max).",
       "consent": "I agree that SaveWatt analyses my bill to propose a Symphonics offer and contacts me about it.",
       "submit": "Get my offer",
       "progressReading": "Reading your bill…",
@@ -1605,6 +1608,7 @@
         "FILE_TOO_LARGE": "The file is larger than 10 MB.",
         "RATE_LIMITED": "Too many recent uploads. Try again later.",
         "CHALLENGE_FAILED": "The anti-bot check failed. Reload the page.",
+        "CONTRACT_REQUIRED": "Above 36 kVA, add your current electricity contract.",
         "generic": "The upload failed. Try again in a moment."
       }
     },
@@ -1649,6 +1653,7 @@
         "LOW_CONFIDENCE": "Low reading confidence: check the values.",
         "PDL_MISSING": "PDL/PRM not found on the bill.",
         "POWER_MISSING": "Subscribed power not found.",
+        "CONTRACT_MISSING": "Above 36 kVA: ask the client for their current electricity contract.",
         "UNSUPPORTED_TARIFF": "Base or peak/off-peak option: enter Symphonics rates per band.",
         "NO_PRICED_CONSUMPTION": "No consumption line with a price.",
         "PERIOD_UNKNOWN": "Unknown billing period: check the annual volumes.",

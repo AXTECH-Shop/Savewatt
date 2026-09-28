@@ -40,6 +40,7 @@ export const INTAKE_ISSUES = [
   "LOW_CONFIDENCE",
   "PDL_MISSING",
   "POWER_MISSING",
+  "CONTRACT_MISSING",
   "UNSUPPORTED_TARIFF",
   "NO_PRICED_CONSUMPTION",
   "PERIOD_UNKNOWN",
@@ -54,6 +55,9 @@ export const INTAKE_ISSUES = [
   "PROCESSING_ERROR",
 ] as const;
 export type IntakeIssue = (typeof INTAKE_ISSUES)[number];
+
+/** Above this subscribed power (C4 and up) the current supply contract is required. */
+export const HIGH_POWER_KVA = 36;
 
 const DAY_MS = 86_400_000;
 const ETE_MONTHS = 7;
@@ -160,12 +164,14 @@ export function autoSendIssues(input: {
   planIssues: IntakeIssue[];
   contactEmail: string | null;
   today: string;
+  hasContract?: boolean;
 }): IntakeIssue[] {
   const { result, reference } = input;
   const issues = new Set<IntakeIssue>(input.planIssues);
   if (result.overallConfidence < (reference?.minConfidence ?? 0.8)) issues.add("LOW_CONFIDENCE");
   if (!/^\d{14}$/.test(result.bill.pdlOrPrm ?? "")) issues.add("PDL_MISSING");
   if (!result.bill.subscribedPowerKva) issues.add("POWER_MISSING");
+  else if (result.bill.subscribedPowerKva > HIGH_POWER_KVA && !input.hasContract) issues.add("CONTRACT_MISSING");
   if (reference && !reference.autoSend) issues.add("AUTO_SEND_DISABLED");
   if (reference) {
     const minimumValidity = new Date(Date.parse(input.today) + 2 * DAY_MS).toISOString().slice(0, 10);
