@@ -21,14 +21,6 @@ const DOWNLOAD_LINK_HOURS = 72;
 
 type Ctx = Parameters<NonNullable<ToolDef["run"]>>[0];
 
-function base64FromBytes(bytes: Uint8Array): string {
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-  }
-  return btoa(binary);
-}
-
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
@@ -482,12 +474,12 @@ export const offerTools: ToolDef[] = [
           attachments: [
             {
               filename: `offre-savewatt-v${version.versionNo}.pdf`,
-              content: base64FromBytes(new Uint8Array(await marketing.arrayBuffer())),
+              content: new Uint8Array(await marketing.arrayBuffer()),
               type: "application/pdf",
             },
             {
               filename: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`,
-              content: base64FromBytes(new Uint8Array(await budget.arrayBuffer())),
+              content: new Uint8Array(await budget.arrayBuffer()),
               type: "application/pdf",
             },
           ],

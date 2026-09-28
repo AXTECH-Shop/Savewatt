@@ -3,8 +3,8 @@ export const DEFAULT_FROM = { email: "offres@savewatt.fr", name: "SaveWatt" };
 
 export interface EmailAttachment {
   filename: string;
-  /** Base64-encoded file content. */
-  content: string;
+  /** Binary files must be passed as bytes: base64 strings arrived corrupted in production. */
+  content: string | ArrayBuffer | Uint8Array;
   type: string;
 }
 

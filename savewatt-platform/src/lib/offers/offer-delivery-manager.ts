@@ -132,12 +132,12 @@ export class OfferDeliveryManager {
         attachments: [
           {
             filename: `offre-savewatt-v${version.versionNo}.pdf`,
-            content: base64FromBytes(new Uint8Array(pdfs.marketing.bytes)),
+            content: new Uint8Array(pdfs.marketing.bytes),
             type: "application/pdf",
           },
           {
             filename: `budget-previsionnel-savewatt-v${version.versionNo}.pdf`,
-            content: base64FromBytes(new Uint8Array(pdfs.budget.bytes)),
+            content: new Uint8Array(pdfs.budget.bytes),
             type: "application/pdf",
           },
         ],
@@ -403,11 +403,3 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function base64FromBytes(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
-  }
-  return btoa(binary);
-}
