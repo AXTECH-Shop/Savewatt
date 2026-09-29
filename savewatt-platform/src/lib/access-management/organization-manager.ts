@@ -4,6 +4,7 @@ import type { WorkspaceActor } from "@/lib/access-control";
 import { CrmError } from "@/lib/crm/crm-errors";
 import { AccessScopePolicy } from "./access-scope-policy";
 import { AccessValidationManager } from "./access-validation-manager";
+import { sendInvitationEmail } from "./invitation-mailer";
 import { OrganizationRepository } from "./organization-repository";
 
 export class OrganizationManager {
@@ -94,7 +95,20 @@ export class OrganizationManager {
     if (!this.policy.canInvite(actor, organization.path, organization.kind, role)) {
       throw new CrmError("CRM_FORBIDDEN", 403, "role");
     }
-    return this.repository.createInvitation(actor, organization, this.validation.email(input.email), role);
+    const invitation = await this.repository.createInvitation(actor, organization, this.validation.email(input.email), role);
+    const emailSent = await sendInvitationEmail(invitation, actor.displayName);
+    return { invitation, emailSent };
+  }
+
+  async resendInvitation(actor: WorkspaceActor, idValue: unknown) {
+    this.requireNetworkManager(actor);
+    const id = this.validation.identifier(idValue);
+    const invitation = (await this.repository.listInvitations(actor)).find((item) => item.id === id);
+    if (!invitation) throw new CrmError("CRM_NOT_FOUND", 404);
+    if (invitation.status !== "PENDING" || invitation.expiresAt * 1000 <= Date.now()) {
+      throw new CrmError("CRM_CONFLICT", 409, "status");
+    }
+    return { emailSent: await sendInvitationEmail(invitation, actor.displayName) };
   }
 
   async revokeInvitation(actor: WorkspaceActor, idValue: unknown, body: unknown) {

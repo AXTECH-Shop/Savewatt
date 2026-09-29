@@ -218,6 +218,10 @@
       "files": "Files"
     },
     "rolePreview": "Role preview",
+    "orgPreview": "View the platform as",
+    "orgPreviewSelf": "My account (admin)",
+    "previewReadOnly": "Read-only preview: you see exactly this organization's data. Changes are disabled.",
+    "exitPreview": "Exit preview",
     "menu": "Menu",
     "closeMenu": "Close menu",
     "close": "Close",
@@ -1299,7 +1303,10 @@
       "suspended": "Suspended",
       "email": "Business email",
       "saving": "Saving…",
-      "created": "Invitation created. The person must sign in with this verified address within 7 days.",
+      "created": "Invitation emailed. The person creates their access with this address within 7 days.",
+      "emailFailed": "Invitation created, but the email could not be sent. Try “Resend” or share this link: {url}",
+      "resend": "Resend",
+      "resent": "Invitation email resent.",
       "updated": "User access updated.",
       "revoked": "Invitation revoked.",
       "revoke": "Revoke",
@@ -1321,7 +1328,7 @@
       "permissionsTitle": "Permissions bounded by the parent",
       "permissionsDescription": "A custom role can never exceed its parent agency permissions or grid.",
       "secureInvitationTitle": "Secure invitation",
-      "secureInvitationDescription": "Clerk manages activation, sessions and strong authentication. The organisation is added after acceptance."
+      "secureInvitationDescription": "The person receives an email with their access link. They create their account with this exact address: role and scope are applied automatically."
     }
   },
   "portfolio": {

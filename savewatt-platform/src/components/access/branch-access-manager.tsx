@@ -12,6 +12,9 @@ import type {
   OrganizationRecord,
 } from "@/lib/access-management/access-types";
 import { StatusPill } from "@/components/workspace/status-pill";
+import { APP_ORIGIN } from "@/lib/access/access-surface";
+
+const INVITATION_URL = `${APP_ORIGIN}/fr/sign-up?type=partner`;
 
 const ROLES: Record<OrganizationKind, AppRole[]> = {
   OPERATOR: [],
@@ -63,9 +66,18 @@ export function BranchAccessManager({
       setMessage(t("error"));
       return;
     }
+    const { emailSent } = (await response.json()) as { emailSent?: boolean };
     setEmail("");
-    setMessage(t("created"));
+    setMessage(emailSent ? t("created") : t("emailFailed", { url: INVITATION_URL }));
     router.refresh();
+  }
+
+  async function resend(invitation: InvitationRecord) {
+    setBusy(true);
+    const response = await fetch(`/api/organizations/invitations/${invitation.id}`, { method: "POST" });
+    setBusy(false);
+    const { emailSent } = response.ok ? ((await response.json()) as { emailSent?: boolean }) : { emailSent: false };
+    setMessage(!response.ok ? t("error") : emailSent ? t("resent") : t("emailFailed", { url: INVITATION_URL }));
   }
 
   async function updateMember(member: MembershipRecord) {
@@ -124,6 +136,7 @@ export function BranchAccessManager({
             {invitations.filter((item) => item.status === "PENDING").map((invitation) => (
               <li key={invitation.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
                 <span className="min-w-0 flex-1"><strong className="block truncate text-ink">{invitation.email}</strong><span className="text-xs text-muted">{invitation.organizationName} · {t(`roles.${invitation.role}`)}</span></span>
+                <button disabled={busy || preview} onClick={() => resend(invitation)} className="press rounded-lg border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-50">{t("resend")}</button>
                 <button disabled={busy || preview} onClick={() => revoke(invitation)} className="press rounded-lg border border-line px-3 py-1.5 text-xs text-muted disabled:opacity-50">{t("revoke")}</button>
               </li>
             ))}

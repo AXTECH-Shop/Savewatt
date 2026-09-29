@@ -1,6 +1,7 @@
 import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import {
   normalizeRole,
@@ -9,10 +10,11 @@ import {
   type WorkspaceActor,
 } from "./access-control";
 import { AccountAccessRepository } from "./access/account-access-repository";
+import { applyRolePreview, ROLE_PREVIEW_COOKIE } from "./access/role-preview";
 
 const serverDemoMode = process.env.NEXT_PUBLIC_SAVEWATT_DEMO_MODE === "true";
 
-export async function resolveServerActor(): Promise<WorkspaceActor> {
+export async function resolveServerActor(options: { ignorePreview?: boolean } = {}): Promise<WorkspaceActor> {
   if (serverDemoMode) {
     return {
       userId: "demo-apporteur",
@@ -51,7 +53,7 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
   if (!internalAccessAllowed) throw new WorkspaceAccessError("INTERNAL_NOT_WHITELISTED");
 
   const role = normalizeRole(membership.role);
-  return {
+  const actor: WorkspaceActor = {
     userId,
     displayName,
     email,
@@ -62,6 +64,9 @@ export async function resolveServerActor(): Promise<WorkspaceActor> {
     scope: scopeForRole(role),
     isPreview: false,
   };
+  if (role !== "SUPER_ADMIN" || options.ignorePreview) return actor;
+  const previewOrganizationId = (await cookies()).get(ROLE_PREVIEW_COOKIE)?.value;
+  return previewOrganizationId ? applyRolePreview(actor, previewOrganizationId) : actor;
 }
 
 export class WorkspaceAccessError extends Error {

@@ -218,6 +218,10 @@
       "files": "Dossiers"
     },
     "rolePreview": "Aperçu du rôle",
+    "orgPreview": "Voir la plateforme comme",
+    "orgPreviewSelf": "Mon compte (admin)",
+    "previewReadOnly": "Aperçu en lecture seule : vous voyez exactement les données de cette organisation. Les modifications sont désactivées.",
+    "exitPreview": "Quitter l’aperçu",
     "menu": "Menu",
     "closeMenu": "Fermer le menu",
     "close": "Fermer",
@@ -1299,7 +1303,10 @@
       "suspended": "Suspendu",
       "email": "E-mail professionnel",
       "saving": "Enregistrement…",
-      "created": "Invitation créée. La personne doit se connecter avec cette adresse vérifiée sous 7 jours.",
+      "created": "Invitation envoyée par email. La personne crée son accès avec cette adresse sous 7 jours.",
+      "emailFailed": "Invitation créée, mais l’email n’a pas pu être envoyé. Réessayez avec « Renvoyer » ou partagez ce lien : {url}",
+      "resend": "Renvoyer",
+      "resent": "Email d’invitation renvoyé.",
       "updated": "Accès utilisateur mis à jour.",
       "revoked": "Invitation révoquée.",
       "revoke": "Révoquer",
@@ -1321,7 +1328,7 @@
       "permissionsTitle": "Droits limités par le parent",
       "permissionsDescription": "Un rôle personnalisé ne peut jamais dépasser les droits ou la grille de sa régie parente.",
       "secureInvitationTitle": "Invitation sécurisée",
-      "secureInvitationDescription": "Clerk gère l’activation, les sessions et l’authentification forte. L’organisation est ajoutée après acceptation."
+      "secureInvitationDescription": "La personne reçoit un email avec son lien d’accès. Elle crée son compte avec cette adresse exacte : son rôle et son périmètre sont appliqués automatiquement."
     }
   },
   "portfolio": {

@@ -8,6 +8,7 @@ import {
   resolveAccessSurface,
 } from "@/lib/access/access-surface";
 import { resolveServerActor, WorkspaceAccessError } from "@/lib/server-access";
+import { listPreviewTargets } from "@/lib/access/role-preview";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -40,17 +41,19 @@ export default async function ProtectedAppLayout({
   }
 
   const surface = resolveAccessSurface((await headers()).get("host"));
-  if (surface === "ADMIN" && !isInternalRole(actor.role)) {
+  const realRole = actor.preview?.realRole ?? actor.role;
+  if (surface === "ADMIN" && !isInternalRole(realRole)) {
     redirect(`${APP_ORIGIN}/${locale}`);
   }
-  if (surface === "APP" && isInternalRole(actor.role)) {
+  if (surface === "APP" && isInternalRole(realRole)) {
     redirect(`${ADMIN_ORIGIN}/${locale}`);
   }
 
   const unreadNotifications = await unreadNotificationCount(actor);
+  const previewTargets = realRole === "SUPER_ADMIN" ? await listPreviewTargets() : [];
 
   return (
-    <WorkspaceProvider actor={actor}>
+    <WorkspaceProvider actor={actor} previewTargets={previewTargets}>
       <AppShell unreadNotifications={unreadNotifications}>{children}</AppShell>
     </WorkspaceProvider>
   );

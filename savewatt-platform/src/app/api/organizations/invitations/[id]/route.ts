@@ -15,3 +15,16 @@ export async function PATCH(
     return api.error(error);
   }
 }
+
+/** Re-sends the access email of a pending invitation. */
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    return Response.json(await new OrganizationManager().resendInvitation(await api.actor(), id));
+  } catch (error) {
+    return api.error(error);
+  }
+}

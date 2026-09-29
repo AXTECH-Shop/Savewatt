@@ -103,7 +103,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 function WorkspaceIdentity() {
   const locale = useLocale();
   const t = useTranslations("shell");
-  const { actor, canPreviewRoles, setPreviewRole } = useWorkspace();
+  const { actor, canPreviewRoles, setPreviewRole, previewTargets, startPreview } = useWorkspace();
+  const [switching, setSwitching] = useState(false);
+
+  async function choosePreview(organizationId: string) {
+    setSwitching(true);
+    await startPreview(organizationId || null);
+    setSwitching(false);
+  }
 
   return (
     <div className="rounded-xl border border-line bg-surface-2 p-3">
@@ -135,6 +142,37 @@ function WorkspaceIdentity() {
             ))}
           </select>
         </label>
+      )}
+      {previewTargets.length > 0 && (
+        <label className="mt-3 block border-t border-line pt-3 text-[11px] font-medium uppercase tracking-[0.12em] text-faint">
+          {t("orgPreview")}
+          <select
+            value={actor.preview ? actor.orgId : ""}
+            disabled={switching}
+            onChange={(event) => void choosePreview(event.target.value)}
+            className="mt-1.5 h-9 w-full rounded-lg border border-line-strong bg-surface px-2 text-xs normal-case tracking-normal text-ink disabled:opacity-60"
+          >
+            <option value="">{t("orgPreviewSelf")}</option>
+            {previewTargets.map((target) => (
+              <option key={target.id} value={target.id}>
+                {labelForRole(target.role, locale)} · {target.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {actor.preview && (
+        <div className="mt-3 rounded-lg border border-pink/40 bg-pink/10 p-2.5 text-xs leading-5 text-ink">
+          {t("previewReadOnly")}
+          <button
+            type="button"
+            disabled={switching}
+            onClick={() => void choosePreview("")}
+            className="press mt-1.5 block font-semibold text-accent hover:underline disabled:opacity-60"
+          >
+            {t("exitPreview")}
+          </button>
+        </div>
       )}
     </div>
   );

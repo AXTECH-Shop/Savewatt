@@ -51,6 +51,15 @@ export interface WorkspaceActor {
   orgPath: string;
   scope: ScopeKind;
   isPreview: boolean;
+  /** Set when a super admin is viewing the platform as another organization (read-only). */
+  preview?: { realRole: AppRole; realOrgName: string };
+}
+
+/** An organization a super admin can preview, with the role used for the preview. */
+export interface PreviewTarget {
+  id: string;
+  name: string;
+  role: AppRole;
 }
 
 const ROLE_SCOPE: Record<AppRole, ScopeKind> = {

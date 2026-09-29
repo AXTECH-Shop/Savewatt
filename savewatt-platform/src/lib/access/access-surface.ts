@@ -2,6 +2,7 @@ import type { AppRole } from "@/lib/access-control";
 
 export const APP_ORIGIN = "https://app.savewatt.fr";
 export const ADMIN_ORIGIN = "https://admin.savewatt.fr";
+export const ROLE_PREVIEW_COOKIE = "zack_role_preview";
 
 export type AccessSurface = "APP" | "ADMIN";
 

@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { ROLE_PREVIEW_COOKIE } from "./lib/access/access-surface";
 
 const intlMiddleware = createMiddleware(routing);
 const demoMode = process.env.NEXT_PUBLIC_SAVEWATT_DEMO_MODE === "true";
@@ -26,6 +27,16 @@ const isPublicRoute = createRouteMatcher([
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Role preview is read-only: refuse every API write except leaving the preview.
+  if (
+    request.cookies.has(ROLE_PREVIEW_COOKIE) &&
+    isApiRoute(request) &&
+    !isPublicRoute(request) &&
+    !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+    request.nextUrl.pathname !== "/api/preview"
+  ) {
+    return NextResponse.json({ error: "PREVIEW_READ_ONLY" }, { status: 403 });
+  }
   if (!demoMode && !isPublicRoute(request)) {
     if (isApiRoute(request)) {
       const { userId } = await auth();

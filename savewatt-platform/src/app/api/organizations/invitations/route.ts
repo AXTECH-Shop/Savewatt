@@ -5,8 +5,8 @@ const api = new CrmApiManager();
 
 export async function POST(request: Request) {
   try {
-    const invitation = await new OrganizationManager().invite(await api.actor(), await api.json(request));
-    return Response.json({ invitation }, { status: 201 });
+    const result = await new OrganizationManager().invite(await api.actor(), await api.json(request));
+    return Response.json(result, { status: 201 });
   } catch (error) {
     return api.error(error);
   }
