@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { SpinnerGap, Trash, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -74,9 +75,9 @@ export function DeleteRecordButton({
         <Trash size={15} />
         {t("action")}
       </button>
-      {open ? (
+      {open ? createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-deep/45 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-deep/45 p-4 sm:items-center"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby="delete-record-title"
@@ -112,7 +113,8 @@ export function DeleteRecordButton({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

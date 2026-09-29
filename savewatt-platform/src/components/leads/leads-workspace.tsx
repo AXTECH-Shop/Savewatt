@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { FileArrowUp, Plus, Download, X } from "@phosphor-icons/react";
 import { Link } from "@/i18n/navigation";
@@ -198,18 +199,20 @@ function ConvertButton({ leadId, label, onDone }: { leadId: string; label: strin
 }
 
 function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-deep/45 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="w-full max-w-lg rounded-2xl border border-line bg-surface p-6 shadow-diffuse">
-        <div className="flex items-center justify-between">
+  // Portal: a transformed ancestor would otherwise trap `position: fixed` inside the page body.
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-deep/45 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col rounded-2xl border border-line bg-surface shadow-diffuse">
+        <div className="flex shrink-0 items-center justify-between px-6 pt-6">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <button onClick={onClose} className="press rounded-lg p-2 text-muted hover:bg-surface-2" aria-label={title}>
             <X size={18} />
           </button>
         </div>
-        <div className="mt-4">{children}</div>
+        <div className="mt-4 min-h-0 overflow-y-auto px-6 pb-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -29,7 +29,7 @@ export interface McpEnv {
   BROWSER: {
     quickAction(
       action: "pdf",
-      options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean } },
+      options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean; preferCSSPageSize?: boolean } },
     ): Promise<Response>;
   };
   EMAIL?: EmailBinding;

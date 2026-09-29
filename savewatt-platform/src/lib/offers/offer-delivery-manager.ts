@@ -226,7 +226,7 @@ export class OfferDeliveryManager {
     browser: {
       quickAction(
         action: "pdf",
-        options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean } },
+        options: { html: string; pdfOptions?: { format?: "a4"; printBackground?: boolean; preferCSSPageSize?: boolean } },
       ): Promise<Response>;
     },
     version: OfferVersionRecord,
@@ -246,7 +246,7 @@ export class OfferDeliveryManager {
     }
     const response = await browser.quickAction("pdf", {
       html: render(),
-      pdfOptions: { format: "a4", printBackground: true },
+      pdfOptions: { format: "a4", printBackground: true, preferCSSPageSize: true },
     });
     if (!response.ok) {
       console.error("OFFER_PDF_RENDER_FAILED", kind, response.status, (await response.text()).slice(0, 500));

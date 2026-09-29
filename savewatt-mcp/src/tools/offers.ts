@@ -133,7 +133,7 @@ async function renderAndArchivePdfs(
     }
     const response = await ctx.env.BROWSER.quickAction("pdf", {
       html: artifact.html,
-      pdfOptions: { format: "a4", printBackground: true },
+      pdfOptions: { format: "a4", printBackground: true, preferCSSPageSize: true },
     });
     if (!response.ok) {
       console.error("OFFER_PDF_RENDER_FAILED", artifact.kind, response.status, (await response.text()).slice(0, 500));
