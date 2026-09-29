@@ -44,7 +44,8 @@ export function AdminAccessConsole({
       body: JSON.stringify({ email, role, organizationId }),
     });
     setBusy(false);
-    setMessage(response.ok ? t("whitelistCreated") : t("error"));
+    const { emailSent } = response.ok ? ((await response.json()) as { emailSent?: boolean }) : { emailSent: false };
+    setMessage(!response.ok ? t("error") : emailSent ? t("whitelistCreated") : t("whitelistEmailFailed"));
     if (response.ok) {
       setEmail("");
       router.refresh();

@@ -953,7 +953,8 @@
       "revoke": "Révoquer",
       "add": "Ajouter",
       "saving": "Enregistrement…",
-      "whitelistCreated": "Accès interne enregistré.",
+      "whitelistCreated": "Accès interne enregistré. Un email avec le lien d’inscription et les instructions a été envoyé.",
+      "whitelistEmailFailed": "Accès interne enregistré, mais l’email n’a pas pu être envoyé. Lien d’inscription : https://app.savewatt.fr/fr/sign-up?type=partner",
       "whitelistRevoked": "Accès interne révoqué.",
       "error": "L’opération a échoué. Vérifiez le périmètre et rechargez les données.",
       "roles": {

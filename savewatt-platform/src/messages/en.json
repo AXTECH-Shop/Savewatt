@@ -953,7 +953,8 @@
       "revoke": "Revoke",
       "add": "Add",
       "saving": "Saving…",
-      "whitelistCreated": "Internal access saved.",
+      "whitelistCreated": "Internal access saved. An email with the sign-up link and instructions was sent.",
+      "whitelistEmailFailed": "Internal access saved, but the email could not be sent. Sign-up link: https://app.savewatt.fr/fr/sign-up?type=partner",
       "whitelistRevoked": "Internal access revoked.",
       "error": "The operation failed. Check the scope and reload the data.",
       "roles": {

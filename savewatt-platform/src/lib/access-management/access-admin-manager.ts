@@ -5,6 +5,7 @@ import { CrmError } from "@/lib/crm/crm-errors";
 import { AccessAdminRepository } from "./access-admin-repository";
 import { AccessScopePolicy } from "./access-scope-policy";
 import { AccessValidationManager } from "./access-validation-manager";
+import { sendWhitelistEmail } from "./invitation-mailer";
 import { OrganizationRepository } from "./organization-repository";
 
 export class AccessAdminManager {
@@ -87,12 +88,14 @@ export class AccessAdminManager {
     if (!organization || organization.kind !== "OPERATOR") {
       throw new CrmError("CRM_INVALID_INPUT", 400, "organizationId");
     }
-    return this.repository.addWhitelist(
+    const whitelistEntry = await this.repository.addWhitelist(
       actor,
       this.validation.email(input.email),
       role,
       organizationId,
     );
+    const emailSent = await sendWhitelistEmail(whitelistEntry, actor.displayName);
+    return { whitelistEntry, emailSent };
   }
 
   async revokeWhitelist(actor: WorkspaceActor, idValue: unknown) {

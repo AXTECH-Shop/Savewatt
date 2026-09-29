@@ -1,3 +1,6 @@
+import { isAppRole } from "@/lib/access-control";
+import { sendAccessEmail } from "@/lib/access-management/access-email";
+import { CrmError } from "@/lib/crm/crm-errors";
 import type { SeasonalCadran, TurpeVariableRates } from "@/lib/offers/estimate";
 import type { ToolDef } from "./registry.ts";
 import { ADMIN, ADMIN_AND_FINANCE } from "./registry.ts";
@@ -207,6 +210,55 @@ export const adminTools: ToolDef[] = [
         .bind(...bindings, limit)
         .all();
       return { events: result.results ?? [], count: (result.results ?? []).length };
+    },
+  },
+  {
+    name: "access.send_email",
+    description:
+      "(Re)send the Zack AI access email (sign-up link + instructions) to someone who already has a pending régie invitation or an active internal admin grant. Never creates access.",
+    status: "live",
+    readOnly: false,
+    scopes: ["admin:write"],
+    roles: ADMIN,
+    inputSchema: {
+      type: "object",
+      properties: { email: { type: "string" } },
+      required: ["email"],
+    },
+    run: async (ctx, args) => {
+      const email = str(obj(args).email, "email", { required: true, max: 200 })!.trim().toLowerCase();
+      const grant =
+        (await ctx.db
+          .prepare(
+            `SELECT invitation.email, invitation.role, invitation.expires_at, organization.name AS organization_name
+             FROM organization_invitations invitation
+             JOIN organizations organization ON organization.id = invitation.organization_id
+             WHERE lower(invitation.email) = ? AND invitation.status = 'PENDING' AND invitation.expires_at > unixepoch()
+             ORDER BY invitation.created_at DESC LIMIT 1`,
+          )
+          .bind(email)
+          .first<{ email: string; role: string; expires_at: number | null; organization_name: string }>()) ??
+        (await ctx.db
+          .prepare(
+            `SELECT whitelist.email, whitelist.role, NULL AS expires_at, organization.name AS organization_name
+             FROM internal_user_whitelist whitelist
+             JOIN organizations organization ON organization.id = whitelist.organization_id
+             WHERE lower(whitelist.email) = ? AND whitelist.status = 'ACTIVE' LIMIT 1`,
+          )
+          .bind(email)
+          .first<{ email: string; role: string; expires_at: number | null; organization_name: string }>());
+      if (!grant || !isAppRole(grant.role)) throw new CrmError("CRM_NOT_FOUND", 404, "email");
+      const sent = await sendAccessEmail(
+        {
+          email: grant.email,
+          role: grant.role,
+          organizationName: grant.organization_name,
+          inviterName: "L'équipe Zack AI",
+          expiresAt: grant.expires_at,
+        },
+        ctx.env.EMAIL,
+      );
+      return { email: grant.email, role: grant.role, organization: grant.organization_name, sent };
     },
   },
 ];
